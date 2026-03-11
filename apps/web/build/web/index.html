@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Kuwboo">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Kuwboo">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Kuwboo</title>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <script>
+    // PWA install prompt capture
+    window._deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      window._deferredPrompt = e;
+    });
+
+    // Service worker update detection
+    window._updateAvailable = false;
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(function(registration) {
+        registration.addEventListener('updatefound', function() {
+          var newWorker = registration.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', function() {
+            // New SW installed while an old one is still controlling = update ready
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              window._updateAvailable = true;
+            }
+          });
+        });
+      });
+    }
+
+    // Helpers exposed to Dart via js_interop
+    window._kuwboo = {
+      toggleFullscreen: function() {
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+          return false;
+        } else {
+          document.documentElement.requestFullscreen();
+          return true;
+        }
+      },
+      isFullscreen: function() {
+        return !!document.fullscreenElement;
+      },
+      canInstall: function() {
+        return window._deferredPrompt != null;
+      },
+      triggerInstall: function() {
+        if (window._deferredPrompt) {
+          window._deferredPrompt.prompt();
+          window._deferredPrompt = null;
+          return true;
+        }
+        return false;
+      },
+      isIOS: function() {
+        return /iPhone|iPad/i.test(navigator.userAgent);
+      },
+      isMobile: function() {
+        return /iPhone|iPad|Android/i.test(navigator.userAgent);
+      },
+      isStandalone: function() {
+        return window.matchMedia('(display-mode: standalone)').matches ||
+               navigator.standalone === true;
+      },
+      hasUpdate: function() {
+        return window._updateAvailable === true;
+      },
+      applyUpdate: function() {
+        window.location.reload();
+      }
+    };
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
