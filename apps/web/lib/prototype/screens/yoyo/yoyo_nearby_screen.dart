@@ -1559,21 +1559,24 @@ class _RadarControlBar extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: SliderTheme(
-              data: SliderThemeData(
-                activeTrackColor: theme.primary,
-                thumbColor: theme.primary,
-                inactiveTrackColor: theme.textTertiary.withValues(alpha: 0.15),
-                trackHeight: 2,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-              ),
-              child: Slider(
-                min: 1,
-                max: 30,
-                divisions: 29,
-                value: state.yoyoRange,
-                onChanged: state.onYoyoRangeChanged,
+            child: Material(
+              color: Colors.transparent,
+              child: SliderTheme(
+                data: SliderThemeData(
+                  activeTrackColor: theme.primary,
+                  thumbColor: theme.primary,
+                  inactiveTrackColor: theme.textTertiary.withValues(alpha: 0.15),
+                  trackHeight: 2,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                ),
+                child: Slider(
+                  min: 1,
+                  max: 30,
+                  divisions: 29,
+                  value: state.yoyoRange,
+                  onChanged: state.onYoyoRangeChanged,
+                ),
               ),
             ),
           ),
