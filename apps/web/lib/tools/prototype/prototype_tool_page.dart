@@ -106,6 +106,7 @@ class _PrototypeToolPageState extends State<PrototypeToolPage> {
         snap: true,
         snapSizes: const [0.5, 0.88],
         builder: (context, scrollController) => MobileToolsSheet(
+          scrollController: scrollController,
           selectedDesign: _selectedDesign,
           onDesignSelected: (i) => setState(() => _selectedDesign = i),
           paletteIndex: _selectedPalette,

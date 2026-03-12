@@ -17,6 +17,7 @@ const _designIndexMap = [0, 3, 4, 6];
 
 /// Bottom sheet content exposing all developer tools on mobile viewports.
 class MobileToolsSheet extends StatefulWidget {
+  final ScrollController scrollController;
   final int selectedDesign;
   final ValueChanged<int> onDesignSelected;
   final int? paletteIndex;
@@ -31,6 +32,7 @@ class MobileToolsSheet extends StatefulWidget {
 
   const MobileToolsSheet({
     super.key,
+    required this.scrollController,
     required this.selectedDesign,
     required this.onDesignSelected,
     required this.paletteIndex,
@@ -51,9 +53,18 @@ class MobileToolsSheet extends StatefulWidget {
 class _MobileToolsSheetState extends State<MobileToolsSheet> {
   bool _paletteExpanded = false;
   bool _iconSetExpanded = false;
-  int _propertiesTab = 0; // 0 = Theme, 1 = Color, 2 = Icons
+  int _propertiesTab = 0; // 0 = Theme, 1 = Color
 
-  int get _currentOriginalIndex => _designIndexMap[widget.selectedDesign];
+  // Local state mirrors — the sheet is on a separate route so parent
+  // setState doesn't rebuild us. We track selections locally and
+  // forward changes to the parent via callbacks.
+  late int _selectedDesign = widget.selectedDesign;
+  late int? _paletteIndex = widget.paletteIndex;
+  late int? _iconSetIndex = widget.iconSetIndex;
+  late int _yoyoVariant = widget.yoyoVariant;
+  late int _yoyoMode = widget.yoyoMode;
+
+  int get _currentOriginalIndex => _designIndexMap[_selectedDesign];
 
   @override
   Widget build(BuildContext context) {
@@ -100,6 +111,7 @@ class _MobileToolsSheetState extends State<MobileToolsSheet> {
           // Scrollable content
           Expanded(
             child: ListView(
+              controller: widget.scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               children: [
                 // ── Controls Section ─────────────────────────────────
@@ -112,10 +124,11 @@ class _MobileToolsSheetState extends State<MobileToolsSheet> {
                 const SizedBox(height: 6),
                 _buildPaletteSection(),
 
-                const SizedBox(height: 16),
-                _sectionLabel('Icon Set'),
-                const SizedBox(height: 6),
-                _buildIconSetSection(),
+                // Icon Set section hidden for now
+                // const SizedBox(height: 16),
+                // _sectionLabel('Icon Set'),
+                // const SizedBox(height: 6),
+                // _buildIconSetSection(),
 
                 const SizedBox(height: 16),
                 _sectionLabel('YoYo Controls'),
@@ -133,7 +146,7 @@ class _MobileToolsSheetState extends State<MobileToolsSheet> {
                 // Tab bar
                 _PropertiesTabBar(
                   activeIndex: _propertiesTab,
-                  accentColor: _designColors[widget.selectedDesign],
+                  accentColor: _designColors[_selectedDesign],
                   onChanged: (i) => setState(() => _propertiesTab = i),
                 ),
                 const SizedBox(height: 16),
@@ -142,19 +155,20 @@ class _MobileToolsSheetState extends State<MobileToolsSheet> {
                 if (_propertiesTab == 0)
                   _ThemeTabContent(
                     originalDesignIndex: _currentOriginalIndex,
-                    accentColor: _designColors[widget.selectedDesign],
+                    accentColor: _designColors[_selectedDesign],
                   )
                 else if (_propertiesTab == 1)
                   _ColorTabContent(
                     originalDesignIndex: _currentOriginalIndex,
-                    paletteIndex: widget.paletteIndex,
-                  )
-                else
-                  _IconsTabContent(
-                    originalDesignIndex: _currentOriginalIndex,
-                    iconSetIndex: widget.iconSetIndex,
-                    accentColor: _designColors[widget.selectedDesign],
+                    paletteIndex: _paletteIndex,
                   ),
+                // Icons tab content hidden for now
+                // else
+                //   _IconsTabContent(
+                //     originalDesignIndex: _currentOriginalIndex,
+                //     iconSetIndex: widget.iconSetIndex,
+                //     accentColor: _designColors[widget.selectedDesign],
+                //   ),
 
                 const SizedBox(height: 32),
               ],
@@ -186,16 +200,19 @@ class _MobileToolsSheetState extends State<MobileToolsSheet> {
           _DesignChip(
             name: _designNames[i],
             color: _designColors[i],
-            isSelected: i == widget.selectedDesign,
-            onTap: () => widget.onDesignSelected(i),
+            isSelected: i == _selectedDesign,
+            onTap: () {
+              setState(() => _selectedDesign = i);
+              widget.onDesignSelected(i);
+            },
           ),
       ],
     );
   }
 
   Widget _buildPaletteSection() {
-    final paletteName = widget.paletteIndex != null
-        ? ColorPalette.visible[widget.paletteIndex!].shortName
+    final paletteName = _paletteIndex != null
+        ? ColorPalette.visible[_paletteIndex!].shortName
         : 'Default';
 
     return Column(
@@ -234,10 +251,13 @@ class _MobileToolsSheetState extends State<MobileToolsSheet> {
             padding: const EdgeInsets.only(top: 8),
             child: PalettePicker(
               currentDesignIndex: _currentOriginalIndex,
-              selectedPaletteIndex: widget.paletteIndex,
+              selectedPaletteIndex: _paletteIndex,
               onPaletteSelected: (index) {
+                setState(() {
+                  _paletteIndex = index;
+                  _paletteExpanded = false;
+                });
                 widget.onPaletteSelected(index);
-                setState(() => _paletteExpanded = false);
               },
             ),
           ),
@@ -304,16 +324,22 @@ class _MobileToolsSheetState extends State<MobileToolsSheet> {
           label: 'Version',
           option0: 'V1',
           option1: 'V2 Consent',
-          selected: widget.yoyoVariant,
-          onChanged: widget.onYoyoVariantChanged,
+          selected: _yoyoVariant,
+          onChanged: (v) {
+            setState(() => _yoyoVariant = v);
+            widget.onYoyoVariantChanged(v);
+          },
         ),
         const SizedBox(height: 8),
         _MobileToggle(
           label: 'Mode',
           option0: 'Social',
           option1: 'Inner Circle',
-          selected: widget.yoyoMode,
-          onChanged: widget.onYoyoModeChanged,
+          selected: _yoyoMode,
+          onChanged: (m) {
+            setState(() => _yoyoMode = m);
+            widget.onYoyoModeChanged(m);
+          },
           activeColor1: const Color(0xFFD4A04A),
         ),
       ],
@@ -341,8 +367,9 @@ class _PropertiesTabBar extends StatelessWidget {
         _TabPill(label: 'Theme', isActive: activeIndex == 0, accentColor: accentColor, onTap: () => onChanged(0)),
         const SizedBox(width: 8),
         _TabPill(label: 'Color', isActive: activeIndex == 1, accentColor: accentColor, onTap: () => onChanged(1)),
-        const SizedBox(width: 8),
-        _TabPill(label: 'Icons', isActive: activeIndex == 2, accentColor: accentColor, onTap: () => onChanged(2)),
+        // Icons tab hidden for now
+        // const SizedBox(width: 8),
+        // _TabPill(label: 'Icons', isActive: activeIndex == 2, accentColor: accentColor, onTap: () => onChanged(2)),
       ],
     );
   }
