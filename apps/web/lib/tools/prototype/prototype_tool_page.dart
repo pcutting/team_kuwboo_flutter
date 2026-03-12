@@ -100,9 +100,11 @@ class _PrototypeToolPageState extends State<PrototypeToolPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => DraggableScrollableSheet(
-        initialChildSize: 0.55,
+        initialChildSize: 0.88,
         minChildSize: 0.3,
         maxChildSize: 0.92,
+        snap: true,
+        snapSizes: const [0.5, 0.88],
         builder: (context, scrollController) => MobileToolsSheet(
           selectedDesign: _selectedDesign,
           onDesignSelected: (i) => setState(() => _selectedDesign = i),
