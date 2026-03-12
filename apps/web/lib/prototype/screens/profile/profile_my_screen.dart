@@ -42,7 +42,7 @@ class ProfileMyScreen extends StatelessWidget {
                             shape: BoxShape.circle,
                             border: Border.all(color: theme.background, width: 3),
                           ),
-                          child: Icon(theme.icons.cameraAlt, size: 14, color: Colors.white),
+                          child: Icon(theme.icons.cameraAlt, size: 14, color: theme.onPrimary),
                         ),
                       ),
                     ],
@@ -204,10 +204,10 @@ class _MenuItemWithBadge extends StatelessWidget {
                 ),
                 child: Text(
                   '$badgeCount',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: theme.onPrimary,
                   ),
                 ),
               ),

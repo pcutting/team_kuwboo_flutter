@@ -45,7 +45,7 @@ class _ProfileNotificationsScreenState
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: i == _variant ? Colors.white : theme.textTertiary,
+                    color: i == _variant ? theme.onPrimary : theme.textTertiary,
                   ),
                 ),
               ),
@@ -351,7 +351,7 @@ List<_ActivityNotification> _activityNotifications(ProtoTheme theme) => [
         imageUrl:
             'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop',
         icon: theme.icons.favoriteFilled,
-        iconColor: Colors.redAccent,
+        iconColor: theme.errorColor,
       ),
       _ActivityNotification(
         title: 'Kai',

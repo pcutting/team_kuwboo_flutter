@@ -123,7 +123,7 @@ class _VideoCreatorProfileState extends State<VideoCreatorProfile> {
                       child: Container(
                         color: Color.lerp(theme.primary, theme.secondary, i / 9)!.withValues(alpha: 0.3),
                         child: Center(
-                          child: Icon(theme.icons.playArrow, size: 24, color: Colors.white.withValues(alpha: 0.5)),
+                          child: Icon(theme.icons.playArrow, size: 24, color: theme.onPrimary.withValues(alpha: 0.5)),
                         ),
                       ),
                     )),

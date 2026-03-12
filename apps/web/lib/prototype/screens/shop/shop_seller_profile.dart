@@ -114,12 +114,12 @@ class _ShopSellerProfileState extends State<ShopSellerProfile> {
                                   Icon(
                                     _isFriend ? theme.icons.personAdd : theme.icons.personAdd,
                                     size: 14,
-                                    color: Colors.white,
+                                    color: theme.onPrimary,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     _isFriend ? 'Friends' : 'Add Friend',
-                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: theme.onPrimary),
                                   ),
                                 ],
                               ),
@@ -226,7 +226,7 @@ class _ShopSellerProfileState extends State<ShopSellerProfile> {
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                         decoration: BoxDecoration(color: theme.secondary, borderRadius: BorderRadius.circular(6)),
-                                        child: const Text('SOLD', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)),
+                                        child: Text('SOLD', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: theme.onPrimary)),
                                       ),
                                     ),
                                 ],
@@ -445,14 +445,14 @@ class _ModuleBadge extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: isActive ? Colors.white : theme.textSecondary),
+            Icon(icon, size: 16, color: isActive ? theme.onPrimary : theme.textSecondary),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: isActive ? Colors.white : theme.textSecondary,
+                color: isActive ? theme.onPrimary : theme.textSecondary,
               ),
             ),
           ],
