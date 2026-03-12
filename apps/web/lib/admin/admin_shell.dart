@@ -14,19 +14,22 @@ class _AdminShellState extends State<AdminShell> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < 800;
+
     return Scaffold(
       backgroundColor: const Color(0xFF0d0d14),
       body: Column(
         children: [
-          AdminNavBar(
-            selectedIndex: _selectedTool,
-            onTabSelected: (index) {
-              // Only allow selecting the Prototype tab (index 0) for now
-              if (index == 0) {
-                setState(() => _selectedTool = index);
-              }
-            },
-          ),
+          if (!isMobile)
+            AdminNavBar(
+              selectedIndex: _selectedTool,
+              onTabSelected: (index) {
+                // Only allow selecting the Prototype tab (index 0) for now
+                if (index == 0) {
+                  setState(() => _selectedTool = index);
+                }
+              },
+            ),
           Expanded(
             child: IndexedStack(
               index: _selectedTool,

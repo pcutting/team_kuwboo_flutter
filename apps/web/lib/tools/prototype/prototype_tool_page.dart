@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../data/color_palettes.dart';
 import '../../data/icon_sets.dart';
 import '../../prototype/prototype_app.dart';
+import 'mobile_tools_sheet.dart';
 import 'phone_frame.dart';
 import 'prototype_sidebar.dart';
 
@@ -89,10 +90,42 @@ class _PrototypeToolPageState extends State<PrototypeToolPage> {
     }
   }
 
+  void _showMobileToolsSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.55,
+        minChildSize: 0.3,
+        maxChildSize: 0.92,
+        builder: (context, scrollController) => MobileToolsSheet(
+          selectedDesign: _selectedDesign,
+          onDesignSelected: (i) => setState(() => _selectedDesign = i),
+          paletteIndex: _selectedPalette,
+          onPaletteSelected: (i) => setState(() => _selectedPalette = i),
+          iconSetIndex: _selectedIconSet,
+          onIconSetSelected: (i) => setState(() => _selectedIconSet = i),
+          yoyoVariant: _yoyoVariant,
+          onYoyoVariantChanged: (v) => setState(() => _yoyoVariant = v),
+          yoyoMode: _yoyoMode,
+          onYoyoModeChanged: (m) => setState(() => _yoyoMode = m),
+          onNavigateRoute: (route) => _navigateNotifier.value = route,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    final showSidebar = width >= 800 && _sidebarVisible;
+    final isMobile = width < 800;
+
+    if (isMobile) {
+      return _buildMobileLayout();
+    }
+
+    final showSidebar = _sidebarVisible;
 
     return KeyboardListener(
       focusNode: _focusNode,
@@ -158,8 +191,8 @@ class _PrototypeToolPageState extends State<PrototypeToolPage> {
                     ],
                   ),
                 ),
-                // Sidebar toggle for narrow screens or when hidden
-                if (width >= 800 && !_sidebarVisible)
+                // Sidebar toggle
+                if (!_sidebarVisible)
                   Positioned(
                     left: 8,
                     top: 8,
@@ -172,7 +205,7 @@ class _PrototypeToolPageState extends State<PrototypeToolPage> {
                       tooltip: 'Show sidebar',
                     ),
                   ),
-                if (width >= 800 && _sidebarVisible)
+                if (_sidebarVisible)
                   Positioned(
                     left: 8,
                     top: 8,
@@ -190,6 +223,78 @@ class _PrototypeToolPageState extends State<PrototypeToolPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMobileLayout() {
+    // Active design primary color for the trigger dot
+    final activePrimary = _selectedPalette != null
+        ? ColorPalette.visible[_selectedPalette!].primary
+        : _designColors[_selectedDesign];
+
+    return Stack(
+      children: [
+        // Prototype edge-to-edge (no PhoneFrame, no DesignLabel, no hint)
+        Positioned.fill(
+          child: PrototypeApp(
+            designIndex: _originalDesignIndex,
+            paletteIndex: _selectedPalette,
+            iconSetIndex: _selectedIconSet,
+            yoyoVariant: _yoyoVariant,
+            onYoyoVariantChanged: (v) => setState(() => _yoyoVariant = v),
+            yoyoMode: _yoyoMode,
+            onYoyoModeChanged: (m) => setState(() => _yoyoMode = m),
+            navigateNotifier: _navigateNotifier,
+          ),
+        ),
+        // Floating trigger button (top-left)
+        Positioned(
+          left: 12,
+          top: 12,
+          child: GestureDetector(
+            onTap: _showMobileToolsSheet,
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1A24).withValues(alpha: 0.85),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  width: 0.5,
+                ),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(
+                    Icons.tune_rounded,
+                    size: 18,
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
+                  // Active color dot
+                  Positioned(
+                    right: 2,
+                    top: 2,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: activePrimary,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFF1A1A24),
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
