@@ -29,10 +29,13 @@ class _SocialFeedScreenState extends State<SocialFeedScreen> {
     final provider = PrototypeStateProvider.maybeOf(context);
     if (provider != null && _variantIndex == null) {
       _variantCount = provider.screenVariantCount;
-      _variantCount!.value = 5;
       _variantIndex = provider.screenVariantIndex;
-      _storyVariant = _variantIndex!.value;
+      _storyVariant = _variantIndex!.value.clamp(0, 4);
       _variantIndex!.addListener(_onExternalVariantChange);
+      // Defer count registration to run after any pending dispose from previous screen
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _variantCount!.value = 5;
+      });
     }
   }
 

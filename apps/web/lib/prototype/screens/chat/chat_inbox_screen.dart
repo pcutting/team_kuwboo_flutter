@@ -27,10 +27,12 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
     final provider = PrototypeStateProvider.maybeOf(context);
     if (provider != null && _variantIndex == null) {
       _variantCount = provider.screenVariantCount;
-      _variantCount!.value = 2;
       _variantIndex = provider.screenVariantIndex;
       _variant = _variantIndex!.value.clamp(0, 1);
       _variantIndex!.addListener(_onExternalVariantChange);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _variantCount!.value = 2;
+      });
     }
   }
 

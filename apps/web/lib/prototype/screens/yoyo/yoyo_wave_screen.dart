@@ -54,10 +54,12 @@ class _YoyoWaveScreenState extends State<YoyoWaveScreen> {
     final provider = PrototypeStateProvider.maybeOf(context);
     if (provider != null && _variantIndex == null) {
       _variantCount = provider.screenVariantCount;
-      _variantCount!.value = 2;
       _variantIndex = provider.screenVariantIndex;
       _variantIndex!.value = provider.yoyoVariant;
       _variantIndex!.addListener(_onExternalVariantChange);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _variantCount!.value = 2;
+      });
     }
   }
 

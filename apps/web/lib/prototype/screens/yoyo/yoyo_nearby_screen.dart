@@ -110,10 +110,12 @@ class _YoyoNearbyScreenState extends State<YoyoNearbyScreen> {
     final provider = PrototypeStateProvider.maybeOf(context);
     if (provider != null && _variantIndex == null) {
       _variantCount = provider.screenVariantCount;
-      _variantCount!.value = 2;
       _variantIndex = provider.screenVariantIndex;
       _variantIndex!.value = provider.yoyoVariant;
       _variantIndex!.addListener(_onExternalVariantChange);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _variantCount!.value = 2;
+      });
     }
   }
 
@@ -1807,33 +1809,16 @@ class _RadarArea extends StatelessWidget {
               ),
             ),
 
-            // People count badge (fixed, outside InteractiveViewer)
+            // People count badge + icon legend (fixed, outside InteractiveViewer)
             Positioned(
               bottom: 8,
               left: 0,
               right: 0,
               child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: theme.surface.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(theme.icons.radar, size: 16, color: theme.secondary),
-                      const SizedBox(width: 6),
-                      Text(
-                        '$userCount people within ${state.yoyoRange.round()} km',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: theme.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
+                child: _RadarBadgeWithLegend(
+                  theme: theme,
+                  userCount: userCount,
+                  rangeKm: state.yoyoRange.round(),
                 ),
               ),
             ),
@@ -2058,6 +2043,130 @@ class _InterestIconRow extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+// ─── Radar badge with expandable icon legend ──────────────────────────
+
+class _RadarBadgeWithLegend extends StatefulWidget {
+  final ProtoTheme theme;
+  final int userCount;
+  final int rangeKm;
+
+  const _RadarBadgeWithLegend({
+    required this.theme,
+    required this.userCount,
+    required this.rangeKm,
+  });
+
+  @override
+  State<_RadarBadgeWithLegend> createState() => _RadarBadgeWithLegendState();
+}
+
+class _RadarBadgeWithLegendState extends State<_RadarBadgeWithLegend> {
+  bool _legendOpen = false;
+
+  static const _legendItems = <String, IconData>{
+    'Hiking': Icons.hiking_rounded,
+    'Tech': Icons.computer_rounded,
+    'Beer': Icons.sports_bar_rounded,
+    'Music': Icons.music_note_rounded,
+    'Design': Icons.palette_rounded,
+    'Coffee': Icons.coffee_rounded,
+    'Photo': Icons.camera_alt_rounded,
+    'Nature': Icons.park_rounded,
+    'Cooking': Icons.restaurant_rounded,
+    'Wine': Icons.wine_bar_rounded,
+    'Travel': Icons.flight_rounded,
+    'Yoga': Icons.self_improvement_rounded,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = widget.theme;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Expanded legend grid (above the badge)
+        if (_legendOpen)
+          Container(
+            margin: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: theme.surface.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 6,
+              children: _legendItems.entries.map((e) {
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 18,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: theme.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(e.value, size: 10, color: theme.primary),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      e.key,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: theme.textSecondary,
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+        // Badge row
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: theme.surface.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(theme.icons.radar, size: 16, color: theme.secondary),
+              const SizedBox(width: 6),
+              Text(
+                '${widget.userCount} people within ${widget.rangeKm} km',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: theme.textSecondary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => setState(() => _legendOpen = !_legendOpen),
+                child: Icon(
+                  _legendOpen ? Icons.close_rounded : Icons.info_outline_rounded,
+                  size: 16,
+                  color: theme.textTertiary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
