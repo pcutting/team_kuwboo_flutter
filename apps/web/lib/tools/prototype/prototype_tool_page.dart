@@ -26,6 +26,8 @@ class _PrototypeToolPageState extends State<PrototypeToolPage> {
   bool _sidebarVisible = true;
   final FocusNode _focusNode = FocusNode();
   final ValueNotifier<String?> _navigateNotifier = ValueNotifier(null);
+  final ValueNotifier<int> _screenVariantCount = ValueNotifier(0);
+  final ValueNotifier<int> _screenVariantIndex = ValueNotifier(0);
 
   int get _originalDesignIndex => _designIndexMap[_selectedDesign];
 
@@ -39,6 +41,8 @@ class _PrototypeToolPageState extends State<PrototypeToolPage> {
   void dispose() {
     _focusNode.dispose();
     _navigateNotifier.dispose();
+    _screenVariantCount.dispose();
+    _screenVariantIndex.dispose();
     super.dispose();
   }
 
@@ -175,6 +179,8 @@ class _PrototypeToolPageState extends State<PrototypeToolPage> {
                           yoyoMode: _yoyoMode,
                           onYoyoModeChanged: (m) => setState(() => _yoyoMode = m),
                           navigateNotifier: _navigateNotifier,
+                          screenVariantCount: _screenVariantCount,
+                          screenVariantIndex: _screenVariantIndex,
                         ),
                       ),
                       // Hint
@@ -245,52 +251,121 @@ class _PrototypeToolPageState extends State<PrototypeToolPage> {
             yoyoMode: _yoyoMode,
             onYoyoModeChanged: (m) => setState(() => _yoyoMode = m),
             navigateNotifier: _navigateNotifier,
+            screenVariantCount: _screenVariantCount,
+            screenVariantIndex: _screenVariantIndex,
           ),
         ),
-        // Floating trigger button (top-left)
-        Positioned(
-          left: 12,
-          top: 12,
-          child: GestureDetector(
-            onTap: _showMobileToolsSheet,
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A1A24).withValues(alpha: 0.85),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  width: 0.5,
-                ),
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Icon(
-                    Icons.tune_rounded,
-                    size: 18,
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                  // Active color dot
-                  Positioned(
-                    right: 2,
-                    top: 2,
+        // Floating controls — vertically centered on left edge
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Trigger button (30px visual, 48px touch target)
+                GestureDetector(
+                  onTap: _showMobileToolsSheet,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.all(9), // (48-30)/2 = 9
                     child: Container(
-                      width: 8,
-                      height: 8,
+                      width: 30,
+                      height: 30,
                       decoration: BoxDecoration(
-                        color: activePrimary,
+                        color: const Color(0xFF1A1A24).withValues(alpha: 0.85),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFF1A1A24),
-                          width: 1.5,
+                          color: Colors.white.withValues(alpha: 0.2),
+                          width: 0.5,
                         ),
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Icon(
+                            Icons.tune_rounded,
+                            size: 15,
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                          Positioned(
+                            right: 1,
+                            top: 1,
+                            child: Container(
+                              width: 7,
+                              height: 7,
+                              decoration: BoxDecoration(
+                                color: activePrimary,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: const Color(0xFF1A1A24),
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+                // Per-screen variant buttons (only when screen has variants)
+                ValueListenableBuilder<int>(
+                  valueListenable: _screenVariantCount,
+                  builder: (context, count, _) {
+                    if (count <= 0) return const SizedBox.shrink();
+                    return ValueListenableBuilder<int>(
+                      valueListenable: _screenVariantIndex,
+                      builder: (context, activeIndex, _) {
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: List.generate(count, (i) {
+                            final isActive = i == activeIndex;
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: GestureDetector(
+                                onTap: () => _screenVariantIndex.value = i,
+                                behavior: HitTestBehavior.opaque,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 11), // center 26px in 48px
+                                  child: Container(
+                                    width: 26,
+                                    height: 26,
+                                    decoration: BoxDecoration(
+                                      color: isActive
+                                          ? const Color(0xFF1A1A24).withValues(alpha: 0.9)
+                                          : const Color(0xFF1A1A24).withValues(alpha: 0.6),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: isActive
+                                            ? activePrimary
+                                            : Colors.white.withValues(alpha: 0.2),
+                                        width: isActive ? 1.5 : 0.5,
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        '${i + 1}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          color: isActive
+                                              ? activePrimary
+                                              : Colors.white.withValues(alpha: 0.6),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ),

@@ -18,6 +18,40 @@ class ChatInboxScreen extends StatefulWidget {
 
 class _ChatInboxScreenState extends State<ChatInboxScreen> {
   int _variant = 0; // 0 = v1 (simple), 1 = v2 (enhanced)
+  ValueNotifier<int>? _variantCount;
+  ValueNotifier<int>? _variantIndex;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final provider = PrototypeStateProvider.maybeOf(context);
+    if (provider != null && _variantIndex == null) {
+      _variantCount = provider.screenVariantCount;
+      _variantCount!.value = 2;
+      _variantIndex = provider.screenVariantIndex;
+      _variant = _variantIndex!.value.clamp(0, 1);
+      _variantIndex!.addListener(_onExternalVariantChange);
+    }
+  }
+
+  void _onExternalVariantChange() {
+    final idx = _variantIndex?.value ?? 0;
+    if (idx != _variant && idx >= 0 && idx < 2) {
+      setState(() => _variant = idx);
+    }
+  }
+
+  @override
+  void dispose() {
+    _variantIndex?.removeListener(_onExternalVariantChange);
+    _variantCount?.value = 0;
+    super.dispose();
+  }
+
+  void _setVariant(int v) {
+    setState(() => _variant = v);
+    _variantIndex?.value = v;
+  }
 
   Widget _buildVariantToggle(ProtoTheme theme) {
     return Row(
@@ -25,7 +59,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
       children: [
         for (int i = 0; i < 2; i++) ...[
           GestureDetector(
-            onTap: () => setState(() => _variant = i),
+            onTap: () => _setVariant(i),
             child: Container(
               width: 22,
               height: 22,

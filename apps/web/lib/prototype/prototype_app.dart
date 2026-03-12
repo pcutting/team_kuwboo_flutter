@@ -35,7 +35,12 @@ class PrototypeApp extends StatefulWidget {
   /// Set value to a route name to push it, then reset to null.
   final ValueNotifier<String?>? navigateNotifier;
 
-  const PrototypeApp({super.key, this.designIndex = 0, this.paletteIndex, this.iconSetIndex, this.yoyoVariant = 0, this.onYoyoVariantChanged, this.yoyoMode = 0, this.onYoyoModeChanged, this.navigateNotifier});
+  /// Per-screen variant state. Screens set count on mount (0 = no variants)
+  /// and read/write index. The tool page renders numbered buttons when count > 0.
+  final ValueNotifier<int>? screenVariantCount;
+  final ValueNotifier<int>? screenVariantIndex;
+
+  const PrototypeApp({super.key, this.designIndex = 0, this.paletteIndex, this.iconSetIndex, this.yoyoVariant = 0, this.onYoyoVariantChanged, this.yoyoMode = 0, this.onYoyoModeChanged, this.navigateNotifier, this.screenVariantCount, this.screenVariantIndex});
 
   @override
   State<PrototypeApp> createState() => _PrototypeAppState();
@@ -69,6 +74,13 @@ class _PrototypeAppState extends State<PrototypeApp> {
   // Global preferences
   bool _isDarkMode = false;
 
+  // Fallback notifiers when not provided externally (desktop/standalone usage)
+  late final ValueNotifier<int> _fallbackVariantCount = ValueNotifier<int>(0);
+  late final ValueNotifier<int> _fallbackVariantIndex = ValueNotifier<int>(0);
+
+  ValueNotifier<int> get _screenVariantCount => widget.screenVariantCount ?? _fallbackVariantCount;
+  ValueNotifier<int> get _screenVariantIndex => widget.screenVariantIndex ?? _fallbackVariantIndex;
+
   @override
   void initState() {
     super.initState();
@@ -87,6 +99,8 @@ class _PrototypeAppState extends State<PrototypeApp> {
   @override
   void dispose() {
     widget.navigateNotifier?.removeListener(_onExternalNavigate);
+    if (widget.screenVariantCount == null) _fallbackVariantCount.dispose();
+    if (widget.screenVariantIndex == null) _fallbackVariantIndex.dispose();
     super.dispose();
   }
 
@@ -197,6 +211,8 @@ class _PrototypeAppState extends State<PrototypeApp> {
         onYoyoModeChanged: (value) {
           widget.onYoyoModeChanged?.call(value);
         },
+        screenVariantCount: _screenVariantCount,
+        screenVariantIndex: _screenVariantIndex,
         isDarkMode: _isDarkMode,
         onDarkModeChanged: (value) {
           setState(() => _isDarkMode = value);

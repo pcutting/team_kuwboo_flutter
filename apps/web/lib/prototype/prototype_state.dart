@@ -54,6 +54,10 @@ class PrototypeStateProvider extends InheritedWidget {
   final int yoyoMode;
   final ValueChanged<int> onYoyoModeChanged;
 
+  // Per-screen variant state (driven by screens, read by tool page)
+  final ValueNotifier<int> screenVariantCount;
+  final ValueNotifier<int> screenVariantIndex;
+
   // Global preferences
   final bool isDarkMode;
   final ValueChanged<bool> onDarkModeChanged;
@@ -97,6 +101,8 @@ class PrototypeStateProvider extends InheritedWidget {
     required this.onYoyoVariantChanged,
     required this.yoyoMode,
     required this.onYoyoModeChanged,
+    required this.screenVariantCount,
+    required this.screenVariantIndex,
     required this.isDarkMode,
     required this.onDarkModeChanged,
     required super.child,

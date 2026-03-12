@@ -17,6 +17,40 @@ class ChatConversationScreen extends StatefulWidget {
 
 class _ChatConversationScreenState extends State<ChatConversationScreen> {
   int _variant = 0; // 0 = v1 (simple), 1 = v2 (full-featured)
+  ValueNotifier<int>? _variantCount;
+  ValueNotifier<int>? _variantIndex;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final provider = PrototypeStateProvider.maybeOf(context);
+    if (provider != null && _variantIndex == null) {
+      _variantCount = provider.screenVariantCount;
+      _variantCount!.value = 2;
+      _variantIndex = provider.screenVariantIndex;
+      _variant = _variantIndex!.value.clamp(0, 1);
+      _variantIndex!.addListener(_onExternalVariantChange);
+    }
+  }
+
+  void _onExternalVariantChange() {
+    final idx = _variantIndex?.value ?? 0;
+    if (idx != _variant && idx >= 0 && idx < 2) {
+      setState(() => _variant = idx);
+    }
+  }
+
+  @override
+  void dispose() {
+    _variantIndex?.removeListener(_onExternalVariantChange);
+    _variantCount?.value = 0;
+    super.dispose();
+  }
+
+  void _setVariant(int v) {
+    setState(() => _variant = v);
+    _variantIndex?.value = v;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,12 +66,12 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
               ? _SimpleHeader(
                   theme: theme,
                   variant: _variant,
-                  onVariantChanged: (v) => setState(() => _variant = v),
+                  onVariantChanged: _setVariant,
                 )
               : _ChatHeader(
                   theme: theme,
                   variant: _variant,
-                  onVariantChanged: (v) => setState(() => _variant = v),
+                  onVariantChanged: _setVariant,
                 ),
           // Purchase badge: v2 only
           if (_variant == 1) _PurchaseBadge(theme: theme),
