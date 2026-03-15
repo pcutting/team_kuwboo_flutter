@@ -62,7 +62,10 @@ class _SocialPostDetailState extends State<SocialPostDetail> {
                               ],
                             ),
                           ),
-                          Icon(theme.icons.moreHoriz, size: 20, color: theme.textTertiary),
+                          ProtoPressButton(
+                            onTap: () => ProtoPostMenu.show(context, authorName: post.author),
+                            child: Icon(theme.icons.moreHoriz, size: 20, color: theme.textTertiary),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 14),

@@ -152,7 +152,33 @@ class DemoEvent {
   final String imageUrl;
   final int goingCount;
   final String distance;
-  const DemoEvent({required this.title, required this.date, required this.time, required this.location, required this.imageUrl, required this.goingCount, required this.distance});
+  final String description;
+  final String hostName;
+  final String hostAvatarUrl;
+  final String? cost;
+  final String? ticketUrl;
+  final List<String> attendeeAvatars;
+  final double latitude;
+  final double longitude;
+  final String category;
+  const DemoEvent({
+    required this.title,
+    required this.date,
+    required this.time,
+    required this.location,
+    required this.imageUrl,
+    required this.goingCount,
+    required this.distance,
+    this.description = '',
+    this.hostName = 'Organiser',
+    this.hostAvatarUrl = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+    this.cost,
+    this.ticketUrl,
+    this.attendeeAvatars = const [],
+    this.latitude = 51.5074,
+    this.longitude = -0.1278,
+    this.category = 'Meetup',
+  });
 }
 
 class DemoBid {
@@ -211,9 +237,131 @@ class ProtoDemoData {
   ];
 
   static const events = [
-    DemoEvent(title: 'Street Food Festival', date: 'Sat, Mar 8', time: '12:00 PM', location: 'Brick Lane', imageUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=200&fit=crop', goingCount: 234, distance: '0.8 km'),
-    DemoEvent(title: 'Open Mic Night', date: 'Fri, Mar 7', time: '8:00 PM', location: 'The Jazz Cafe', imageUrl: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&h=200&fit=crop', goingCount: 89, distance: '1.2 km'),
-    DemoEvent(title: 'Art Exhibition', date: 'Sun, Mar 9', time: '10:00 AM', location: 'Tate Modern', imageUrl: 'https://images.unsplash.com/photo-1531243269054-5ebf6f34081e?w=400&h=200&fit=crop', goingCount: 512, distance: '2.1 km'),
+    DemoEvent(
+      title: 'Street Food Festival',
+      date: 'Sat, 8 Mar',
+      time: '12:00 PM',
+      location: 'Brick Lane, Shoreditch',
+      imageUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=200&fit=crop',
+      goingCount: 234,
+      distance: '0.8 km',
+      description: 'Sample cuisines from over 40 street food vendors across East London. Live music, craft drinks, and family-friendly activities all afternoon.',
+      hostName: 'East London Eats',
+      hostAvatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
+      attendeeAvatars: [
+        'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop',
+      ],
+      latitude: 51.5215,
+      longitude: -0.0715,
+      category: 'Food',
+    ),
+    DemoEvent(
+      title: 'Open Mic Night',
+      date: 'Fri, 7 Mar',
+      time: '8:00 PM',
+      location: 'The Jazz Cafe, Camden',
+      imageUrl: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&h=200&fit=crop',
+      goingCount: 89,
+      distance: '1.2 km',
+      description: 'Bring your instrument or just your voice. Sign-up sheet opens at 7 PM. All genres welcome — jazz, folk, spoken word, comedy.',
+      hostName: 'Camden Sounds',
+      hostAvatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop',
+      cost: '£5',
+      attendeeAvatars: [
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+      ],
+      latitude: 51.5392,
+      longitude: -0.1426,
+      category: 'Music',
+    ),
+    DemoEvent(
+      title: 'Art Exhibition: New Perspectives',
+      date: 'Sun, 9 Mar',
+      time: '10:00 AM',
+      location: 'Tate Modern, Bankside',
+      imageUrl: 'https://images.unsplash.com/photo-1531243269054-5ebf6f34081e?w=400&h=200&fit=crop',
+      goingCount: 512,
+      distance: '2.1 km',
+      description: 'A curated showcase of emerging British artists exploring identity, place and digital culture. Guided tours at 11 AM and 2 PM.',
+      hostName: 'Tate Modern',
+      hostAvatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop',
+      cost: '£15',
+      ticketUrl: 'https://tate.org.uk/tickets',
+      attendeeAvatars: [
+        'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1463453091185-61582044d556?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&h=100&fit=crop',
+      ],
+      latitude: 51.5076,
+      longitude: -0.0994,
+      category: 'Art',
+    ),
+    DemoEvent(
+      title: 'Saturday Morning 5K Run',
+      date: 'Sat, 8 Mar',
+      time: '8:00 AM',
+      location: 'Victoria Park, Hackney',
+      imageUrl: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=400&h=200&fit=crop',
+      goingCount: 67,
+      distance: '1.5 km',
+      description: 'Weekly community run for all levels. Meet at the bandstand. Warm-up at 7:45, run starts at 8 sharp. Coffee after!',
+      hostName: 'Hackney Runners',
+      hostAvatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
+      attendeeAvatars: [
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop',
+      ],
+      latitude: 51.5363,
+      longitude: -0.0421,
+      category: 'Sports',
+    ),
+    DemoEvent(
+      title: 'Rooftop DJ Set & Cocktails',
+      date: 'Fri, 14 Mar',
+      time: '9:00 PM',
+      location: 'Skyline Bar, Shoreditch',
+      imageUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=200&fit=crop',
+      goingCount: 156,
+      distance: '0.5 km',
+      description: 'House and disco from resident DJs. Two-for-one cocktails before 10 PM. Dress code: smart casual. Over 21s only.',
+      hostName: 'Skyline Events',
+      hostAvatarUrl: 'https://images.unsplash.com/photo-1463453091185-61582044d556?w=100&h=100&fit=crop',
+      cost: 'From £20',
+      ticketUrl: 'https://skylinebar.co.uk/events',
+      attendeeAvatars: [
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=100&h=100&fit=crop',
+      ],
+      latitude: 51.5233,
+      longitude: -0.0774,
+      category: 'Nightlife',
+    ),
+    DemoEvent(
+      title: 'Tech Founders Meetup',
+      date: 'Wed, 12 Mar',
+      time: '6:30 PM',
+      location: 'WeWork, Moorgate',
+      imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=200&fit=crop',
+      goingCount: 43,
+      distance: '3.0 km',
+      description: 'Monthly networking for early-stage founders. Lightning talks, Q&A panel, and pizza. This month: "Finding product-market fit in 2026".',
+      hostName: 'London Startup Club',
+      hostAvatarUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=100&h=100&fit=crop',
+      attendeeAvatars: [
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1463453091185-61582044d556?w=100&h=100&fit=crop',
+      ],
+      latitude: 51.5180,
+      longitude: -0.0886,
+      category: 'Meetup',
+    ),
   ];
 
   static const bids = [

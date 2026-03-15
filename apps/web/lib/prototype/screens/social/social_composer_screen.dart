@@ -17,6 +17,7 @@ class SocialComposerScreen extends StatefulWidget {
 
 class _SocialComposerScreenState extends State<SocialComposerScreen> {
   String _contentType = 'Post';
+  bool _eventCostFree = true;
 
   @override
   Widget build(BuildContext context) {
@@ -40,13 +41,17 @@ class _SocialComposerScreenState extends State<SocialComposerScreen> {
                 const Spacer(),
                 GestureDetector(
                   onTap: () {
-                    ProtoToast.show(context, Icons.check_circle_rounded, '$_contentType published');
+                    final msg = _contentType == 'Event' ? 'Event created' : '$_contentType published';
+                    ProtoToast.show(context, Icons.check_circle_rounded, msg);
                     state.pop();
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     decoration: BoxDecoration(color: theme.primary, borderRadius: BorderRadius.circular(20)),
-                    child: Text('Post', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
+                    child: Text(
+                      _contentType == 'Event' ? 'Create Event' : 'Post',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+                    ),
                   ),
                 ),
               ],
@@ -85,37 +90,152 @@ class _SocialComposerScreenState extends State<SocialComposerScreen> {
           ),
           Divider(height: 1, color: theme.text.withValues(alpha: 0.06)),
           Expanded(
-            child: Padding(
+            child: ListView(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ProtoAvatar(radius: 20, imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop'),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _contentType == 'Event'
+                            ? 'Event name'
+                            : widget.repostVideoArgs != null
+                                ? 'Add your thoughts...'
+                                : "What's on your mind?",
+                        style: theme.body.copyWith(fontSize: 16, color: theme.textTertiary),
+                      ),
+                    ),
+                  ],
+                ),
+                // Video repost preview card
+                if (widget.repostVideoArgs != null) ...[
+                  const SizedBox(height: 16),
+                  _ComposerVideoEmbed(
+                    creator: widget.repostVideoArgs!['creator'] as String,
+                    caption: widget.repostVideoArgs!['caption'] as String,
+                    gradientIndex: widget.repostVideoArgs!['gradientIndex'] as int,
+                  ),
+                ],
+                // Event-specific fields
+                if (_contentType == 'Event') ...[
+                  const SizedBox(height: 20),
+                  // Date & Time row
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ProtoAvatar(radius: 20, imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop'),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          widget.repostVideoArgs != null
-                              ? 'Add your thoughts...'
-                              : "What's on your mind?",
-                          style: theme.body.copyWith(fontSize: 16, color: theme.textTertiary),
+                      Icon(theme.icons.calendarToday, size: 18, color: theme.textSecondary),
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: theme.background,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: theme.text.withValues(alpha: 0.1)),
                         ),
+                        child: Text('Sat, 15 Mar', style: theme.body.copyWith(fontSize: 13)),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: theme.background,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: theme.text.withValues(alpha: 0.1)),
+                        ),
+                        child: Text('7:00 PM', style: theme.body.copyWith(fontSize: 13)),
                       ),
                     ],
                   ),
-                  // Video repost preview card
-                  if (widget.repostVideoArgs != null) ...[
-                    const SizedBox(height: 16),
-                    _ComposerVideoEmbed(
-                      creator: widget.repostVideoArgs!['creator'] as String,
-                      caption: widget.repostVideoArgs!['caption'] as String,
-                      gradientIndex: widget.repostVideoArgs!['gradientIndex'] as int,
+                  const SizedBox(height: 14),
+                  // Location field
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: theme.background,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.text.withValues(alpha: 0.1)),
                     ),
-                  ],
+                    child: Row(
+                      children: [
+                        Icon(theme.icons.locationOn, size: 18, color: theme.textTertiary),
+                        const SizedBox(width: 10),
+                        Text('Add venue or address', style: theme.body.copyWith(fontSize: 14, color: theme.textTertiary)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  // Cost row
+                  Row(
+                    children: [
+                      Icon(Icons.local_offer_outlined, size: 18, color: theme.textSecondary),
+                      const SizedBox(width: 10),
+                      GestureDetector(
+                        onTap: () => setState(() => _eventCostFree = !_eventCostFree),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: _eventCostFree
+                                ? const Color(0xFF2E7D32).withValues(alpha: 0.1)
+                                : theme.background,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: _eventCostFree
+                                  ? const Color(0xFF2E7D32).withValues(alpha: 0.3)
+                                  : theme.text.withValues(alpha: 0.1),
+                            ),
+                          ),
+                          child: Text(
+                            'Free',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: _eventCostFree ? const Color(0xFF2E7D32) : theme.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (!_eventCostFree) ...[
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: theme.background,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: theme.text.withValues(alpha: 0.1)),
+                            ),
+                            child: Text('£0.00', style: theme.body.copyWith(fontSize: 13, color: theme.textTertiary)),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  // Cover image placeholder
+                  Container(
+                    height: 100,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: theme.background,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: theme.text.withValues(alpha: 0.15),
+                        style: BorderStyle.solid,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(theme.icons.cameraAltOutline, size: 28, color: theme.textTertiary),
+                        const SizedBox(height: 6),
+                        Text('Add cover image', style: theme.caption.copyWith(fontSize: 12)),
+                      ],
+                    ),
+                  ),
                 ],
-              ),
+              ],
             ),
           ),
           // Bottom actions

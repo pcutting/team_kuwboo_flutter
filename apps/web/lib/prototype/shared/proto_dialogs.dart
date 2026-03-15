@@ -400,6 +400,146 @@ class _ProfileMenuContentState extends State<_ProfileMenuContent> {
   }
 }
 
+/// Bottom sheet menu for post/event card ⋯ actions.
+/// Shows Follow, Not interested, Mute, Block, Report options.
+class ProtoPostMenu {
+  static void show(BuildContext context, {required String authorName}) {
+    final theme = ProtoTheme.of(context);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: theme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(theme.radiusLg)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.textTertiary.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _PostMenuItem(
+                  icon: theme.icons.personAdd,
+                  label: 'Follow $authorName',
+                  theme: theme,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    ProtoToast.show(context, theme.icons.personAdd, 'Following $authorName');
+                  },
+                ),
+                _PostMenuItem(
+                  icon: Icons.thumb_down_outlined,
+                  label: 'Not interested',
+                  subtitle: "Don't recommend posts like this",
+                  theme: theme,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    ProtoToast.show(context, Icons.thumb_down_outlined, 'Noted — fewer posts like this');
+                  },
+                ),
+                _PostMenuItem(
+                  icon: Icons.volume_off_outlined,
+                  label: 'Mute $authorName',
+                  subtitle: 'Hide their posts for 30 days',
+                  theme: theme,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    ProtoToast.show(context, Icons.volume_off_outlined, '$authorName muted for 30 days');
+                  },
+                ),
+                _PostMenuItem(
+                  icon: theme.icons.blockOutline,
+                  label: 'Block $authorName',
+                  theme: theme,
+                  isDestructive: true,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    ProtoToast.show(context, theme.icons.blockOutline, '$authorName blocked');
+                  },
+                ),
+                _PostMenuItem(
+                  icon: theme.icons.flag,
+                  label: 'Report this post',
+                  theme: theme,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    ProtoToast.show(context, theme.icons.flag, 'Report submitted');
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PostMenuItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String? subtitle;
+  final ProtoTheme theme;
+  final VoidCallback onTap;
+  final bool isDestructive;
+
+  const _PostMenuItem({
+    required this.icon,
+    required this.label,
+    this.subtitle,
+    required this.theme,
+    required this.onTap,
+    this.isDestructive = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = isDestructive ? const Color(0xFFD32F2F) : theme.text;
+    final iconColor = isDestructive ? const Color(0xFFD32F2F) : theme.textSecondary;
+    return Semantics(
+      label: label,
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: theme.text.withValues(alpha: 0.04))),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: iconColor),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: theme.body.copyWith(color: textColor, fontSize: 14)),
+                    if (subtitle != null)
+                      Text(subtitle!, style: theme.caption.copyWith(fontSize: 11)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ProfileMenuItem extends StatelessWidget {
   final IconData icon;
   final String label;

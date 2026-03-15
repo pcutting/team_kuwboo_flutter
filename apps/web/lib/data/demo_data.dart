@@ -637,7 +637,7 @@ extension DemoDataExtended on DemoData {
       text: 'Three angles of the same kickflip. Which one\'s the keeper?',
       media: [
         DemoMediaItem(
-          url: 'https://images.unsplash.com/photo-1564429238961-bf8ae33ce4c5?w=800&h=450&fit=crop',
+          url: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&h=450&fit=crop',
           type: DemoMediaType.video,
           aspectRatio: 16 / 9,
           durationLabel: '0:08',
