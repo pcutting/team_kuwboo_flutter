@@ -134,7 +134,20 @@ class _SocialEventDetailState extends State<SocialEventDetail> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title
+                      // Title + Promoted badge
+                      if (event.isPromoted)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: theme.secondary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'Promoted',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: theme.secondary),
+                          ),
+                        ),
                       Text(event.title, style: theme.headline.copyWith(fontSize: 22)),
                       const SizedBox(height: 14),
 

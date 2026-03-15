@@ -161,6 +161,7 @@ class DemoEvent {
   final double latitude;
   final double longitude;
   final String category;
+  final bool isPromoted;
   const DemoEvent({
     required this.title,
     required this.date,
@@ -178,6 +179,7 @@ class DemoEvent {
     this.latitude = 51.5074,
     this.longitude = -0.1278,
     this.category = 'Meetup',
+    this.isPromoted = false,
   });
 }
 
@@ -300,6 +302,7 @@ class ProtoDemoData {
       latitude: 51.5076,
       longitude: -0.0994,
       category: 'Art',
+      isPromoted: true,
     ),
     DemoEvent(
       title: 'Saturday Morning 5K Run',
@@ -341,6 +344,7 @@ class ProtoDemoData {
       latitude: 51.5233,
       longitude: -0.0774,
       category: 'Nightlife',
+      isPromoted: true,
     ),
     DemoEvent(
       title: 'Tech Founders Meetup',
