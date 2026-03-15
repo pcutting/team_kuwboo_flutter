@@ -2,6 +2,9 @@
 .dart_tool/
 .packages
 build/
+!apps/web/build/
+apps/web/build/*
+!apps/web/build/web/
 *.iml
 .idea/
 .vscode/
