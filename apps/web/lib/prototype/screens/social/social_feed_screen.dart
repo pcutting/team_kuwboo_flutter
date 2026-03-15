@@ -1027,7 +1027,24 @@ class _FeedEventCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(event.title, style: theme.title.copyWith(fontSize: 15)),
+                  Row(
+                    children: [
+                      Expanded(child: Text(event.title, style: theme.title.copyWith(fontSize: 15))),
+                      if (event.isPromoted)
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: theme.secondary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'Promoted',
+                            style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: theme.secondary),
+                          ),
+                        ),
+                    ],
+                  ),
                   const SizedBox(height: 4),
                   Row(
                     children: [

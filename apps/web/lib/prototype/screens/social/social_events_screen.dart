@@ -212,7 +212,24 @@ class _EventCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(event.title, style: theme.title.copyWith(fontSize: 16)),
+                  Row(
+                    children: [
+                      Expanded(child: Text(event.title, style: theme.title.copyWith(fontSize: 16))),
+                      if (event.isPromoted)
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: theme.secondary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'Promoted',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: theme.secondary),
+                          ),
+                        ),
+                    ],
+                  ),
                   const SizedBox(height: 6),
                   // Location row
                   Row(
