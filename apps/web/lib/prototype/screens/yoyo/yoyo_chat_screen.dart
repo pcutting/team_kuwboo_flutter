@@ -20,8 +20,6 @@ class YoyoChatScreen extends StatefulWidget {
 }
 
 class _YoyoChatScreenState extends State<YoyoChatScreen> {
-  ValueNotifier<int>? _variantCount;
-  ValueNotifier<int>? _variantIndex;
   bool _searchFocused = false;
 
   void _handleSearchTap() {
@@ -34,47 +32,12 @@ class _YoyoChatScreenState extends State<YoyoChatScreen> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final provider = PrototypeStateProvider.maybeOf(context);
-    if (provider != null && _variantIndex == null) {
-      _variantCount = provider.screenVariantCount;
-      _variantIndex = provider.screenVariantIndex;
-      _variantIndex!.value = provider.yoyoVariant;
-      _variantIndex!.addListener(_onExternalVariantChange);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _variantCount!.value = 2;
-      });
-    }
-  }
-
-  void _onExternalVariantChange() {
-    final idx = _variantIndex?.value ?? 0;
-    final state = PrototypeStateProvider.maybeOf(context);
-    if (state != null && idx != state.yoyoVariant && idx >= 0 && idx < 2) {
-      state.onYoyoVariantChanged(idx);
-    }
-  }
-
-  @override
-  void dispose() {
-    _variantIndex?.removeListener(_onExternalVariantChange);
-    _variantCount?.value = 0;
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
     final yoyoConvos = ProtoDemoData.conversations
         .where((c) => c.moduleContext == 'YoYo')
         .toList();
-    if (_variantIndex != null && _variantIndex!.value != state.yoyoVariant) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _variantIndex!.value = state.yoyoVariant;
-      });
-    }
 
     if (state.yoyoMode == 1) {
       return const InnerCircleChatView();

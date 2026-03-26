@@ -42,7 +42,7 @@ class ProfileMyScreen extends StatelessWidget {
                             shape: BoxShape.circle,
                             border: Border.all(color: theme.background, width: 3),
                           ),
-                          child: Icon(theme.icons.cameraAlt, size: 14, color: theme.onPrimary),
+                          child: Icon(theme.icons.cameraAlt, size: 14, color: Colors.white),
                         ),
                       ),
                     ],
@@ -113,6 +113,15 @@ class ProfileMyScreen extends StatelessWidget {
                   child: Text('Login Flow', style: theme.caption.copyWith(fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
                 ),
                 _MenuItem(icon: Icons.login_rounded, label: 'Login Screen', onTap: () => state.push(ProtoRoutes.authLogin)),
+
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 8),
+                  child: Text('Features', style: theme.caption.copyWith(fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                ),
+                _MenuItem(icon: Icons.inbox_rounded, label: 'Chat Inbox', onTap: () => state.push(ProtoRoutes.chatInbox)),
+                _MenuItem(icon: Icons.receipt_long_outlined, label: 'Chat Transaction Cards', onTap: () => state.pushWithArgs(ProtoRoutes.chatConversation, {'variant': 1})),
+                _MenuItem(icon: Icons.notifications_outlined, label: 'Notifications', onTap: () => state.push(ProtoRoutes.profileNotifications)),
                 const SizedBox(height: 20),
               ],
             ),
@@ -204,10 +213,10 @@ class _MenuItemWithBadge extends StatelessWidget {
                 ),
                 child: Text(
                   '$badgeCount',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: theme.onPrimary,
+                    color: Colors.white,
                   ),
                 ),
               ),

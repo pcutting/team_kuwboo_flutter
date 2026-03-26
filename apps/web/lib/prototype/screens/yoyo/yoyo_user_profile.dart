@@ -166,15 +166,15 @@ class _YoyoUserProfileState extends State<YoyoUserProfile> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: enc.encounterType == EncounterType.nearby ? theme.secondary.withValues(alpha: 0.15) : theme.warningColor.withValues(alpha: 0.15),
+                  color: enc.encounterType == EncounterType.nearby ? theme.secondary.withValues(alpha: 0.15) : Colors.amber.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(enc.encounterType == EncounterType.nearby ? Icons.pin_drop_rounded : Icons.flash_on_rounded, size: 12, color: enc.encounterType == EncounterType.nearby ? theme.secondary : theme.warningColor),
+                    Icon(enc.encounterType == EncounterType.nearby ? Icons.pin_drop_rounded : Icons.flash_on_rounded, size: 12, color: enc.encounterType == EncounterType.nearby ? theme.secondary : Colors.amber.shade700),
                     const SizedBox(width: 4),
-                    Text(enc.encounterType == EncounterType.nearby ? 'Nearby' : 'Pass-by', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: enc.encounterType == EncounterType.nearby ? theme.secondary : theme.warningColor)),
+                    Text(enc.encounterType == EncounterType.nearby ? 'Nearby' : 'Pass-by', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: enc.encounterType == EncounterType.nearby ? theme.secondary : Colors.amber.shade700)),
                   ],
                 ),
               ),
@@ -213,7 +213,7 @@ class _YoyoUserProfileState extends State<YoyoUserProfile> {
                   gradient: LinearGradient(colors: [theme.primary, theme.secondary]),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Center(child: Text('Share My Card', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: theme.onPrimary))),
+                child: const Center(child: Text('Share My Card', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white))),
               ),
             ),
           ),
@@ -244,19 +244,19 @@ class _YoyoUserProfileState extends State<YoyoUserProfile> {
               if (enc.relationship == RelationshipType.friend)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: theme.warningColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: [Icon(Icons.star_rounded, size: 12, color: theme.warningColor), const SizedBox(width: 4), Text('Friend', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: theme.warningColor))],
+                    children: [Icon(Icons.star_rounded, size: 12, color: Colors.amber.shade700), const SizedBox(width: 4), Text('Friend', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.amber.shade700))],
                   ),
                 )
               else if (enc.relationship == RelationshipType.partner)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: theme.errorColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
-                  child: Row(
+                  decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: [Icon(Icons.favorite_rounded, size: 12, color: theme.errorColor), const SizedBox(width: 4), Text('Partner', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: theme.errorColor))],
+                    children: [Icon(Icons.favorite_rounded, size: 12, color: Colors.red), SizedBox(width: 4), Text('Partner', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.red))],
                   ),
                 ),
               if (user.isOnline) ...[
@@ -320,12 +320,12 @@ class _YoyoUserProfileState extends State<YoyoUserProfile> {
           // Retention indicator
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(color: theme.warningColor.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
             child: Row(
               children: [
-                Icon(Icons.auto_delete_rounded, size: 14, color: theme.warningColor),
+                Icon(Icons.auto_delete_rounded, size: 14, color: Colors.orange.shade700),
                 const SizedBox(width: 6),
-                Text('Profile data expires in 28h', style: TextStyle(fontSize: 12, color: theme.warningColor)),
+                Text('Profile data expires in 28h', style: TextStyle(fontSize: 12, color: Colors.orange.shade700)),
               ],
             ),
           ),
@@ -365,8 +365,8 @@ class _YoyoUserProfileState extends State<YoyoUserProfile> {
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 child: _hasWaved
-                    ? Row(key: const ValueKey('waved'), mainAxisAlignment: MainAxisAlignment.center, children: [Icon(theme.icons.check, size: 18, color: theme.onPrimary), const SizedBox(width: 8), Text('Waved!', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: theme.onPrimary))])
-                    : Row(key: const ValueKey('wave'), mainAxisAlignment: MainAxisAlignment.center, children: [Icon(theme.icons.wavingHand, size: 18, color: theme.onPrimary), const SizedBox(width: 8), Text('Wave', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: theme.onPrimary))]),
+                    ? Row(key: const ValueKey('waved'), mainAxisAlignment: MainAxisAlignment.center, children: [Icon(theme.icons.check, size: 18, color: Colors.white), const SizedBox(width: 8), const Text('Waved!', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white))])
+                    : Row(key: const ValueKey('wave'), mainAxisAlignment: MainAxisAlignment.center, children: [Icon(theme.icons.wavingHand, size: 18, color: Colors.white), const SizedBox(width: 8), const Text('Wave', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white))]),
               ),
             ),
           ),

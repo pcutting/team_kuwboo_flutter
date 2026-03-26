@@ -2,62 +2,296 @@ import 'package:flutter/material.dart';
 import '../../proto_theme.dart';
 import '../../shared/proto_image.dart';
 import '../../prototype_state.dart';
-import '../../prototype_demo_data.dart';
 import '../../prototype_routes.dart';
 import '../../shared/proto_press_button.dart';
 import '../../shared/proto_dialogs.dart';
 import '../../shared/proto_scaffold.dart';
 
+// ── V2 Data Model ──────────────────────────────────────────────────────────
+
+enum _ItemType {
+  message,
+  dateSeparator,
+  offerSent,
+  counterOffer,
+  offerAccepted,
+  meetupPending,
+  shipPending,
+  purchaseComplete,
+}
+
+class _ChatItem {
+  final String? text;
+  final String timeAgo;
+  final bool isMine;
+  final _ItemType type;
+  final String? productTitle;
+  final String? productImageUrl;
+  final double? amount;
+  final double? originalPrice;
+  final String? statusLabel;
+  final String? detailLine;
+
+  const _ChatItem({
+    this.text,
+    this.timeAgo = '',
+    this.isMine = false,
+    this.type = _ItemType.message,
+    this.productTitle,
+    this.productImageUrl,
+    this.amount,
+    this.originalPrice,
+    this.statusLabel,
+    this.detailLine,
+  });
+}
+
+// ── V2 Conversation Data ────────────────────────────────────────────────────
+
+const _kPolaroidImage =
+    'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=200&h=200&fit=crop';
+const _kVinylImage =
+    'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?w=200&h=200&fit=crop';
+const _kBagImage =
+    'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=200&h=200&fit=crop';
+
+const _conversation = <_ChatItem>[
+  // ── Monday — Polaroid Camera ($45 → $42 agreed → meetup) ──
+  _ChatItem(type: _ItemType.dateSeparator, text: 'Monday'),
+  _ChatItem(
+    text: 'Hey! Loved your latest video',
+    timeAgo: '10:30 AM',
+    isMine: false,
+  ),
+  _ChatItem(
+    text: 'Thanks! Took ages to edit',
+    timeAgo: '10:32 AM',
+    isMine: true,
+  ),
+  _ChatItem(
+    text: 'The transition at 0:15 was so smooth',
+    timeAgo: '10:33 AM',
+    isMine: false,
+  ),
+  _ChatItem(
+    text: 'I used a new plugin for that!',
+    timeAgo: '10:35 AM',
+    isMine: true,
+  ),
+  _ChatItem(
+    text: 'Nice! btw I saw you liked my Polaroid listing',
+    timeAgo: '10:38 AM',
+    isMine: false,
+  ),
+  _ChatItem(
+    text: 'Yeah it looks great! Would you take \$38?',
+    timeAgo: '10:40 AM',
+    isMine: true,
+  ),
+  _ChatItem(
+    type: _ItemType.offerSent,
+    productTitle: 'Polaroid Camera',
+    productImageUrl: _kPolaroidImage,
+    amount: 38,
+    originalPrice: 45,
+    timeAgo: '10:40 AM',
+    isMine: true,
+  ),
+  _ChatItem(
+    text: "Hmm, could you do \$42? It's in great condition",
+    timeAgo: '10:45 AM',
+    isMine: false,
+  ),
+  _ChatItem(
+    type: _ItemType.counterOffer,
+    productTitle: 'Polaroid Camera',
+    productImageUrl: _kPolaroidImage,
+    amount: 42,
+    originalPrice: 45,
+    timeAgo: '10:45 AM',
+    isMine: false,
+  ),
+  _ChatItem(
+    text: 'Deal! \$42 works',
+    timeAgo: '10:48 AM',
+    isMine: true,
+  ),
+  _ChatItem(
+    type: _ItemType.offerAccepted,
+    productTitle: 'Polaroid Camera',
+    productImageUrl: _kPolaroidImage,
+    amount: 42,
+    originalPrice: 45,
+    timeAgo: '10:48 AM',
+  ),
+  _ChatItem(
+    text: "Awesome! Meet & Pay? I'm near Blue Bottle",
+    timeAgo: '10:52 AM',
+    isMine: false,
+  ),
+  _ChatItem(
+    text: 'Perfect, tomorrow at 2pm?',
+    timeAgo: '10:55 AM',
+    isMine: true,
+  ),
+  _ChatItem(
+    type: _ItemType.meetupPending,
+    productTitle: 'Polaroid Camera',
+    statusLabel: 'Meet & Pay',
+    detailLine: 'Blue Bottle Coffee',
+    timeAgo: 'Tue 2:00 PM',
+  ),
+
+  // ── Tuesday — Camera delivered + Vinyl Records ($120 → $100 → shipping) ──
+  _ChatItem(type: _ItemType.dateSeparator, text: 'Tuesday'),
+  _ChatItem(
+    text: 'Just got home, camera works perfectly!',
+    timeAgo: '3:30 PM',
+    isMine: true,
+  ),
+  _ChatItem(
+    type: _ItemType.purchaseComplete,
+    productTitle: 'Polaroid Camera',
+    productImageUrl: _kPolaroidImage,
+    amount: 42,
+    timeAgo: '3:30 PM',
+  ),
+  _ChatItem(
+    text: 'Glad you love it! Interested in my vinyl collection too?',
+    timeAgo: '3:35 PM',
+    isMine: false,
+  ),
+  _ChatItem(
+    text: 'Oh those records? They look amazing',
+    timeAgo: '3:38 PM',
+    isMine: true,
+  ),
+  _ChatItem(
+    text: 'Would you do \$95 for the lot?',
+    timeAgo: '3:40 PM',
+    isMine: true,
+  ),
+  _ChatItem(
+    type: _ItemType.offerSent,
+    productTitle: 'Vinyl Records',
+    productImageUrl: _kVinylImage,
+    amount: 95,
+    originalPrice: 120,
+    timeAgo: '3:40 PM',
+    isMine: true,
+  ),
+  _ChatItem(
+    text: 'Lowest I could do is \$105',
+    timeAgo: '3:48 PM',
+    isMine: false,
+  ),
+  _ChatItem(
+    type: _ItemType.counterOffer,
+    productTitle: 'Vinyl Records',
+    productImageUrl: _kVinylImage,
+    amount: 105,
+    originalPrice: 120,
+    timeAgo: '3:48 PM',
+    isMine: false,
+  ),
+  _ChatItem(
+    text: '\$100 even and we have a deal?',
+    timeAgo: '3:52 PM',
+    isMine: true,
+  ),
+  _ChatItem(
+    text: 'OK you got it! Ship or meet up?',
+    timeAgo: '3:55 PM',
+    isMine: false,
+  ),
+  _ChatItem(
+    type: _ItemType.offerAccepted,
+    productTitle: 'Vinyl Records',
+    productImageUrl: _kVinylImage,
+    amount: 100,
+    originalPrice: 120,
+    timeAgo: '3:55 PM',
+  ),
+  _ChatItem(
+    text: "Ship it this time, I'll pay shipping",
+    timeAgo: '4:00 PM',
+    isMine: true,
+  ),
+  _ChatItem(
+    type: _ItemType.shipPending,
+    productTitle: 'Vinyl Records',
+    statusLabel: 'Standard Shipping',
+    detailLine: 'Est. 5-7 days',
+    amount: 4.99,
+    timeAgo: '4:00 PM',
+  ),
+
+  // ── Today — Leather Bag ($89 → $70 offered → pending) ──
+  _ChatItem(type: _ItemType.dateSeparator, text: 'Today'),
+  _ChatItem(
+    text: "Shipped! Here's your tracking",
+    timeAgo: '9:15 AM',
+    isMine: false,
+  ),
+  _ChatItem(
+    text: 'Thanks! Also, is that leather bag still available?',
+    timeAgo: '9:20 AM',
+    isMine: true,
+  ),
+  _ChatItem(
+    text: 'The weekend bag? Yeah! \$89',
+    timeAgo: '9:25 AM',
+    isMine: false,
+  ),
+  _ChatItem(
+    text: 'Would you take \$70?',
+    timeAgo: '9:28 AM',
+    isMine: true,
+  ),
+  _ChatItem(
+    type: _ItemType.offerSent,
+    productTitle: 'Leather Weekend Bag',
+    productImageUrl: _kBagImage,
+    amount: 70,
+    originalPrice: 89,
+    timeAgo: '9:28 AM',
+    isMine: true,
+  ),
+];
+
+// ── Main Screen ─────────────────────────────────────────────────────────────
+
 class ChatConversationScreen extends StatefulWidget {
-  const ChatConversationScreen({super.key});
+  final int initialVariant;
+  const ChatConversationScreen({super.key, this.initialVariant = 0});
 
   @override
   State<ChatConversationScreen> createState() => _ChatConversationScreenState();
 }
 
 class _ChatConversationScreenState extends State<ChatConversationScreen> {
-  int _variant = 0; // 0 = v1 (simple), 1 = v2 (full-featured)
-  ValueNotifier<int>? _variantCount;
-  ValueNotifier<int>? _variantIndex;
+  late int _variant = widget.initialVariant;
+  final _scrollController = ScrollController();
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final provider = PrototypeStateProvider.maybeOf(context);
-    if (provider != null && _variantIndex == null) {
-      _variantCount = provider.screenVariantCount;
-      _variantIndex = provider.screenVariantIndex;
-      _variant = _variantIndex!.value.clamp(0, 1);
-      _variantIndex!.addListener(_onExternalVariantChange);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _variantCount!.value = 2;
-      });
-    }
-  }
-
-  void _onExternalVariantChange() {
-    final idx = _variantIndex?.value ?? 0;
-    if (idx != _variant && idx >= 0 && idx < 2) {
-      setState(() => _variant = idx);
-    }
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
   }
 
   @override
   void dispose() {
-    _variantIndex?.removeListener(_onExternalVariantChange);
-    _variantCount?.value = 0;
+    _scrollController.dispose();
     super.dispose();
-  }
-
-  void _setVariant(int v) {
-    setState(() => _variant = v);
-    _variantIndex?.value = v;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
-    final messages = ProtoDemoData.messages;
 
     return Container(
       color: theme.background,
@@ -68,38 +302,20 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
               ? _SimpleHeader(
                   theme: theme,
                   variant: _variant,
-                  onVariantChanged: _setVariant,
+                  onVariantChanged: (v) => setState(() => _variant = v),
                 )
               : _ChatHeader(
                   theme: theme,
                   variant: _variant,
-                  onVariantChanged: _setVariant,
+                  onVariantChanged: (v) => setState(() => _variant = v),
                 ),
-          // Purchase badge: v2 only
-          if (_variant == 1) _PurchaseBadge(theme: theme),
           // Messages
           Expanded(
             child: _variant == 0
-                ? _SimpleMessageList(theme: theme, messages: messages)
-                : ListView(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
-                    children: [
-                      for (int i = 0; i < messages.length; i++)
-                        _swipeableMessage(
-                          context,
-                          theme,
-                          messages[i],
-                          i,
-                          _MessageBubble(
-                            theme: theme,
-                            msg: messages[i],
-                            index: i,
-                            allMessages: messages,
-                          ),
-                        ),
-                      _TypingIndicator(theme: theme),
-                    ],
+                ? _SimpleMessageList(theme: theme)
+                : _V2TransactionList(
+                    theme: theme,
+                    scrollController: _scrollController,
                   ),
           ),
           // Input bar: v1 = simple, v2 = rich
@@ -113,68 +329,97 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
   }
 }
 
-// ── Variant Toggle Buttons (reusable) ─────────────────────────────────────────
+// ── V2 Transaction List ─────────────────────────────────────────────────────
 
-Widget _buildVariantToggle(
-  ProtoTheme theme,
-  int activeVariant,
-  void Function(int) onVariantChanged,
-) {
-  return Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      for (int i = 0; i < 2; i++) ...[
-        GestureDetector(
-          onTap: () => onVariantChanged(i),
-          child: Container(
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              color: i == activeVariant ? theme.primary : theme.background,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: i == activeVariant
-                    ? theme.primary
-                    : theme.textTertiary.withValues(alpha: 0.4),
-                width: 1,
-              ),
+class _V2TransactionList extends StatelessWidget {
+  final ProtoTheme theme;
+  final ScrollController scrollController;
+
+  const _V2TransactionList({
+    required this.theme,
+    required this.scrollController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Count total outgoing messages for read receipt logic
+    int totalOutgoing = 0;
+    for (final item in _conversation) {
+      if (item.type == _ItemType.message && item.isMine) totalOutgoing++;
+    }
+
+    // Build widget list with running counters
+    int outgoingNum = 0;
+    int incomingNum = 0;
+    final widgets = <Widget>[];
+
+    for (final item in _conversation) {
+      if (item.type == _ItemType.message && item.isMine) outgoingNum++;
+      if (item.type == _ItemType.message && !item.isMine) incomingNum++;
+
+      switch (item.type) {
+        case _ItemType.dateSeparator:
+          widgets.add(_DateSeparator(theme: theme, label: item.text!));
+          break;
+        case _ItemType.message:
+          widgets.add(_swipeableChatItem(
+            context,
+            theme,
+            item,
+            widgets.length,
+            _V2MessageBubble(
+              theme: theme,
+              item: item,
+              outgoingNum: item.isMine ? outgoingNum : 0,
+              incomingNum: !item.isMine ? incomingNum : 0,
+              totalOutgoing: totalOutgoing,
             ),
-            child: Center(
-              child: Text(
-                '${i + 1}',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: i == activeVariant ? Colors.white : theme.textTertiary,
-                ),
-              ),
-            ),
-          ),
-        ),
-        if (i < 1) const SizedBox(width: 4),
-      ],
-    ],
-  );
+          ));
+          break;
+        case _ItemType.offerSent:
+        case _ItemType.counterOffer:
+          widgets.add(_OfferCard(theme: theme, item: item));
+          break;
+        case _ItemType.offerAccepted:
+          widgets.add(_AcceptedCard(theme: theme, item: item));
+          break;
+        case _ItemType.meetupPending:
+        case _ItemType.shipPending:
+          widgets.add(_DeliveryCard(theme: theme, item: item));
+          break;
+        case _ItemType.purchaseComplete:
+          widgets.add(_CompletedCard(theme: theme, item: item));
+          break;
+      }
+    }
+    widgets.add(_TypingIndicator(theme: theme));
+
+    return ListView(
+      controller: scrollController,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      children: widgets,
+    );
+  }
 }
 
-// ── Shared swipe-to-delete wrapper (used by both v1 and v2) ─────────────────
+// ── Swipe-to-delete for _ChatItem (v2) ──────────────────────────────────────
 
-Widget _swipeableMessage(
+Widget _swipeableChatItem(
   BuildContext context,
   ProtoTheme theme,
-  DemoMessage msg,
+  _ChatItem item,
   int index,
   Widget child,
 ) {
   return Dismissible(
-    key: ValueKey('msg-$index'),
-    direction: msg.isMine
+    key: ValueKey('v2-msg-$index'),
+    direction: item.isMine
         ? DismissDirection.endToStart
         : DismissDirection.startToEnd,
-    confirmDismiss: (_) => _showDeleteSheet(context, theme, msg),
+    confirmDismiss: (_) => _showDeleteSheetV2(context, theme, item),
     background: Container(
-      alignment: msg.isMine ? Alignment.centerRight : Alignment.centerLeft,
-      padding: msg.isMine
+      alignment: item.isMine ? Alignment.centerRight : Alignment.centerLeft,
+      padding: item.isMine
           ? const EdgeInsets.only(right: 20)
           : const EdgeInsets.only(left: 20),
       margin: const EdgeInsets.only(bottom: 8),
@@ -189,8 +434,8 @@ Widget _swipeableMessage(
   );
 }
 
-Future<bool> _showDeleteSheet(
-    BuildContext context, ProtoTheme theme, DemoMessage msg) async {
+Future<bool> _showDeleteSheetV2(
+    BuildContext context, ProtoTheme theme, _ChatItem item) async {
   await showModalBottomSheet(
     context: context,
     backgroundColor: theme.surface,
@@ -252,7 +497,7 @@ Future<bool> _showDeleteSheet(
               ),
             ),
           ),
-          if (msg.isMine)
+          if (item.isMine)
             ProtoPressButton(
               onTap: () {
                 Navigator.pop(ctx);
@@ -288,6 +533,50 @@ Future<bool> _showDeleteSheet(
     ),
   );
   return false;
+}
+
+// ── Variant Toggle Buttons (reusable) ─────────────────────────────────────────
+
+Widget _buildVariantToggle(
+  ProtoTheme theme,
+  int activeVariant,
+  void Function(int) onVariantChanged,
+) {
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      for (int i = 0; i < 2; i++) ...[
+        GestureDetector(
+          onTap: () => onVariantChanged(i),
+          child: Container(
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              color: i == activeVariant ? theme.primary : theme.background,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: i == activeVariant
+                    ? theme.primary
+                    : theme.textTertiary.withValues(alpha: 0.4),
+                width: 1,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                '${i + 1}',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: i == activeVariant ? Colors.white : theme.textTertiary,
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (i < 1) const SizedBox(width: 4),
+      ],
+    ],
+  );
 }
 
 // ── V1 Simple Header (ProtoSubBar + toggle) ─────────────────────────────────
@@ -524,63 +813,81 @@ class _ChatHeader extends StatelessWidget {
   }
 }
 
-// ── V1 Simple Message List ──────────────────────────────────────────────────
+// ── V1 Simple Message List (with transaction cards) ─────────────────────────
 
 class _SimpleMessageList extends StatelessWidget {
   final ProtoTheme theme;
-  final List<DemoMessage> messages;
 
-  const _SimpleMessageList({required this.theme, required this.messages});
+  const _SimpleMessageList({required this.theme});
 
   @override
   Widget build(BuildContext context) {
+    final widgets = <Widget>[];
+
+    for (final item in _conversation) {
+      switch (item.type) {
+        case _ItemType.dateSeparator:
+          widgets.add(_DateSeparator(theme: theme, label: item.text!));
+          break;
+        case _ItemType.message:
+          widgets.add(_simpleBubble(item));
+          break;
+        case _ItemType.offerSent:
+        case _ItemType.counterOffer:
+          widgets.add(_OfferCard(theme: theme, item: item));
+          break;
+        case _ItemType.offerAccepted:
+          widgets.add(_AcceptedCard(theme: theme, item: item));
+          break;
+        case _ItemType.meetupPending:
+        case _ItemType.shipPending:
+          widgets.add(_DeliveryCard(theme: theme, item: item));
+          break;
+        case _ItemType.purchaseComplete:
+          widgets.add(_CompletedCard(theme: theme, item: item));
+          break;
+      }
+    }
+    widgets.add(_TypingIndicator(theme: theme));
+
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      children: [
-        for (int i = 0; i < messages.length; i++)
-          _swipeableMessage(
-            context,
-            theme,
-            messages[i],
-            i,
-            _simpleBubble(messages[i]),
-          ),
-      ],
+      children: widgets,
     );
   }
 
-  Widget _simpleBubble(DemoMessage msg) {
+  Widget _simpleBubble(_ChatItem item) {
     return Align(
-      alignment: msg.isMine ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: item.isMine ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         constraints: const BoxConstraints(maxWidth: 240),
         decoration: BoxDecoration(
-          color: msg.isMine ? theme.primary : theme.surface,
+          color: item.isMine ? theme.primary : theme.surface,
           borderRadius: BorderRadius.circular(16).copyWith(
-            bottomRight: msg.isMine ? const Radius.circular(4) : null,
-            bottomLeft: !msg.isMine ? const Radius.circular(4) : null,
+            bottomRight: item.isMine ? const Radius.circular(4) : null,
+            bottomLeft: !item.isMine ? const Radius.circular(4) : null,
           ),
-          boxShadow: msg.isMine ? null : theme.softShadow,
+          boxShadow: item.isMine ? null : theme.softShadow,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              msg.text,
+              item.text!,
               style: TextStyle(
                 fontSize: 14,
-                color: msg.isMine ? Colors.white : theme.text,
+                color: item.isMine ? Colors.white : theme.text,
                 height: 1.4,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              msg.timeAgo,
+              item.timeAgo,
               style: TextStyle(
                 fontSize: 10,
-                color: msg.isMine
+                color: item.isMine
                     ? Colors.white.withValues(alpha: 0.6)
                     : theme.textTertiary,
               ),
@@ -648,86 +955,75 @@ class _SimpleInputBar extends StatelessWidget {
   }
 }
 
-// ── Message Bubble with Read Receipts & Reaction ──────────────────────────────
+// ── V2 Message Bubble with Read Receipts & Reaction ─────────────────────────
 
-class _MessageBubble extends StatelessWidget {
+class _V2MessageBubble extends StatelessWidget {
   final ProtoTheme theme;
-  final DemoMessage msg;
-  final int index;
-  final List<DemoMessage> allMessages;
+  final _ChatItem item;
+  final int outgoingNum;
+  final int incomingNum;
+  final int totalOutgoing;
 
-  const _MessageBubble({
+  const _V2MessageBubble({
     required this.theme,
-    required this.msg,
-    required this.index,
-    required this.allMessages,
+    required this.item,
+    required this.outgoingNum,
+    required this.incomingNum,
+    required this.totalOutgoing,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Count which outgoing/incoming message this is (1-indexed)
-    int outgoingNum = 0;
-    int incomingNum = 0;
-    for (int j = 0; j <= index; j++) {
-      if (allMessages[j].isMine) {
-        outgoingNum++;
-      } else {
-        incomingNum++;
-      }
-    }
+    final showReaction = !item.isMine && incomingNum == 3;
 
     // Check if this is the last "Read" outgoing message
     bool isLastReadOutgoing = false;
-    if (msg.isMine && outgoingNum <= 3) {
-      int futureOutgoingCount = outgoingNum;
-      for (int j = index + 1; j < allMessages.length; j++) {
-        if (allMessages[j].isMine) {
-          futureOutgoingCount++;
-          break;
-        }
-      }
-      isLastReadOutgoing = futureOutgoingCount > 3 || futureOutgoingCount == outgoingNum;
+    if (item.isMine && outgoingNum <= totalOutgoing - 2) {
+      // Check if the next outgoing would exceed the read threshold
+      isLastReadOutgoing = outgoingNum == totalOutgoing - 2;
     }
-
-    // Reaction pill on 3rd incoming message
-    final showReaction = !msg.isMine && incomingNum == 3;
 
     return Column(
       crossAxisAlignment:
-          msg.isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          item.isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Align(
           alignment:
-              msg.isMine ? Alignment.centerRight : Alignment.centerLeft,
+              item.isMine ? Alignment.centerRight : Alignment.centerLeft,
           child: GestureDetector(
             onLongPress: () => _showReactionPicker(context),
-            onDoubleTap: () => ProtoToast.show(
-              context,
-              Icons.reply_rounded,
-              'Reply to "${msg.text.length > 25 ? '${msg.text.substring(0, 25)}...' : msg.text}"',
-            ),
+            onDoubleTap: () {
+              final preview = item.text!.length > 25
+                  ? '${item.text!.substring(0, 25)}...'
+                  : item.text!;
+              ProtoToast.show(
+                context,
+                Icons.reply_rounded,
+                'Reply to "$preview"',
+              );
+            },
             child: Container(
               margin: EdgeInsets.only(bottom: showReaction ? 2 : 8),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               constraints: const BoxConstraints(maxWidth: 240),
               decoration: BoxDecoration(
-                color: msg.isMine ? theme.primary : theme.surface,
+                color: item.isMine ? theme.primary : theme.surface,
                 borderRadius: BorderRadius.circular(16).copyWith(
                   bottomRight:
-                      msg.isMine ? const Radius.circular(4) : null,
+                      item.isMine ? const Radius.circular(4) : null,
                   bottomLeft:
-                      !msg.isMine ? const Radius.circular(4) : null,
+                      !item.isMine ? const Radius.circular(4) : null,
                 ),
-                boxShadow: msg.isMine ? null : theme.softShadow,
+                boxShadow: item.isMine ? null : theme.softShadow,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    msg.text,
+                    item.text!,
                     style: TextStyle(
                       fontSize: 14,
-                      color: msg.isMine ? Colors.white : theme.text,
+                      color: item.isMine ? Colors.white : theme.text,
                       height: 1.4,
                     ),
                   ),
@@ -736,17 +1032,17 @@ class _MessageBubble extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        msg.timeAgo,
+                        item.timeAgo,
                         style: TextStyle(
                           fontSize: 10,
-                          color: msg.isMine
+                          color: item.isMine
                               ? Colors.white.withValues(alpha: 0.6)
                               : theme.textTertiary,
                         ),
                       ),
-                      if (msg.isMine) ...[
+                      if (item.isMine) ...[
                         const SizedBox(width: 3),
-                        _readReceiptIcon(outgoingNum),
+                        _readReceiptIcon(),
                       ],
                     ],
                   ),
@@ -775,7 +1071,7 @@ class _MessageBubble extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 8, right: 4),
             child: Text(
-              'Seen 10:41 AM',
+              'Seen 4:02 PM',
               style: TextStyle(fontSize: 10, color: theme.textTertiary),
             ),
           ),
@@ -783,15 +1079,15 @@ class _MessageBubble extends StatelessWidget {
     );
   }
 
-  Widget _readReceiptIcon(int outgoingNum) {
-    if (outgoingNum <= 3) {
-      // Read — light blue double check (visible on any primary)
+  Widget _readReceiptIcon() {
+    if (outgoingNum <= totalOutgoing - 2) {
+      // Read — light blue double check
       return const Icon(
         Icons.done_all_rounded,
         size: 14,
         color: Color(0xFF4FC3F7),
       );
-    } else if (outgoingNum == 4) {
+    } else if (outgoingNum == totalOutgoing - 1) {
       // Delivered — semi-transparent double check
       return Icon(
         Icons.done_all_rounded,
@@ -810,7 +1106,6 @@ class _MessageBubble extends StatelessWidget {
 
   void _showReactionPicker(BuildContext context) {
     final overlay = Overlay.of(context);
-
     late OverlayEntry entry;
     entry = OverlayEntry(
       builder: (ctx) => _ReactionOverlay(
@@ -883,6 +1178,505 @@ class _ReactionOverlay extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Date Separator ──────────────────────────────────────────────────────────
+
+class _DateSeparator extends StatelessWidget {
+  final ProtoTheme theme;
+  final String label;
+  const _DateSeparator({required this.theme, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Divider(
+              color: theme.textTertiary.withValues(alpha: 0.3),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              label,
+              style: theme.caption.copyWith(
+                color: theme.textTertiary,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Divider(
+              color: theme.textTertiary.withValues(alpha: 0.3),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Offer Card (offerSent + counterOffer) ───────────────────────────────────
+
+class _OfferCard extends StatelessWidget {
+  final ProtoTheme theme;
+  final _ChatItem item;
+  const _OfferCard({required this.theme, required this.item});
+
+  bool get _isCounter => item.type == _ItemType.counterOffer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.primary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Product row
+          Row(
+            children: [
+              ProtoNetworkImage(
+                imageUrl: item.productImageUrl!,
+                width: 44,
+                height: 44,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(item.productTitle!,
+                        style: theme.title.copyWith(fontSize: 13)),
+                    Text(
+                      'Listed: \$${item.originalPrice!.toStringAsFixed(0)}',
+                      style: theme.caption.copyWith(
+                        decoration: TextDecoration.lineThrough,
+                        color: theme.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          Divider(
+            color: theme.textTertiary.withValues(alpha: 0.15),
+            height: 20,
+          ),
+          // Offer line
+          Row(
+            children: [
+              Icon(Icons.local_offer_rounded,
+                  size: 16, color: theme.primary),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  _isCounter
+                      ? 'Maya counter-offered \$${item.amount!.toStringAsFixed(0)}'
+                      : 'You offered \$${item.amount!.toStringAsFixed(0)}',
+                  style: theme.body.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Action buttons
+          Row(
+            children: [
+              Expanded(
+                child: _outlinedButton(
+                  context,
+                  _isCounter ? 'Accept' : 'Change Offer',
+                  _isCounter ? Icons.check_rounded : Icons.edit_rounded,
+                  _isCounter ? 'Offer accepted' : 'Change offer',
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _outlinedButton(
+                  context,
+                  _isCounter ? 'Counter' : 'Withdraw',
+                  _isCounter ? Icons.reply_rounded : Icons.close_rounded,
+                  _isCounter ? 'Counter-offer sent' : 'Offer withdrawn',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _outlinedButton(
+    BuildContext context,
+    String label,
+    IconData icon,
+    String toast,
+  ) {
+    return ProtoPressButton(
+      onTap: () => ProtoToast.show(context, icon, toast),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: theme.primary.withValues(alpha: 0.3)),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: theme.primary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Accepted Card ───────────────────────────────────────────────────────────
+
+class _AcceptedCard extends StatelessWidget {
+  final ProtoTheme theme;
+  final _ChatItem item;
+  const _AcceptedCard({required this.theme, required this.item});
+
+  static const _green = Color(0xFF4CAF50);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _green.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _green.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              const Icon(Icons.check_circle_rounded,
+                  size: 18, color: _green),
+              const SizedBox(width: 6),
+              Text(
+                'Price Agreed!',
+                style: theme.title.copyWith(fontSize: 14, color: _green),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Product row
+          Row(
+            children: [
+              ProtoNetworkImage(
+                imageUrl: item.productImageUrl!,
+                width: 44,
+                height: 44,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(item.productTitle!,
+                        style: theme.title.copyWith(fontSize: 13)),
+                    Row(
+                      children: [
+                        Text(
+                          'Agreed: \$${item.amount!.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: _green,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '(was \$${item.originalPrice!.toStringAsFixed(0)})',
+                          style: theme.caption.copyWith(
+                            decoration: TextDecoration.lineThrough,
+                            color: theme.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Button
+          ProtoPressButton(
+            onTap: () => ProtoToast.show(
+              context,
+              Icons.local_shipping_rounded,
+              'Choose delivery method',
+            ),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: _green.withValues(alpha: 0.4)),
+              ),
+              child: const Center(
+                child: Text(
+                  'Choose Delivery Method',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: _green,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Delivery Card (meetupPending + shipPending) ─────────────────────────────
+
+class _DeliveryCard extends StatelessWidget {
+  final ProtoTheme theme;
+  final _ChatItem item;
+  const _DeliveryCard({required this.theme, required this.item});
+
+  bool get _isMeetup => item.type == _ItemType.meetupPending;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.tertiary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.tertiary.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Icon(
+                _isMeetup
+                    ? Icons.handshake_rounded
+                    : Icons.local_shipping_rounded,
+                size: 18,
+                color: theme.tertiary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                _isMeetup ? 'Meet & Pay' : 'Ship It',
+                style:
+                    theme.title.copyWith(fontSize: 14, color: theme.tertiary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Detail rows
+          if (_isMeetup) ...[
+            _detailRow(Icons.location_on_rounded, item.detailLine!),
+            const SizedBox(height: 6),
+            _detailRow(Icons.calendar_today_rounded, item.timeAgo),
+          ] else ...[
+            _detailRow(Icons.inventory_2_rounded, item.statusLabel!),
+            const SizedBox(height: 6),
+            _detailRow(
+              Icons.schedule_rounded,
+              '${item.detailLine!} \u00B7 \$${item.amount!.toStringAsFixed(2)}',
+            ),
+          ],
+          const SizedBox(height: 10),
+          // Action button
+          ProtoPressButton(
+            onTap: () => ProtoToast.show(
+              context,
+              _isMeetup ? Icons.map_rounded : Icons.local_shipping_rounded,
+              _isMeetup ? 'View on Map' : 'Track Shipment',
+            ),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                    color: theme.tertiary.withValues(alpha: 0.35)),
+              ),
+              child: Center(
+                child: Text(
+                  _isMeetup ? 'View on Map' : 'Track Shipment',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: theme.tertiary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Safety tip for meetup
+          if (_isMeetup) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.shield_rounded,
+                    size: 14, color: theme.textTertiary),
+                const SizedBox(width: 5),
+                Text(
+                  'Meet in a public place',
+                  style: theme.caption.copyWith(
+                    color: theme.textTertiary,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 15, color: theme.textSecondary),
+        const SizedBox(width: 6),
+        Text(text, style: theme.body.copyWith(fontSize: 13)),
+      ],
+    );
+  }
+}
+
+// ── Completed Card ──────────────────────────────────────────────────────────
+
+class _CompletedCard extends StatelessWidget {
+  final ProtoTheme theme;
+  final _ChatItem item;
+  const _CompletedCard({required this.theme, required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.primary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Icon(Icons.check_circle_rounded,
+                  size: 18, color: theme.primary),
+              const SizedBox(width: 6),
+              Text(
+                'Purchase Complete!',
+                style:
+                    theme.title.copyWith(fontSize: 14, color: theme.primary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Product row
+          Row(
+            children: [
+              ProtoNetworkImage(
+                imageUrl: item.productImageUrl!,
+                width: 44,
+                height: 44,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item.productTitle!,
+                      style: theme.title.copyWith(fontSize: 13)),
+                  Text(
+                    'Paid: \$${item.amount!.toStringAsFixed(0)}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: theme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Star rating (4 out of 5)
+          Row(
+            children: List.generate(5, (i) {
+              return Icon(
+                i < 4
+                    ? theme.icons.starFilled
+                    : Icons.star_outline_rounded,
+                size: 18,
+                color: i < 4 ? theme.tertiary : theme.textTertiary,
+              );
+            }),
+          ),
+          const SizedBox(height: 10),
+          // Leave a Review button (filled primary)
+          ProtoPressButton(
+            onTap: () => ProtoToast.show(
+              context,
+              theme.icons.starFilled,
+              'Leave a review',
+            ),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: theme.primary,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Center(
+                child: Text(
+                  'Leave a Review',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1014,93 +1808,6 @@ class _RichInputBar extends StatelessWidget {
     return ProtoPressButton(
       onTap: () => ProtoToast.show(context, icon, toast),
       child: Icon(icon, size: 22, color: theme.textSecondary),
-    );
-  }
-}
-
-// ── Purchase Badge (unchanged) ────────────────────────────────────────────────
-
-class _PurchaseBadge extends StatelessWidget {
-  final ProtoTheme theme;
-  const _PurchaseBadge({required this.theme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.primary.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
-          ProtoNetworkImage(
-            imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=80&h=80&fit=crop',
-            width: 44,
-            height: 44,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Vintage Camera',
-                  style: theme.title.copyWith(fontSize: 13),
-                ),
-                Row(
-                  children: [
-                    Text(
-                      '\$85',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: theme.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    ...List.generate(
-                      5,
-                      (i) => Icon(
-                        i < 4
-                            ? theme.icons.starFilled
-                            : Icons.star_outline_rounded,
-                        size: 12,
-                        color: i < 4 ? theme.tertiary : theme.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          ProtoPressButton(
-            onTap: () => ProtoToast.show(
-              context,
-              theme.icons.starFilled,
-              'Leave a review',
-            ),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: theme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'Review',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: theme.primary,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

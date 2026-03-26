@@ -74,7 +74,7 @@ Color _deBoostAccent(Color c) {
 /// Accessed via `ProtoTheme.of(context)` backed by an InheritedWidget.
 class ProtoTheme {
   /// Kuwboo brand red — used for FAB and accent elements.
-  static const kuwbooRed = Color(0xFFEC583F);
+  static const kuwbooBlue = Color(0xFF1877F2);
 
   // Colors
   final Color primary;

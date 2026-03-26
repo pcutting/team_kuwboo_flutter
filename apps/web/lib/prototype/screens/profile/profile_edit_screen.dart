@@ -72,7 +72,7 @@ class ProfileEditScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                         border: interest.isSelected ? null : Border.all(color: theme.text.withValues(alpha: 0.1)),
                       ),
-                      child: Text(interest.name, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: interest.isSelected ? theme.onPrimary : theme.textSecondary)),
+                      child: Text(interest.name, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: interest.isSelected ? Colors.white : theme.textSecondary)),
                     );
                   }).toList(),
                 ),

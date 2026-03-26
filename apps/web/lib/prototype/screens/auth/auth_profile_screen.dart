@@ -51,10 +51,10 @@ class AuthProfileScreen extends StatelessWidget {
                             shape: BoxShape.circle,
                             border: Border.all(color: theme.surface, width: 2),
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.camera_alt_rounded,
                             size: 16,
-                            color: theme.onPrimary,
+                            color: Colors.white,
                           ),
                         ),
                       ),

@@ -18,42 +18,6 @@ class ProfileNotificationsScreen extends StatefulWidget {
 class _ProfileNotificationsScreenState
     extends State<ProfileNotificationsScreen> {
   int _variant = 0; // 0 = v1 (simple), 1 = v2 (search + mark read)
-  ValueNotifier<int>? _variantCount;
-  ValueNotifier<int>? _variantIndex;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final provider = PrototypeStateProvider.maybeOf(context);
-    if (provider != null && _variantIndex == null) {
-      _variantCount = provider.screenVariantCount;
-      _variantIndex = provider.screenVariantIndex;
-      _variant = _variantIndex!.value.clamp(0, 1);
-      _variantIndex!.addListener(_onExternalVariantChange);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _variantCount!.value = 2;
-      });
-    }
-  }
-
-  void _onExternalVariantChange() {
-    final idx = _variantIndex?.value ?? 0;
-    if (idx != _variant && idx >= 0 && idx < 2) {
-      setState(() => _variant = idx);
-    }
-  }
-
-  @override
-  void dispose() {
-    _variantIndex?.removeListener(_onExternalVariantChange);
-    _variantCount?.value = 0;
-    super.dispose();
-  }
-
-  void _setVariant(int v) {
-    setState(() => _variant = v);
-    _variantIndex?.value = v;
-  }
 
   Widget _buildVariantToggle(ProtoTheme theme) {
     return Row(
@@ -61,7 +25,7 @@ class _ProfileNotificationsScreenState
       children: [
         for (int i = 0; i < 2; i++) ...[
           GestureDetector(
-            onTap: () => _setVariant(i),
+            onTap: () => setState(() => _variant = i),
             child: Container(
               width: 22,
               height: 22,
@@ -81,7 +45,7 @@ class _ProfileNotificationsScreenState
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: i == _variant ? theme.onPrimary : theme.textTertiary,
+                    color: i == _variant ? Colors.white : theme.textTertiary,
                   ),
                 ),
               ),
@@ -387,7 +351,7 @@ List<_ActivityNotification> _activityNotifications(ProtoTheme theme) => [
         imageUrl:
             'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop',
         icon: theme.icons.favoriteFilled,
-        iconColor: theme.errorColor,
+        iconColor: Colors.redAccent,
       ),
       _ActivityNotification(
         title: 'Kai',

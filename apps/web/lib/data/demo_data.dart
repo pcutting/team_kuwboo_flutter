@@ -310,31 +310,11 @@ class DemoVideo {
 
 // ─── Social feed demo data ───
 
-enum DemoMediaType { image, video }
-
-class DemoMediaItem {
-  final String url;
-  final DemoMediaType type;
-  final double aspectRatio; // width / height (e.g. 16/9 = 1.78, 3/4 = 0.75)
-  final String? durationLabel; // e.g. "0:32" for videos
-
-  const DemoMediaItem({
-    required this.url,
-    this.type = DemoMediaType.image,
-    this.aspectRatio = 4 / 3,
-    this.durationLabel,
-  });
-
-  bool get isVideo => type == DemoMediaType.video;
-
-  /// Clamp ratio to Instagram-style bounds: 4:5 portrait to 1.91:1 landscape
-  double get clampedRatio => aspectRatio.clamp(0.8, 1.91);
-}
-
 class DemoPost {
   final String author;
   final String text;
-  final List<DemoMediaItem> media;
+  final String? imageUrl;
+  final List<String> imageUrls;
   final int reactions;
   final int comments;
   final String timeAgo;
@@ -349,7 +329,8 @@ class DemoPost {
   const DemoPost({
     required this.author,
     required this.text,
-    this.media = const [],
+    this.imageUrl,
+    this.imageUrls = const [],
     required this.reactions,
     required this.comments,
     required this.timeAgo,
@@ -494,53 +475,30 @@ extension DemoDataExtended on DemoData {
   ];
 
   static const posts = [
-    // 1. Video repost — shows as shared video with thumbnail + play overlay
     DemoPost(
       author: 'Alex',
       text: 'This recipe is insane, you have to try it',
-      media: [
-        DemoMediaItem(
-          url: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=600&h=450&fit=crop',
-          type: DemoMediaType.video,
-          aspectRatio: 4 / 3,
-          durationLabel: '1:24',
-        ),
-      ],
       reactions: 12,
       comments: 4,
       timeAgo: '15m ago',
       avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+      repostVideoCreator: '@samcooks',
+      repostVideoCaption: 'Wait for it... 🍳 #cooking #foodie',
+      repostVideoIndex: 2,
     ),
-
-    // 2. Multiple landscape photos (carousel, all 4:3)
     DemoPost(
       author: 'Jordan Lee',
       text: 'Golden hour at the pier was absolutely unreal today. Sometimes you just have to stop and take it all in.',
-      media: [
-        DemoMediaItem(url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=450&fit=crop', aspectRatio: 4 / 3),
-        DemoMediaItem(url: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=600&h=450&fit=crop', aspectRatio: 4 / 3),
-        DemoMediaItem(url: 'https://images.unsplash.com/photo-1476673160081-cf065607f449?w=600&h=450&fit=crop', aspectRatio: 4 / 3),
+      imageUrls: [
+        'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop',
+        'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=400&h=300&fit=crop',
+        'https://images.unsplash.com/photo-1476673160081-cf065607f449?w=400&h=300&fit=crop',
       ],
       reactions: 47,
       comments: 12,
       timeAgo: '2h ago',
       avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop',
     ),
-
-    // 3. Single portrait photo (3:4 ratio)
-    DemoPost(
-      author: 'Priya Sharma',
-      text: 'New mural just went up on Brick Lane. Street art in this city never disappoints.',
-      media: [
-        DemoMediaItem(url: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=450&h=600&fit=crop', aspectRatio: 3 / 4),
-      ],
-      reactions: 63,
-      comments: 9,
-      timeAgo: '1h ago',
-      avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-    ),
-
-    // 4. Text-only (no media — existing)
     DemoPost(
       author: 'Riley Chen',
       text: 'Anyone else going to the food festival this weekend? Looking for recommendations!',
@@ -549,26 +507,6 @@ extension DemoDataExtended on DemoData {
       timeAgo: '4h ago',
       avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop',
     ),
-
-    // 5. Single landscape video (16:9)
-    DemoPost(
-      author: 'Kai Nakamura',
-      text: 'Caught this sunset time-lapse from the rooftop. 45 minutes in 30 seconds.',
-      media: [
-        DemoMediaItem(
-          url: 'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=800&h=450&fit=crop',
-          type: DemoMediaType.video,
-          aspectRatio: 16 / 9,
-          durationLabel: '0:32',
-        ),
-      ],
-      reactions: 112,
-      comments: 24,
-      timeAgo: '3h ago',
-      avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
-    ),
-
-    // 6. Text repost (existing)
     DemoPost(
       author: 'Maya Ali',
       text: 'This is such a vibe!',
@@ -579,100 +517,14 @@ extension DemoDataExtended on DemoData {
       timeAgo: '5h ago',
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
     ),
-
-    // 7. Single portrait video (9:16 — clamped to 4:5)
-    DemoPost(
-      author: 'Luna Park',
-      text: 'POV: finding the perfect coffee spot on a rainy afternoon',
-      media: [
-        DemoMediaItem(
-          url: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=450&h=600&fit=crop',
-          type: DemoMediaType.video,
-          aspectRatio: 9 / 16,
-          durationLabel: '0:18',
-        ),
-      ],
-      reactions: 78,
-      comments: 15,
-      timeAgo: '5h ago',
-      avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop',
-    ),
-
-    // 8. Single landscape image (wide 16:9 — existing ramen post)
     DemoPost(
       author: 'Sam Torres',
       text: 'Just tried the new ramen place on 5th. The tonkotsu broth is life-changing.',
-      media: [
-        DemoMediaItem(url: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&h=450&fit=crop', aspectRatio: 16 / 9),
-      ],
+      imageUrl: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=300&fit=crop',
       reactions: 89,
       comments: 18,
       timeAgo: '6h ago',
       avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop',
-    ),
-
-    // 9. Mixed photos + videos in carousel
-    DemoPost(
-      author: 'Marco Davis',
-      text: 'Weekend market haul — the ceramics stall had some unreal pieces this time.',
-      media: [
-        DemoMediaItem(url: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=600&h=450&fit=crop', aspectRatio: 4 / 3),
-        DemoMediaItem(
-          url: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&h=450&fit=crop',
-          type: DemoMediaType.video,
-          aspectRatio: 4 / 3,
-          durationLabel: '0:14',
-        ),
-        DemoMediaItem(url: 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=600&h=450&fit=crop', aspectRatio: 4 / 3),
-      ],
-      reactions: 56,
-      comments: 7,
-      timeAgo: '8h ago',
-      avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
-    ),
-
-    // 10. Multiple videos carousel (all 16:9 landscape)
-    DemoPost(
-      author: 'Finn Hayes',
-      text: 'Three angles of the same kickflip. Which one\'s the keeper?',
-      media: [
-        DemoMediaItem(
-          url: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&h=450&fit=crop',
-          type: DemoMediaType.video,
-          aspectRatio: 16 / 9,
-          durationLabel: '0:08',
-        ),
-        DemoMediaItem(
-          url: 'https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=800&h=450&fit=crop',
-          type: DemoMediaType.video,
-          aspectRatio: 16 / 9,
-          durationLabel: '0:06',
-        ),
-        DemoMediaItem(
-          url: 'https://images.unsplash.com/photo-1621544402532-78c290378588?w=800&h=450&fit=crop',
-          type: DemoMediaType.video,
-          aspectRatio: 16 / 9,
-          durationLabel: '0:11',
-        ),
-      ],
-      reactions: 83,
-      comments: 19,
-      timeAgo: '9h ago',
-      avatarUrl: 'https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=100&h=100&fit=crop',
-    ),
-
-    // 11. Multiple portrait photos
-    DemoPost(
-      author: 'Zara Okonkwo',
-      text: 'Finally got the film back from last month. Something about 35mm just hits different.',
-      media: [
-        DemoMediaItem(url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=450&h=600&fit=crop', aspectRatio: 3 / 4),
-        DemoMediaItem(url: 'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=450&h=600&fit=crop', aspectRatio: 3 / 4),
-      ],
-      reactions: 91,
-      comments: 14,
-      timeAgo: '10h ago',
-      avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop',
     ),
   ];
 

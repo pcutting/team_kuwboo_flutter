@@ -70,14 +70,13 @@ class _ShopDealsScreenState extends State<ShopDealsScreen> {
                   onTap: () => state.push(ProtoRoutes.shopProduct),
                   child: Container(
                     decoration: theme.cardDecoration,
+                    clipBehavior: Clip.antiAlias,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           flex: 3,
-                          child: ClipRRect(
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                            child: Stack(
+                          child: Stack(
                               fit: StackFit.expand,
                               children: [
                                 ProtoNetworkImage(imageUrl: deal.imageUrl),
@@ -130,7 +129,6 @@ class _ShopDealsScreenState extends State<ShopDealsScreen> {
                                 ),
                               ],
                             ),
-                          ),
                         ),
                         Expanded(
                           flex: 2,

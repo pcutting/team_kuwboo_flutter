@@ -74,8 +74,8 @@ class _DatingExpandedProfileState extends State<DatingExpandedProfile> {
                     borderRadius: 0,
                     onIndexChanged: (i) => setState(() => _currentPhoto = i),
                     onTap: (i) => _openFullscreenGallery(allPhotos, i),
-                    dotColor: theme.onPrimary,
-                    dotInactiveColor: theme.onPrimary.withValues(alpha: 0.4),
+                    dotColor: Colors.white,
+                    dotInactiveColor: Colors.white.withValues(alpha: 0.4),
                     showCounter: true,
                   ),
                 ),
@@ -195,11 +195,11 @@ class _DatingExpandedProfileState extends State<DatingExpandedProfile> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(theme.icons.personAdd, size: 18, color: theme.onPrimary),
+                        Icon(theme.icons.personAdd, size: 18, color: Colors.white),
                         const SizedBox(width: 6),
                         Text(
                           'Connect',
-                          style: theme.button.copyWith(fontSize: 14, color: theme.onPrimary),
+                          style: theme.button.copyWith(fontSize: 14, color: Colors.white),
                         ),
                       ],
                     ),
@@ -456,7 +456,6 @@ class _PhotoCardSwiperState extends State<_PhotoCardSwiper>
 
   @override
   Widget build(BuildContext context) {
-    final theme = ProtoTheme.of(context);
     final offset = _effectiveOffset;
     final width = MediaQuery.sizeOf(context).width;
     final rotation = width > 0 ? (offset.dx / width) * _maxRotation : 0.0;
@@ -550,14 +549,14 @@ class _PhotoCardSwiperState extends State<_PhotoCardSwiper>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: theme.overlayColor,
+                color: Colors.black.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 '${_current + 1}/$_count',
-                style: TextStyle(
+                style: const TextStyle(
                     fontSize: 11,
-                    color: theme.onPrimary,
+                    color: Colors.white,
                     fontWeight: FontWeight.w600),
               ),
             ),

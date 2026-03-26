@@ -59,6 +59,7 @@ class SponsoredPostCard extends StatelessWidget {
     final theme = ProtoTheme.of(context);
     return Container(
       decoration: theme.cardDecoration,
+      clipBehavior: Clip.antiAlias,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -67,7 +68,6 @@ class SponsoredPostCard extends StatelessWidget {
             height: 140,
             width: double.infinity,
             decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               image: imageUrl != null
                   ? DecorationImage(image: NetworkImage(imageUrl!), fit: BoxFit.cover)
                   : null,
@@ -144,6 +144,7 @@ class SponsoredProductCard extends StatelessWidget {
     final theme = ProtoTheme.of(context);
     return Container(
       decoration: theme.cardDecoration,
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -151,7 +152,6 @@ class SponsoredProductCard extends StatelessWidget {
             flex: 3,
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,

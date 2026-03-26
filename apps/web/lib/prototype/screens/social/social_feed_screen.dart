@@ -8,7 +8,6 @@ import '../../prototype_demo_data.dart';
 import '../../shared/proto_scaffold.dart';
 import '../../shared/proto_press_button.dart';
 import '../../shared/proto_dialogs.dart';
-import '../../shared/proto_media.dart';
 import '../sponsored/sponsored_inline.dart';
 import '../../shared/proto_states.dart';
 
@@ -20,25 +19,7 @@ class SocialFeedScreen extends StatefulWidget {
 }
 
 class _SocialFeedScreenState extends State<SocialFeedScreen> {
-  ValueNotifier<int>? _variantCount;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_variantCount == null) {
-      final provider = PrototypeStateProvider.maybeOf(context);
-      if (provider != null) {
-        _variantCount = provider.screenVariantCount;
-        _variantCount!.value = 0;
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _variantCount?.value = 0;
-    super.dispose();
-  }
+  final int _storyVariant = 3; // Locked to V4 (dark cards)
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +31,7 @@ class _SocialFeedScreenState extends State<SocialFeedScreen> {
       showTopBar: false,
       body: Column(
         children: [
+          // Custom top bar
           const _SocialTopBar(),
 
           Expanded(
@@ -81,22 +63,38 @@ class _SocialFeedScreenState extends State<SocialFeedScreen> {
                             onTap: () => state.push(ProtoRoutes.socialStumble),
                             child: _TabChip(label: 'Stumble', isActive: false),
                           ),
-                          const SizedBox(width: 8),
-                          GestureDetector(
-                            onTap: () => state.push(ProtoRoutes.socialEvents),
-                            child: _TabChip(label: 'Events', isActive: false),
-                          ),
                           const Spacer(),
                           GestureDetector(
                             onTap: () => state.push(ProtoRoutes.socialFriends),
                             child: Icon(theme.icons.peopleOutline, size: 22, color: theme.textSecondary),
                           ),
+                          const SizedBox(width: 16),
+                          GestureDetector(
+                            onTap: () => state.push(ProtoRoutes.socialEvents),
+                            child: Icon(Icons.event_outlined, size: 22, color: theme.textSecondary),
+                          ),
                         ],
                       ),
                     ),
 
-                    // Mixed feed: posts, events, and sponsored content
-                    ..._buildMixedFeed(state, theme),
+                    // Post cards with inline sponsored content
+                    ...List.generate(DemoDataExtended.posts.length + 1, (i) {
+                      // Insert sponsored card after 2nd post
+                      if (i == 2) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          child: SponsoredPostCard(
+                            brandName: 'Urban Threads',
+                            headline: 'New Season Streetwear',
+                            description: 'Discover the latest drops from independent designers. Free UK delivery.',
+                            ctaText: 'Shop Now',
+                          ),
+                        );
+                      }
+                      final postIndex = i < 2 ? i : i - 1;
+                      if (postIndex >= DemoDataExtended.posts.length) return const SizedBox.shrink();
+                      return _PostCard(post: DemoDataExtended.posts[postIndex]);
+                    }),
 
                     // Bottom spacing for FAB
                     const SizedBox(height: 80),
@@ -135,47 +133,21 @@ class _SocialFeedScreenState extends State<SocialFeedScreen> {
     );
   }
 
-  List<Widget> _buildMixedFeed(PrototypeStateProvider state, ProtoTheme theme) {
-    final posts = DemoDataExtended.posts;
-    final events = ProtoDemoData.events;
-    final items = <Widget>[];
-
-    // Interleave: post, post, sponsored, post, EVENT, post, post, EVENT, ...
-    int eventIdx = 0;
-    for (var i = 0; i < posts.length; i++) {
-      // Sponsored card after 2nd post
-      if (i == 2) {
-        items.add(Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: SponsoredPostCard(
-            brandName: 'Urban Threads',
-            headline: 'New Season Streetwear',
-            description: 'Discover the latest drops from independent designers. Free UK delivery.',
-            ctaText: 'Shop Now',
-          ),
-        ));
-      }
-
-      // Insert an event card after every 3rd post (positions 3, 6, 9...)
-      if (i > 0 && i % 3 == 0 && eventIdx < events.length) {
-        items.add(_FeedEventCard(
-          event: events[eventIdx],
-          onTap: () => state.pushWithArgs(ProtoRoutes.socialEventDetail, events[eventIdx]),
-        ));
-        eventIdx++;
-      }
-
-      final post = posts[i];
-      items.add(_PostCard(
-        post: post,
-        onTap: () => state.pushWithArgs(ProtoRoutes.socialPostDetail, post),
-      ));
-    }
-    return items;
-  }
-
   Widget _buildStoriesRow(BuildContext context, PrototypeStateProvider state, ProtoTheme theme) {
-    return _StoriesRowCard(state: state, theme: theme);
+    switch (_storyVariant) {
+      case 0:
+        return _StoriesRowThumbnail(state: state, theme: theme);
+      case 1:
+        return _StoriesRowThumbnail(state: state, theme: theme, bgColor: Colors.white);
+      case 2:
+        return _StoriesRowThumbnail(state: state, theme: theme, bgColor: Colors.black);
+      case 3:
+        return _StoriesRowCard(state: state, theme: theme);
+      case 4:
+        return _StoriesRowCard(state: state, theme: theme, darkCards: true);
+      default:
+        return _StoriesRowThumbnail(state: state, theme: theme);
+    }
   }
 }
 
@@ -606,8 +578,7 @@ class _TabChip extends StatelessWidget {
 
 class _PostCard extends StatefulWidget {
   final DemoPost post;
-  final VoidCallback? onTap;
-  const _PostCard({required this.post, this.onTap});
+  const _PostCard({required this.post});
 
   @override
   State<_PostCard> createState() => _PostCardState();
@@ -622,163 +593,144 @@ class _PostCardState extends State<_PostCard> {
     final theme = ProtoTheme.of(context);
     final post = widget.post;
     final likeCount = post.reactions + (_isLiked ? 1 : 0);
+    final allImages = post.imageUrls.isNotEmpty
+        ? post.imageUrls
+        : (post.imageUrl != null ? [post.imageUrl!] : <String>[]);
 
-    const hp = EdgeInsets.symmetric(horizontal: 14);
-
-    return GestureDetector(
-      onTap: widget.onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.all(14),
       decoration: theme.cardDecoration,
-      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 14),
           // Author row
-          Padding(
-            padding: hp,
-            child: Row(
-              children: [
-                ProtoAvatar(radius: 18, imageUrl: post.avatarUrl),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(post.author, style: theme.title.copyWith(fontSize: 14)),
-                      Text(post.timeAgo, style: theme.caption),
-                    ],
-                  ),
+          Row(
+            children: [
+              ProtoAvatar(radius: 18, imageUrl: post.avatarUrl),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(post.author, style: theme.title.copyWith(fontSize: 14)),
+                    Text(post.timeAgo, style: theme.caption),
+                  ],
                 ),
-                ProtoPressButton(
-                  onTap: () => ProtoPostMenu.show(context, authorName: post.author),
-                  child: Icon(theme.icons.moreHoriz, size: 20, color: theme.textTertiary),
-                ),
-              ],
-            ),
+              ),
+              Icon(theme.icons.moreHoriz, size: 20, color: theme.textTertiary),
+            ],
           ),
           const SizedBox(height: 10),
-          Padding(
-            padding: hp,
-            child: Text(post.text, style: theme.body),
-          ),
+          Text(post.text, style: theme.body),
 
           // Video repost embed card
           if (post.repostVideoCreator != null) ...[
             const SizedBox(height: 10),
-            Padding(
-              padding: hp,
-              child: _VideoRepostEmbed(
-                creator: post.repostVideoCreator!,
-                caption: post.repostVideoCaption ?? '',
-                gradientIndex: post.repostVideoIndex ?? 0,
-              ),
+            _VideoRepostEmbed(
+              creator: post.repostVideoCreator!,
+              caption: post.repostVideoCaption ?? '',
+              gradientIndex: post.repostVideoIndex ?? 0,
             ),
           ],
 
           // Text repost card (embedded original post)
           if (post.repostAuthor != null && post.repostVideoCreator == null) ...[
             const SizedBox(height: 10),
-            Padding(
-              padding: hp,
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: theme.background,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: theme.text.withValues(alpha: 0.08)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.repeat_rounded, size: 16, color: theme.textTertiary),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(post.repostAuthor!, style: theme.title.copyWith(fontSize: 12)),
-                          const SizedBox(height: 2),
-                          Text(post.repostText ?? '', style: theme.body.copyWith(fontSize: 13), maxLines: 3, overflow: TextOverflow.ellipsis),
-                        ],
-                      ),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: theme.background,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.text.withValues(alpha: 0.08)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.repeat_rounded, size: 16, color: theme.textTertiary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(post.repostAuthor!, style: theme.title.copyWith(fontSize: 12)),
+                        const SizedBox(height: 2),
+                        Text(post.repostText ?? '', style: theme.body.copyWith(fontSize: 13), maxLines: 3, overflow: TextOverflow.ellipsis),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],
 
-          // Media: edge-to-edge within the card
-          if (post.media.isNotEmpty) ...[
+          // Image carousel or single image
+          if (allImages.isNotEmpty) ...[
             const SizedBox(height: 10),
-            if (post.media.length > 1)
-              ProtoMediaCarousel(
-                items: post.media,
+            if (allImages.length > 1)
+              _ImageCarousel(
+                images: allImages,
                 theme: theme,
                 currentIndex: _currentImage,
                 onPageChanged: (i) => setState(() => _currentImage = i),
-                borderRadius: BorderRadius.zero,
               )
             else
-              ProtoSingleMedia(item: post.media.first, theme: theme, borderRadius: BorderRadius.zero),
+              ProtoNetworkImage(
+                imageUrl: allImages.first,
+                height: 160,
+                width: double.infinity,
+                borderRadius: BorderRadius.circular(theme.radiusMd),
+              ),
           ],
 
           const SizedBox(height: 10),
           // Action row: like, comment, repost, share
-          Padding(
-            padding: hp,
-            child: Row(
-              children: [
-                // Like button (interactive)
-                ProtoPressButton(
-                  onTap: () => setState(() => _isLiked = !_isLiked),
-                  child: Row(
-                    children: [
-                      Icon(
-                        _isLiked ? theme.icons.favoriteFilled : theme.icons.favoriteOutline,
-                        size: 20,
-                        color: _isLiked ? theme.accent : theme.textTertiary,
-                      ),
-                      const SizedBox(width: 6),
-                      Text('$likeCount', style: theme.caption.copyWith(
-                        color: _isLiked ? theme.accent : theme.textTertiary,
-                      )),
-                    ],
-                  ),
+          Row(
+            children: [
+              // Like button (interactive)
+              ProtoPressButton(
+                onTap: () => setState(() => _isLiked = !_isLiked),
+                child: Row(
+                  children: [
+                    Icon(
+                      _isLiked ? theme.icons.favoriteFilled : theme.icons.favoriteOutline,
+                      size: 20,
+                      color: _isLiked ? theme.accent : theme.textTertiary,
+                    ),
+                    const SizedBox(width: 6),
+                    Text('$likeCount', style: theme.caption.copyWith(
+                      color: _isLiked ? theme.accent : theme.textTertiary,
+                    )),
+                  ],
                 ),
-                const SizedBox(width: 20),
-                // Comment
-                ProtoPressButton(
-                  onTap: () => ProtoToast.show(context, theme.icons.chatBubbleOutline, 'Comments'),
-                  child: Row(
-                    children: [
-                      Icon(theme.icons.chatBubbleOutline, size: 18, color: theme.textTertiary),
-                      const SizedBox(width: 6),
-                      Text('${post.comments}', style: theme.caption),
-                    ],
-                  ),
+              ),
+              const SizedBox(width: 20),
+              // Comment
+              ProtoPressButton(
+                onTap: () => ProtoToast.show(context, theme.icons.chatBubbleOutline, 'Comments'),
+                child: Row(
+                  children: [
+                    Icon(theme.icons.chatBubbleOutline, size: 18, color: theme.textTertiary),
+                    const SizedBox(width: 6),
+                    Text('${post.comments}', style: theme.caption),
+                  ],
                 ),
-                const SizedBox(width: 20),
-                // Repost
-                ProtoPressButton(
-                  onTap: () => ProtoToast.show(context, Icons.repeat_rounded, 'Reposted'),
-                  child: Icon(Icons.repeat_rounded, size: 18, color: theme.textTertiary),
-                ),
-                const Spacer(),
-                // Share
-                ProtoPressButton(
-                  onTap: () => ProtoShareSheet.show(context),
-                  child: Icon(theme.icons.share, size: 18, color: theme.textTertiary),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 20),
+              // Repost
+              ProtoPressButton(
+                onTap: () => ProtoToast.show(context, Icons.repeat_rounded, 'Reposted'),
+                child: Icon(Icons.repeat_rounded, size: 18, color: theme.textTertiary),
+              ),
+              const Spacer(),
+              // Share
+              ProtoPressButton(
+                onTap: () => ProtoShareSheet.show(context),
+                child: Icon(theme.icons.share, size: 18, color: theme.textTertiary),
+              ),
+            ],
           ),
-          const SizedBox(height: 14),
         ],
-      ),
       ),
     );
   }
@@ -943,166 +895,56 @@ class _VideoRepostEmbed extends StatelessWidget {
   }
 }
 
-// ─── Compact event card for mixed feed ──────────────────────────────────────
+class _ImageCarousel extends StatelessWidget {
+  final List<String> images;
+  final ProtoTheme theme;
+  final int currentIndex;
+  final ValueChanged<int> onPageChanged;
 
-class _FeedEventCard extends StatelessWidget {
-  final DemoEvent event;
-  final VoidCallback onTap;
-  const _FeedEventCard({required this.event, required this.onTap});
+  const _ImageCarousel({
+    required this.images,
+    required this.theme,
+    required this.currentIndex,
+    required this.onPageChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = ProtoTheme.of(context);
-    final costLabel = event.cost ?? 'Free';
-    final isFree = event.cost == null;
-
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: theme.cardDecoration,
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Cover image with badges
-            SizedBox(
-              height: 130,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ProtoNetworkImage(imageUrl: event.imageUrl, height: 130, width: double.infinity),
-                  // Date pill
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(event.date, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white)),
-                    ),
-                  ),
-                  // Cost pill
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isFree ? const Color(0xFF2E7D32).withValues(alpha: 0.85) : Colors.black.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(costLabel, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white)),
-                    ),
-                  ),
-                  // "Event" label bottom-left
-                  Positioned(
-                    bottom: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: theme.primary.withValues(alpha: 0.85),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.event_rounded, size: 11, color: Colors.white),
-                          const SizedBox(width: 4),
-                          const Text('Event', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(child: Text(event.title, style: theme.title.copyWith(fontSize: 15))),
-                      if (event.isPromoted)
-                        Container(
-                          margin: const EdgeInsets.only(left: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: theme.secondary.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            'Promoted',
-                            style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: theme.secondary),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(theme.icons.locationOn, size: 13, color: theme.textTertiary),
-                      const SizedBox(width: 4),
-                      Expanded(child: Text(event.location, style: theme.caption, overflow: TextOverflow.ellipsis)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      // Avatar stack
-                      if (event.attendeeAvatars.isNotEmpty) ...[
-                        SizedBox(
-                          width: 18.0 + (event.attendeeAvatars.take(3).length - 1) * 12.0,
-                          height: 18,
-                          child: Stack(
-                            children: [
-                              for (var j = 0; j < event.attendeeAvatars.take(3).length; j++)
-                                Positioned(
-                                  left: j * 12.0,
-                                  child: Container(
-                                    width: 18,
-                                    height: 18,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: theme.surface, width: 1.5),
-                                      image: DecorationImage(
-                                        image: NetworkImage(event.attendeeAvatars[j]),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                      ],
-                      Text('${event.goingCount} going', style: theme.caption.copyWith(color: theme.primary, fontSize: 11)),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: theme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Text('Interested', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: theme.primary)),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
+    return Column(
+      children: [
+        SizedBox(
+          height: 160,
+          child: PageView.builder(
+            itemCount: images.length,
+            onPageChanged: onPageChanged,
+            itemBuilder: (context, i) {
+              return ProtoNetworkImage(
+                imageUrl: images[i],
+                width: double.infinity,
+                borderRadius: BorderRadius.circular(theme.radiusMd),
+              );
+            },
+          ),
         ),
-      ),
+        const SizedBox(height: 8),
+        // Dot indicators
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(images.length, (i) {
+            final isActive = i == currentIndex;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: isActive ? 16 : 6,
+              height: 6,
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              decoration: BoxDecoration(
+                color: isActive ? theme.primary : theme.textTertiary.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(3),
+              ),
+            );
+          }),
+        ),
+      ],
     );
   }
 }
-

@@ -320,11 +320,11 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
           width: _fabSize,
           height: _fabSize,
           decoration: BoxDecoration(
-            color: ProtoTheme.kuwbooRed,
+            color: ProtoTheme.kuwbooBlue,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: ProtoTheme.kuwbooRed.withValues(alpha: 0.3),
+                color: ProtoTheme.kuwbooBlue.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 3),
               ),
@@ -439,7 +439,7 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: isCurrent ? theme.secondary : theme.surface,
+                      color: isCurrent ? ProtoTheme.kuwbooBlue : theme.surface,
                       shape: BoxShape.circle,
                       border: isCurrent
                           ? null
@@ -448,7 +448,7 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
                             ),
                       boxShadow: [
                         BoxShadow(
-                          color: (isCurrent ? theme.secondary : Colors.black)
+                          color: (isCurrent ? ProtoTheme.kuwbooBlue : Colors.black)
                               .withValues(alpha: 0.15),
                           blurRadius: 6,
                           offset: const Offset(0, 2),

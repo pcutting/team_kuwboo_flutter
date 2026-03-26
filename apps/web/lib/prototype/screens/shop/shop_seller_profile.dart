@@ -114,12 +114,12 @@ class _ShopSellerProfileState extends State<ShopSellerProfile> {
                                   Icon(
                                     _isFriend ? theme.icons.personAdd : theme.icons.personAdd,
                                     size: 14,
-                                    color: theme.onPrimary,
+                                    color: Colors.white,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     _isFriend ? 'Friends' : 'Add Friend',
-                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: theme.onPrimary),
+                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
                                   ),
                                 ],
                               ),
@@ -213,12 +213,13 @@ class _ShopSellerProfileState extends State<ShopSellerProfile> {
                       onTap: () => state.push(ProtoRoutes.shopProduct),
                       child: Container(
                         decoration: theme.cardDecoration,
+                        clipBehavior: Clip.antiAlias,
                         child: Column(
                           children: [
                             Expanded(
                               child: Stack(
                                 children: [
-                                  ProtoNetworkImage(imageUrl: p.imageUrl, width: double.infinity, borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
+                                  ProtoNetworkImage(imageUrl: p.imageUrl, width: double.infinity),
                                   if (_activeTab == 'Sold')
                                     Positioned(
                                       top: 8,
@@ -226,7 +227,7 @@ class _ShopSellerProfileState extends State<ShopSellerProfile> {
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                         decoration: BoxDecoration(color: theme.secondary, borderRadius: BorderRadius.circular(6)),
-                                        child: Text('SOLD', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: theme.onPrimary)),
+                                        child: const Text('SOLD', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)),
                                       ),
                                     ),
                                 ],
@@ -445,14 +446,14 @@ class _ModuleBadge extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: isActive ? theme.onPrimary : theme.textSecondary),
+            Icon(icon, size: 16, color: isActive ? Colors.white : theme.textSecondary),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: isActive ? theme.onPrimary : theme.textSecondary,
+                color: isActive ? Colors.white : theme.textSecondary,
               ),
             ),
           ],

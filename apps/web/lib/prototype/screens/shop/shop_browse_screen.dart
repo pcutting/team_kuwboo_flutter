@@ -136,6 +136,7 @@ class _ShopBrowseScreenState extends State<ShopBrowseScreen> {
                   onTap: () => state.push(ProtoRoutes.shopProduct),
                   child: Container(
                     decoration: theme.cardDecoration,
+                    clipBehavior: Clip.antiAlias,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -144,7 +145,6 @@ class _ShopBrowseScreenState extends State<ShopBrowseScreen> {
                           child: ProtoNetworkImage(
                             imageUrl: product.imageUrl,
                             width: double.infinity,
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                           ),
                         ),
                         Expanded(

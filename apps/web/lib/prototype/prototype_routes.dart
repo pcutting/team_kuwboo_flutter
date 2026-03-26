@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../data/demo_data.dart';
-import 'prototype_demo_data.dart';
 import 'proto_transitions.dart';
 
 // Screen imports — home screens
@@ -32,8 +30,6 @@ import 'screens/social/social_composer_screen.dart';
 import 'screens/social/social_story_viewer.dart';
 import 'screens/social/social_friends_list.dart';
 import 'screens/social/social_events_screen.dart';
-import 'screens/social/social_post_detail.dart';
-import 'screens/social/social_event_detail.dart';
 
 // Shop sub-screens
 import 'screens/shop/shop_product_detail.dart';
@@ -112,8 +108,6 @@ class ProtoRoutes {
   static const socialStory = '/social/story';
   static const socialFriends = '/social/friends';
   static const socialEvents = '/social/events';
-  static const socialPostDetail = '/social/post-detail';
-  static const socialEventDetail = '/social/event-detail';
 
   // Shop
   static const shopProduct = '/shop/product';
@@ -223,12 +217,6 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return instant(const SocialFriendsList(), name: settings.name);
     case ProtoRoutes.socialEvents:
       return instant(const SocialEventsScreen(), name: settings.name);
-    case ProtoRoutes.socialPostDetail:
-      final post = settings.arguments as DemoPost;
-      return slideRight(SocialPostDetail(post: post), name: settings.name);
-    case ProtoRoutes.socialEventDetail:
-      final event = settings.arguments as DemoEvent;
-      return slideRight(SocialEventDetail(event: event), name: settings.name);
 
     // ── Shop sub-screens ──
     case ProtoRoutes.shopProduct:
@@ -262,7 +250,11 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case ProtoRoutes.chatInbox:
       return slideRight(const ChatInboxScreen(), name: settings.name);
     case ProtoRoutes.chatConversation:
-      return slideRight(const ChatConversationScreen(), name: settings.name);
+      final chatArgs = settings.arguments as Map<String, dynamic>?;
+      return slideRight(
+        ChatConversationScreen(initialVariant: chatArgs?['variant'] as int? ?? 0),
+        name: settings.name,
+      );
 
     // ── Profile ──
     case ProtoRoutes.profileMy:

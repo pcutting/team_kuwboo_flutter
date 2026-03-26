@@ -46,6 +46,12 @@ class PrototypeStateProvider extends InheritedWidget {
   final bool yoyoV2EncounterTransparency;
   final ValueChanged<bool> onYoyoV2EncounterTransparencyChanged;
 
+  // YoYo Go Live state (visibility timer)
+  final bool yoyoLiveActive;
+  final VoidCallback onYoyoLiveToggle;
+  final int yoyoLiveDuration; // 0=30m, 1=2h, 2=8h, 3=Always
+  final ValueChanged<int> onYoyoLiveDurationChanged;
+
   // YoYo variant (0 = V1, 1 = V2) — global across all YoYo screens
   final int yoyoVariant;
   final ValueChanged<int> onYoyoVariantChanged;
@@ -53,10 +59,6 @@ class PrototypeStateProvider extends InheritedWidget {
   // YoYo mode (0 = Social, 1 = Inner Circle) — toggles context for all tabs
   final int yoyoMode;
   final ValueChanged<int> onYoyoModeChanged;
-
-  // Per-screen variant state (driven by screens, read by tool page)
-  final ValueNotifier<int> screenVariantCount;
-  final ValueNotifier<int> screenVariantIndex;
 
   // Global preferences
   final bool isDarkMode;
@@ -97,12 +99,14 @@ class PrototypeStateProvider extends InheritedWidget {
     required this.onYoyoV2RelationshipFilterChanged,
     required this.yoyoV2EncounterTransparency,
     required this.onYoyoV2EncounterTransparencyChanged,
+    required this.yoyoLiveActive,
+    required this.onYoyoLiveToggle,
+    required this.yoyoLiveDuration,
+    required this.onYoyoLiveDurationChanged,
     required this.yoyoVariant,
     required this.onYoyoVariantChanged,
     required this.yoyoMode,
     required this.onYoyoModeChanged,
-    required this.screenVariantCount,
-    required this.screenVariantIndex,
     required this.isDarkMode,
     required this.onDarkModeChanged,
     required super.child,
@@ -226,6 +230,8 @@ class PrototypeStateProvider extends InheritedWidget {
       yoyoV2EncounterFilter != oldWidget.yoyoV2EncounterFilter ||
       yoyoV2RelationshipFilter != oldWidget.yoyoV2RelationshipFilter ||
       yoyoV2EncounterTransparency != oldWidget.yoyoV2EncounterTransparency ||
+      yoyoLiveActive != oldWidget.yoyoLiveActive ||
+      yoyoLiveDuration != oldWidget.yoyoLiveDuration ||
       yoyoVariant != oldWidget.yoyoVariant ||
       yoyoMode != oldWidget.yoyoMode ||
       isDarkMode != oldWidget.isDarkMode;

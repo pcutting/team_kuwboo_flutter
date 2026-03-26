@@ -35,12 +35,7 @@ class PrototypeApp extends StatefulWidget {
   /// Set value to a route name to push it, then reset to null.
   final ValueNotifier<String?>? navigateNotifier;
 
-  /// Per-screen variant state. Screens set count on mount (0 = no variants)
-  /// and read/write index. The tool page renders numbered buttons when count > 0.
-  final ValueNotifier<int>? screenVariantCount;
-  final ValueNotifier<int>? screenVariantIndex;
-
-  const PrototypeApp({super.key, this.designIndex = 0, this.paletteIndex, this.iconSetIndex, this.yoyoVariant = 0, this.onYoyoVariantChanged, this.yoyoMode = 0, this.onYoyoModeChanged, this.navigateNotifier, this.screenVariantCount, this.screenVariantIndex});
+  const PrototypeApp({super.key, this.designIndex = 6, this.paletteIndex, this.iconSetIndex, this.yoyoVariant = 0, this.onYoyoVariantChanged, this.yoyoMode = 0, this.onYoyoModeChanged, this.navigateNotifier});
 
   @override
   State<PrototypeApp> createState() => _PrototypeAppState();
@@ -53,7 +48,7 @@ class _PrototypeAppState extends State<PrototypeApp> {
 
   // YoYo radar & filter state
   double _yoyoRange = 1.0;
-  bool _isYoyoHidden = false;
+  bool _isYoyoHidden = true; // Hidden by default — privacy-first
   bool _yoyoFriendsOnly = false;
   Set<String> _yoyoSelectedInterests = {};
 
@@ -71,15 +66,12 @@ class _PrototypeAppState extends State<PrototypeApp> {
   String _yoyoV2RelationshipFilter = 'all';
   bool _yoyoV2EncounterTransparency = true;
 
+  // YoYo Go Live state
+  bool _yoyoLiveActive = false;
+  int _yoyoLiveDuration = 0; // 0=30m, 1=2h, 2=8h, 3=Always
+
   // Global preferences
   bool _isDarkMode = false;
-
-  // Fallback notifiers when not provided externally (desktop/standalone usage)
-  late final ValueNotifier<int> _fallbackVariantCount = ValueNotifier<int>(0);
-  late final ValueNotifier<int> _fallbackVariantIndex = ValueNotifier<int>(0);
-
-  ValueNotifier<int> get _screenVariantCount => widget.screenVariantCount ?? _fallbackVariantCount;
-  ValueNotifier<int> get _screenVariantIndex => widget.screenVariantIndex ?? _fallbackVariantIndex;
 
   @override
   void initState() {
@@ -99,8 +91,6 @@ class _PrototypeAppState extends State<PrototypeApp> {
   @override
   void dispose() {
     widget.navigateNotifier?.removeListener(_onExternalNavigate);
-    if (widget.screenVariantCount == null) _fallbackVariantCount.dispose();
-    if (widget.screenVariantIndex == null) _fallbackVariantIndex.dispose();
     super.dispose();
   }
 
@@ -203,6 +193,18 @@ class _PrototypeAppState extends State<PrototypeApp> {
         onYoyoV2EncounterTransparencyChanged: (value) {
           setState(() => _yoyoV2EncounterTransparency = value);
         },
+        yoyoLiveActive: _yoyoLiveActive,
+        onYoyoLiveToggle: () {
+          setState(() {
+            _yoyoLiveActive = !_yoyoLiveActive;
+            // When going live, un-hide; when ending, re-hide
+            _isYoyoHidden = !_yoyoLiveActive;
+          });
+        },
+        yoyoLiveDuration: _yoyoLiveDuration,
+        onYoyoLiveDurationChanged: (value) {
+          setState(() => _yoyoLiveDuration = value);
+        },
         yoyoVariant: widget.yoyoVariant,
         onYoyoVariantChanged: (value) {
           widget.onYoyoVariantChanged?.call(value);
@@ -211,8 +213,6 @@ class _PrototypeAppState extends State<PrototypeApp> {
         onYoyoModeChanged: (value) {
           widget.onYoyoModeChanged?.call(value);
         },
-        screenVariantCount: _screenVariantCount,
-        screenVariantIndex: _screenVariantIndex,
         isDarkMode: _isDarkMode,
         onDarkModeChanged: (value) {
           setState(() => _isDarkMode = value);
