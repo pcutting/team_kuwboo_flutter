@@ -99,16 +99,7 @@ class ProtoTopBar extends StatelessWidget {
                   ),
                 ),
               ),
-              // Mode toggle — only visible in YoYo module
-              if (activeModule == ProtoModule.yoyo) ...[
-                const SizedBox(width: 8),
-                _YoyoModeToggleIcon(
-                  isInnerCircle: isInnerCircle,
-                  onTap: () {
-                    state.onYoyoModeChanged(state.yoyoMode == 0 ? 1 : 0);
-                  },
-                ),
-              ],
+              // Inner Circle toggle removed — feature deferred
             ],
           ),
 
