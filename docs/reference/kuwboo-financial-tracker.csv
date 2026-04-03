@@ -1,0 +1,6 @@
+Date,Type,Description,Amount,Accumulated Bids,Accumulated Invoiced,Accumulated Payments,Amount Owed,% Paid,Invoice Ref,Milestone / Notes
+2026-01-07,Bid,Discovery Phase,5000,5000,0,0,0,0%,,,
+2026-01-07,Invoice,Discovery Phase,5000,5000,5000,0,5000,0%,INV-001,Discovery
+2026-01-07,Payment,Discovery Phase,5000,5000,5000,5000,0,100%,INV-001,Discovery - paid in full
+2026-02-02,Bid,Main Project Build,60000,65000,5000,5000,0,100%,,,
+2026-02-22,Invoice,Milestone 1 - Design,6500,65000,11500,5000,6500,43%,INV-002,Milestone 1 - Design
