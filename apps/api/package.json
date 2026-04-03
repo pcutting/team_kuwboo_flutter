@@ -22,6 +22,10 @@
     "migration:list": "mikro-orm migration:list"
   },
   "dependencies": {
+    "@mikro-orm/core": "^6.0.0",
+    "@mikro-orm/migrations": "^6.0.0",
+    "@mikro-orm/nestjs": "^6.0.0",
+    "@mikro-orm/postgresql": "^6.0.0",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.0",
@@ -31,17 +35,14 @@
     "@nestjs/swagger": "^11.0.0",
     "@nestjs/terminus": "^11.0.0",
     "@nestjs/throttler": "^6.0.0",
-    "@mikro-orm/core": "^6.0.0",
-    "@mikro-orm/nestjs": "^6.0.0",
-    "@mikro-orm/postgresql": "^6.0.0",
-    "@mikro-orm/migrations": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "helmet": "^8.0.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.0"
+    "rxjs": "^7.8.0",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@mikro-orm/cli": "^6.0.0",
@@ -52,6 +53,7 @@
     "@types/jest": "^29.5.0",
     "@types/node": "^22.0.0",
     "@types/passport-jwt": "^4.0.0",
+    "@types/uuid": "^11.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.0.0",
@@ -70,13 +72,19 @@
     ]
   },
   "jest": {
-    "moduleFileExtensions": ["js", "json", "ts"],
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
-    "collectCoverageFrom": ["**/*.(t|j)s"],
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
