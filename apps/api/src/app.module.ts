@@ -15,6 +15,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 import { HealthModule } from './modules/health/health.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { HealthModule } from './modules/health/health.module';
     ]),
 
     HealthModule,
+    UsersModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
