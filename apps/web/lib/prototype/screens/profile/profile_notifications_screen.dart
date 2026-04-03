@@ -17,46 +17,6 @@ class ProfileNotificationsScreen extends StatefulWidget {
 
 class _ProfileNotificationsScreenState
     extends State<ProfileNotificationsScreen> {
-  int _variant = 0; // 0 = v1 (simple), 1 = v2 (search + mark read)
-
-  Widget _buildVariantToggle(ProtoTheme theme) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (int i = 0; i < 2; i++) ...[
-          GestureDetector(
-            onTap: () => setState(() => _variant = i),
-            child: Container(
-              width: 22,
-              height: 22,
-              decoration: BoxDecoration(
-                color: i == _variant ? theme.primary : theme.background,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: i == _variant
-                      ? theme.primary
-                      : theme.textTertiary.withValues(alpha: 0.4),
-                  width: 1,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  '${i + 1}',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: i == _variant ? Colors.white : theme.textTertiary,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          if (i < 1) const SizedBox(width: 4),
-        ],
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
@@ -67,12 +27,10 @@ class _ProfileNotificationsScreenState
         children: [
           ProtoSubBar(
             title: 'Notifications',
-            actions: [_buildVariantToggle(theme)],
           ),
 
-          // V2: search bar + mark all read
-          if (_variant == 1)
-            Padding(
+          // Search bar + mark all read
+          Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
@@ -130,8 +88,6 @@ class _ProfileNotificationsScreenState
                 ],
               ),
             ),
-
-          // V1: no search bar
 
           Expanded(
             child: ListView(

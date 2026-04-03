@@ -43,7 +43,6 @@ class _ViewerHomeState extends State<ViewerHome> {
   int _selectedDesign = 3; // Street (original index 6)
   int? _selectedPalette;
   int? _selectedIconSet;
-  int _yoyoVariant = 0;
   int _yoyoMode = 0;
   DesignSet _designSet = DesignSet.setC;
   bool _updateAvailable = false;
@@ -77,10 +76,6 @@ class _ViewerHomeState extends State<ViewerHome> {
 
   void _handleKeyEvent(KeyEvent event) {
     // Keyboard shortcuts removed — Street theme is locked in
-  }
-
-  void _onYoyoVariantChanged(int variant) {
-    setState(() => _yoyoVariant = variant);
   }
 
   void _onYoyoModeChanged(int mode) {
@@ -130,8 +125,6 @@ class _ViewerHomeState extends State<ViewerHome> {
                 designIndex: DesignRegistry.visibleOriginalIndices[_selectedDesign],
                 paletteIndex: _selectedPalette,
                 iconSetIndex: _selectedIconSet,
-                yoyoVariant: _yoyoVariant,
-                onYoyoVariantChanged: _onYoyoVariantChanged,
                 yoyoMode: _yoyoMode,
                 onYoyoModeChanged: _onYoyoModeChanged,
                 navigateNotifier: _navigateNotifier,
@@ -163,8 +156,6 @@ class _ViewerHomeState extends State<ViewerHome> {
           Padding(
             padding: const EdgeInsets.only(left: 24),
             child: ProtoDesignSidebar(
-              yoyoVariant: _yoyoVariant,
-              onYoyoVariantChanged: _onYoyoVariantChanged,
               yoyoMode: _yoyoMode,
               onYoyoModeChanged: _onYoyoModeChanged,
               onNavigateRoute: (route) => _navigateNotifier.value = route,
@@ -198,8 +189,6 @@ class _ViewerHomeState extends State<ViewerHome> {
                     originalDesignIndex: DesignRegistry.visibleOriginalIndices[_selectedDesign],
                     paletteIndex: _selectedPalette,
                     iconSetIndex: _selectedIconSet,
-                    yoyoVariant: _yoyoVariant,
-                    onYoyoVariantChanged: _onYoyoVariantChanged,
                     yoyoMode: _yoyoMode,
                     onYoyoModeChanged: _onYoyoModeChanged,
                   )
@@ -208,8 +197,6 @@ class _ViewerHomeState extends State<ViewerHome> {
                         originalDesignIndex: DesignRegistry.visibleOriginalIndices[_selectedDesign],
                         paletteIndex: _selectedPalette,
                         iconSetIndex: _selectedIconSet,
-                        yoyoVariant: _yoyoVariant,
-                        onYoyoVariantChanged: _onYoyoVariantChanged,
                         yoyoMode: _yoyoMode,
                         onYoyoModeChanged: _onYoyoModeChanged,
                       )

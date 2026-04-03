@@ -52,10 +52,6 @@ class PrototypeStateProvider extends InheritedWidget {
   final int yoyoLiveDuration; // 0=30m, 1=2h, 2=8h, 3=Always
   final ValueChanged<int> onYoyoLiveDurationChanged;
 
-  // YoYo variant (0 = V1, 1 = V2) — global across all YoYo screens
-  final int yoyoVariant;
-  final ValueChanged<int> onYoyoVariantChanged;
-
   // YoYo mode (0 = Social, 1 = Inner Circle) — toggles context for all tabs
   final int yoyoMode;
   final ValueChanged<int> onYoyoModeChanged;
@@ -103,8 +99,6 @@ class PrototypeStateProvider extends InheritedWidget {
     required this.onYoyoLiveToggle,
     required this.yoyoLiveDuration,
     required this.onYoyoLiveDurationChanged,
-    required this.yoyoVariant,
-    required this.onYoyoVariantChanged,
     required this.yoyoMode,
     required this.onYoyoModeChanged,
     required this.isDarkMode,
@@ -232,7 +226,6 @@ class PrototypeStateProvider extends InheritedWidget {
       yoyoV2EncounterTransparency != oldWidget.yoyoV2EncounterTransparency ||
       yoyoLiveActive != oldWidget.yoyoLiveActive ||
       yoyoLiveDuration != oldWidget.yoyoLiveDuration ||
-      yoyoVariant != oldWidget.yoyoVariant ||
       yoyoMode != oldWidget.yoyoMode ||
       isDarkMode != oldWidget.isDarkMode;
 }

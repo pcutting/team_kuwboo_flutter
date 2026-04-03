@@ -5,8 +5,6 @@ import '../../prototype_demo_data.dart';
 import '../../shared/proto_scaffold.dart';
 import '../../shared/proto_press_button.dart';
 import '../../shared/proto_dialogs.dart';
-import 'yoyo_shared.dart';
-
 /// YoYo settings — ghost mode toggle, range slider, show filters, notifications.
 /// V2 adds session scheduling, data retention, visibility, DND, transparency.
 class YoyoSettingsScreen extends StatefulWidget {
@@ -33,18 +31,14 @@ class _YoyoSettingsScreenState extends State<YoyoSettingsScreen> {
         children: [
           ProtoSubBar(
             title: 'YoYo Settings',
-            actions: [
-              if (state.yoyoVariant == 1) yoyoV2Badge(theme),
-            ],
+            actions: [],
           ),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               children: [
-                // V2-only sections
-                if (state.yoyoVariant == 1) ...[
-                  // Session Scheduling
-                  _V2SessionSchedulingCard(theme: theme),
+                // Session Scheduling
+                _V2SessionSchedulingCard(theme: theme),
                   const SizedBox(height: 12),
                   // Data Retention
                   _V2DataRetentionCard(theme: theme, state: state),
@@ -150,8 +144,7 @@ class _YoyoSettingsScreenState extends State<YoyoSettingsScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
-                ],
+                const SizedBox(height: 12),
                 // Ghost mode
                 Container(
                   padding: const EdgeInsets.all(16),

@@ -19,12 +19,6 @@ class PrototypeApp extends StatefulWidget {
   /// Optional icon set override index. null = use design's built-in icons.
   final int? iconSetIndex;
 
-  /// YoYo variant (0 = V1, 1 = V2). Controlled by the viewer sidebar.
-  final int yoyoVariant;
-
-  /// Callback when YoYo variant changes from inside the prototype.
-  final ValueChanged<int>? onYoyoVariantChanged;
-
   /// YoYo mode (0 = Social, 1 = Inner Circle). Controlled by viewer sidebar and header toggle.
   final int yoyoMode;
 
@@ -35,7 +29,7 @@ class PrototypeApp extends StatefulWidget {
   /// Set value to a route name to push it, then reset to null.
   final ValueNotifier<String?>? navigateNotifier;
 
-  const PrototypeApp({super.key, this.designIndex = 6, this.paletteIndex, this.iconSetIndex, this.yoyoVariant = 0, this.onYoyoVariantChanged, this.yoyoMode = 0, this.onYoyoModeChanged, this.navigateNotifier});
+  const PrototypeApp({super.key, this.designIndex = 6, this.paletteIndex, this.iconSetIndex, this.yoyoMode = 0, this.onYoyoModeChanged, this.navigateNotifier});
 
   @override
   State<PrototypeApp> createState() => _PrototypeAppState();
@@ -204,10 +198,6 @@ class _PrototypeAppState extends State<PrototypeApp> {
         yoyoLiveDuration: _yoyoLiveDuration,
         onYoyoLiveDurationChanged: (value) {
           setState(() => _yoyoLiveDuration = value);
-        },
-        yoyoVariant: widget.yoyoVariant,
-        onYoyoVariantChanged: (value) {
-          widget.onYoyoVariantChanged?.call(value);
         },
         yoyoMode: widget.yoyoMode,
         onYoyoModeChanged: (value) {

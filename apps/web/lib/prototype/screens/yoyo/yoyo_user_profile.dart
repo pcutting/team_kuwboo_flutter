@@ -9,8 +9,6 @@ import '../../prototype_demo_data.dart';
 import '../../shared/proto_scaffold.dart';
 import '../../shared/proto_press_button.dart';
 import '../../shared/proto_dialogs.dart';
-import 'yoyo_shared.dart';
-
 class YoyoUserProfile extends StatefulWidget {
   const YoyoUserProfile({super.key});
 
@@ -34,9 +32,8 @@ class _YoyoUserProfileState extends State<YoyoUserProfile> {
       child: Column(
         children: [
           ProtoSubBar(
-            title: state.yoyoVariant == 1 && !_isRevealed ? 'Anonymous User' : user.name,
+            title: !_isRevealed ? 'Anonymous User' : user.name,
             actions: [
-              if (state.yoyoVariant == 1) yoyoV2Badge(theme),
               const SizedBox(width: 8),
               ProtoPressButton(
                 onTap: () => ProtoShareSheet.show(context),
@@ -45,9 +42,7 @@ class _YoyoUserProfileState extends State<YoyoUserProfile> {
             ],
           ),
           Expanded(
-            child: state.yoyoVariant == 1
-                ? _buildV2Profile(context, theme, state, user, v2Encounter)
-                : _buildV1Profile(context, theme, state, user),
+            child: _buildV2Profile(context, theme, state, user, v2Encounter),
           ),
         ],
       ),

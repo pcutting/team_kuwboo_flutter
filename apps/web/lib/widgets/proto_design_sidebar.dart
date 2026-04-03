@@ -3,16 +3,12 @@ import 'package:flutter/material.dart';
 /// Sidebar controls for the desktop viewer — YoYo toggles and Auth flow nav.
 /// Theme/palette/icon pickers removed (Street theme is locked in).
 class ProtoDesignSidebar extends StatelessWidget {
-  final int yoyoVariant;
-  final ValueChanged<int>? onYoyoVariantChanged;
   final int yoyoMode;
   final ValueChanged<int>? onYoyoModeChanged;
   final ValueChanged<String>? onNavigateRoute;
 
   const ProtoDesignSidebar({
     super.key,
-    this.yoyoVariant = 0,
-    this.onYoyoVariantChanged,
     this.yoyoMode = 0,
     this.onYoyoModeChanged,
     this.onNavigateRoute,
@@ -27,16 +23,8 @@ class ProtoDesignSidebar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // YoYo Version toggle
-          if (onYoyoVariantChanged != null) ...[
-            _YoyoVariantToggle(
-              variant: yoyoVariant,
-              onChanged: onYoyoVariantChanged!,
-            ),
-          ],
           // YoYo Mode toggle (Social / Inner Circle)
           if (onYoyoModeChanged != null) ...[
-            const SizedBox(height: 6),
             _YoyoModeToggle(
               mode: yoyoMode,
               onChanged: onYoyoModeChanged!,
@@ -254,106 +242,3 @@ class _AuthFlowButton extends StatelessWidget {
   }
 }
 
-/// V1/V2 pill toggle for the YoYo module, shown in the sidebar.
-class _YoyoVariantToggle extends StatelessWidget {
-  final int variant;
-  final ValueChanged<int> onChanged;
-
-  const _YoyoVariantToggle({
-    required this.variant,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 160,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 4),
-            child: Text(
-              'YoYo Version',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 0.5,
-                color: Colors.white.withValues(alpha: 0.35),
-              ),
-            ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => onChanged(0),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      color: variant == 0
-                          ? Colors.white.withValues(alpha: 0.12)
-                          : Colors.white.withValues(alpha: 0.03),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: variant == 0
-                            ? Colors.white.withValues(alpha: 0.25)
-                            : Colors.white.withValues(alpha: 0.06),
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'V1',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: variant == 0 ? FontWeight.w700 : FontWeight.w400,
-                          color: variant == 0
-                              ? Colors.white.withValues(alpha: 0.9)
-                              : Colors.white.withValues(alpha: 0.4),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => onChanged(1),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      color: variant == 1
-                          ? Colors.white.withValues(alpha: 0.12)
-                          : Colors.white.withValues(alpha: 0.03),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: variant == 1
-                            ? Colors.white.withValues(alpha: 0.25)
-                            : Colors.white.withValues(alpha: 0.06),
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'V2 Consent',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: variant == 1 ? FontWeight.w700 : FontWeight.w400,
-                          color: variant == 1
-                              ? Colors.white.withValues(alpha: 0.9)
-                              : Colors.white.withValues(alpha: 0.4),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}

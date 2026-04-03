@@ -262,15 +262,13 @@ const _conversation = <_ChatItem>[
 // ── Main Screen ─────────────────────────────────────────────────────────────
 
 class ChatConversationScreen extends StatefulWidget {
-  final int initialVariant;
-  const ChatConversationScreen({super.key, this.initialVariant = 0});
+  const ChatConversationScreen({super.key});
 
   @override
   State<ChatConversationScreen> createState() => _ChatConversationScreenState();
 }
 
 class _ChatConversationScreenState extends State<ChatConversationScreen> {
-  late int _variant = widget.initialVariant;
   final _scrollController = ScrollController();
 
   @override
@@ -297,31 +295,14 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
       color: theme.background,
       child: Column(
         children: [
-          // Header: v1 = ProtoSubBar, v2 = custom two-row header
-          _variant == 0
-              ? _SimpleHeader(
-                  theme: theme,
-                  variant: _variant,
-                  onVariantChanged: (v) => setState(() => _variant = v),
-                )
-              : _ChatHeader(
-                  theme: theme,
-                  variant: _variant,
-                  onVariantChanged: (v) => setState(() => _variant = v),
-                ),
-          // Messages
+          _ChatHeader(theme: theme),
           Expanded(
-            child: _variant == 0
-                ? _SimpleMessageList(theme: theme)
-                : _V2TransactionList(
-                    theme: theme,
-                    scrollController: _scrollController,
-                  ),
+            child: _V2TransactionList(
+              theme: theme,
+              scrollController: _scrollController,
+            ),
           ),
-          // Input bar: v1 = simple, v2 = rich
-          _variant == 0
-              ? _SimpleInputBar(theme: theme)
-              : _RichInputBar(theme: theme),
+          _RichInputBar(theme: theme),
           const SizedBox(height: 20),
         ],
       ),
@@ -535,181 +516,13 @@ Future<bool> _showDeleteSheetV2(
   return false;
 }
 
-// ── Variant Toggle Buttons (reusable) ─────────────────────────────────────────
-
-Widget _buildVariantToggle(
-  ProtoTheme theme,
-  int activeVariant,
-  void Function(int) onVariantChanged,
-) {
-  return Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      for (int i = 0; i < 2; i++) ...[
-        GestureDetector(
-          onTap: () => onVariantChanged(i),
-          child: Container(
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              color: i == activeVariant ? theme.primary : theme.background,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: i == activeVariant
-                    ? theme.primary
-                    : theme.textTertiary.withValues(alpha: 0.4),
-                width: 1,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                '${i + 1}',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: i == activeVariant ? Colors.white : theme.textTertiary,
-                ),
-              ),
-            ),
-          ),
-        ),
-        if (i < 1) const SizedBox(width: 4),
-      ],
-    ],
-  );
-}
-
-// ── V1 Simple Header (ProtoSubBar + toggle) ─────────────────────────────────
-
-class _SimpleHeader extends StatelessWidget {
-  final ProtoTheme theme;
-  final int variant;
-  final ValueChanged<int> onVariantChanged;
-
-  const _SimpleHeader({
-    required this.theme,
-    required this.variant,
-    required this.onVariantChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final state = PrototypeStateProvider.of(context);
-
-    // Mirrors _ChatHeader Row 1 layout so toggle stays centered when switching
-    return Container(
-      padding: const EdgeInsets.only(top: 14, left: 8, right: 12, bottom: 10),
-      decoration: BoxDecoration(
-        color: theme.surface,
-        border: Border(
-          bottom: BorderSide(color: theme.text.withValues(alpha: 0.06)),
-        ),
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => state.pop(),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: theme.background,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(theme.icons.arrowBack, size: 16, color: theme.text),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text('Maya', style: theme.title),
-          const Spacer(),
-          _buildVariantToggle(theme, variant, onVariantChanged),
-          const Spacer(),
-          ProtoPressButton(
-            onTap: () => _showMoreMenu(context),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: theme.background,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(theme.icons.moreHoriz, size: 18, color: theme.text),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showMoreMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: theme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.textTertiary.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
-            _menuItem(ctx, Icons.block_rounded, 'Block', theme.accent),
-            _menuItem(ctx, Icons.flag_rounded, 'Report', theme.accent),
-            _menuItem(ctx, Icons.delete_sweep_rounded, 'Clear chat', theme.textSecondary),
-            const SizedBox(height: 12),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _menuItem(BuildContext context, IconData icon, String label, Color color) {
-    return ProtoPressButton(
-      onTap: () {
-        Navigator.pop(context);
-        ProtoToast.show(context, icon, '$label tapped');
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        child: Row(
-          children: [
-            Icon(icon, size: 22, color: color),
-            const SizedBox(width: 14),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── V2 Custom Chat Header (with toggle) ─────────────────────────────────────
+// ── Chat Header ─────────────────────────────────────────────────────────────
 
 class _ChatHeader extends StatelessWidget {
   final ProtoTheme theme;
-  final int variant;
-  final ValueChanged<int> onVariantChanged;
 
   const _ChatHeader({
     required this.theme,
-    required this.variant,
-    required this.onVariantChanged,
   });
 
   static const _avatarUrl =
@@ -729,7 +542,7 @@ class _ChatHeader extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Row 1: Back + Toggle + More menu
+          // Row 1: Back + More menu
           Row(
             children: [
               GestureDetector(
@@ -744,8 +557,6 @@ class _ChatHeader extends StatelessWidget {
                   child: Icon(theme.icons.arrowBack, size: 16, color: theme.text),
                 ),
               ),
-              const Spacer(),
-              _buildVariantToggle(theme, variant, onVariantChanged),
               const Spacer(),
               ProtoPressButton(
                 onTap: () => ProtoToast.show(
@@ -813,149 +624,7 @@ class _ChatHeader extends StatelessWidget {
   }
 }
 
-// ── V1 Simple Message List (with transaction cards) ─────────────────────────
-
-class _SimpleMessageList extends StatelessWidget {
-  final ProtoTheme theme;
-
-  const _SimpleMessageList({required this.theme});
-
-  @override
-  Widget build(BuildContext context) {
-    final widgets = <Widget>[];
-
-    for (final item in _conversation) {
-      switch (item.type) {
-        case _ItemType.dateSeparator:
-          widgets.add(_DateSeparator(theme: theme, label: item.text!));
-          break;
-        case _ItemType.message:
-          widgets.add(_simpleBubble(item));
-          break;
-        case _ItemType.offerSent:
-        case _ItemType.counterOffer:
-          widgets.add(_OfferCard(theme: theme, item: item));
-          break;
-        case _ItemType.offerAccepted:
-          widgets.add(_AcceptedCard(theme: theme, item: item));
-          break;
-        case _ItemType.meetupPending:
-        case _ItemType.shipPending:
-          widgets.add(_DeliveryCard(theme: theme, item: item));
-          break;
-        case _ItemType.purchaseComplete:
-          widgets.add(_CompletedCard(theme: theme, item: item));
-          break;
-      }
-    }
-    widgets.add(_TypingIndicator(theme: theme));
-
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      children: widgets,
-    );
-  }
-
-  Widget _simpleBubble(_ChatItem item) {
-    return Align(
-      alignment: item.isMine ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        constraints: const BoxConstraints(maxWidth: 240),
-        decoration: BoxDecoration(
-          color: item.isMine ? theme.primary : theme.surface,
-          borderRadius: BorderRadius.circular(16).copyWith(
-            bottomRight: item.isMine ? const Radius.circular(4) : null,
-            bottomLeft: !item.isMine ? const Radius.circular(4) : null,
-          ),
-          boxShadow: item.isMine ? null : theme.softShadow,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              item.text!,
-              style: TextStyle(
-                fontSize: 14,
-                color: item.isMine ? Colors.white : theme.text,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              item.timeAgo,
-              style: TextStyle(
-                fontSize: 10,
-                color: item.isMine
-                    ? Colors.white.withValues(alpha: 0.6)
-                    : theme.textTertiary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── V1 Simple Input Bar ─────────────────────────────────────────────────────
-
-class _SimpleInputBar extends StatelessWidget {
-  final ProtoTheme theme;
-  const _SimpleInputBar({required this.theme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: theme.surface,
-        border: Border(
-          top: BorderSide(color: theme.text.withValues(alpha: 0.06)),
-        ),
-      ),
-      child: Row(
-        children: [
-          ProtoPressButton(
-            onTap: () => ProtoToast.show(
-              context,
-              Icons.attach_file_rounded,
-              'Attach file or take photo',
-            ),
-            child: Icon(Icons.attach_file_rounded, size: 22, color: theme.textSecondary),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: theme.background,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                'Type a message...',
-                style: theme.body.copyWith(color: theme.textTertiary),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          ProtoPressButton(
-            onTap: () => ProtoToast.show(
-              context,
-              theme.icons.send,
-              'Message would send',
-            ),
-            child: Icon(theme.icons.send, size: 24, color: theme.primary),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── V2 Message Bubble with Read Receipts & Reaction ─────────────────────────
+// ── Message Bubble with Read Receipts & Reaction ────────────────────────────
 
 class _V2MessageBubble extends StatelessWidget {
   final ProtoTheme theme;

@@ -250,9 +250,8 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case ProtoRoutes.chatInbox:
       return slideRight(const ChatInboxScreen(), name: settings.name);
     case ProtoRoutes.chatConversation:
-      final chatArgs = settings.arguments as Map<String, dynamic>?;
       return slideRight(
-        ChatConversationScreen(initialVariant: chatArgs?['variant'] as int? ?? 0),
+        const ChatConversationScreen(),
         name: settings.name,
       );
 

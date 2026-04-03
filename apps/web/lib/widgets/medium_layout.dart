@@ -8,8 +8,6 @@ class MediumLayout extends StatelessWidget {
   final int originalDesignIndex;
   final int? paletteIndex;
   final int? iconSetIndex;
-  final int yoyoVariant;
-  final ValueChanged<int> onYoyoVariantChanged;
   final int yoyoMode;
   final ValueChanged<int> onYoyoModeChanged;
 
@@ -18,8 +16,6 @@ class MediumLayout extends StatelessWidget {
     required this.originalDesignIndex,
     required this.paletteIndex,
     required this.iconSetIndex,
-    required this.yoyoVariant,
-    required this.onYoyoVariantChanged,
     required this.yoyoMode,
     required this.onYoyoModeChanged,
   });
@@ -80,8 +76,6 @@ class MediumLayout extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(left: 16),
                     child: ProtoDesignSidebar(
-                      yoyoVariant: yoyoVariant,
-                      onYoyoVariantChanged: onYoyoVariantChanged,
                       yoyoMode: yoyoMode,
                       onYoyoModeChanged: onYoyoModeChanged,
                     ),
@@ -93,8 +87,6 @@ class MediumLayout extends StatelessWidget {
                           designIndex: originalDesignIndex,
                           paletteIndex: paletteIndex,
                           iconSetIndex: iconSetIndex,
-                          yoyoVariant: yoyoVariant,
-                          onYoyoVariantChanged: onYoyoVariantChanged,
                           yoyoMode: yoyoMode,
                           onYoyoModeChanged: onYoyoModeChanged,
                         ),

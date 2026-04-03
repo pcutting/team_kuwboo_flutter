@@ -7,7 +7,6 @@ import '../../prototype_demo_data.dart';
 import '../../shared/proto_scaffold.dart';
 import '../../shared/proto_press_button.dart';
 import '../../shared/proto_dialogs.dart';
-import 'yoyo_shared.dart';
 import 'inner_circle_chat.dart';
 
 /// Filtered chat inbox showing only YoYo conversations.
@@ -54,8 +53,6 @@ class _YoyoChatScreenState extends State<YoyoChatScreen> {
             child: Row(
               children: [
                 Text('YoYo Chat', style: theme.headline.copyWith(fontSize: 24)),
-                const SizedBox(width: 8),
-                if (state.yoyoVariant == 1) yoyoV2Badge(theme),
               ],
             ),
           ),
@@ -149,9 +146,8 @@ class _YoyoChatScreenState extends State<YoyoChatScreen> {
                                         ),
                                       ),
                                     ),
-                                  // V2: Lock icon for encrypted
-                                  if (state.yoyoVariant == 1)
-                                    Positioned(
+                                  // Encryption indicator
+                                  Positioned(
                                       left: 0,
                                       top: 0,
                                       child: Container(
@@ -175,39 +171,35 @@ class _YoyoChatScreenState extends State<YoyoChatScreen> {
                                     Row(
                                       children: [
                                         Text(conv.name, style: theme.title.copyWith(fontSize: 14)),
-                                        // V2: "How you met" badge
-                                        if (state.yoyoVariant == 1) ...[
-                                          const SizedBox(width: 6),
-                                          Icon(Icons.pin_drop_rounded, size: 12, color: theme.secondary),
-                                          const SizedBox(width: 2),
-                                          Text('Nearby', style: TextStyle(fontSize: 9, color: theme.secondary, fontWeight: FontWeight.w600)),
-                                        ],
+                                        // "How you met" badge
+                                        const SizedBox(width: 6),
+                                        Icon(Icons.pin_drop_rounded, size: 12, color: theme.secondary),
+                                        const SizedBox(width: 2),
+                                        Text('Nearby', style: TextStyle(fontSize: 9, color: theme.secondary, fontWeight: FontWeight.w600)),
                                       ],
                                     ),
                                     const SizedBox(height: 2),
                                     Text(conv.lastMessage, style: theme.body, maxLines: 1, overflow: TextOverflow.ellipsis),
-                                    // V2: Data retention timer
-                                    if (state.yoyoVariant == 1) ...[
-                                      const SizedBox(height: 2),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.auto_delete_rounded,
-                                            size: 11,
+                                    // Data retention timer
+                                    const SizedBox(height: 2),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.auto_delete_rounded,
+                                          size: 11,
+                                          color: i == 0 ? Colors.orange.shade700 : theme.textTertiary,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          i == 0 ? 'Expires in 4h' : 'Expires in 28h',
+                                          style: TextStyle(
+                                            fontSize: 10,
                                             color: i == 0 ? Colors.orange.shade700 : theme.textTertiary,
+                                            fontWeight: i == 0 ? FontWeight.w600 : FontWeight.w400,
                                           ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            i == 0 ? 'Expires in 4h' : 'Expires in 28h',
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: i == 0 ? Colors.orange.shade700 : theme.textTertiary,
-                                              fontWeight: i == 0 ? FontWeight.w600 : FontWeight.w400,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),
