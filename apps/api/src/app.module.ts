@@ -23,6 +23,7 @@ import { DevicesModule } from './modules/devices/devices.module';
 import { MediaModule } from './modules/media/media.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ConsentModule } from './modules/consent/consent.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { ConsentModule } from './modules/consent/consent.module';
     MediaModule,
     NotificationsModule,
     ConsentModule,
+    AdminModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
