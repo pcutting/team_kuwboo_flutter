@@ -27,6 +27,12 @@ const config: Options<PostgreSqlDriver> = {
     disableForeignKeys: false,
   },
 
+  // RDS requires SSL in production
+  driverOptions:
+    process.env.NODE_ENV === 'production'
+      ? { connection: { ssl: { rejectUnauthorized: false } } }
+      : undefined,
+
   pool: {
     min: 2,
     max: 10,
