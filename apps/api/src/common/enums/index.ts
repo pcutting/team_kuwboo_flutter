@@ -14,3 +14,7 @@ export { InteractionStateType, InteractionEventType } from './interaction-type.e
 export { ConnectionContext, ConnectionStatus, ModuleScope } from './connection-context.enum';
 export { ReportTargetType, ReportReason, ReportStatus } from './report-status.enum';
 export { CategoryScope } from './category-scope.enum';
+export { AuctionStatus } from './auction-status.enum';
+export { CampaignStatus } from './campaign-status.enum';
+export { ProductCondition } from './product-condition.enum';
+export { ThreadModuleKey } from './thread-module-key.enum';

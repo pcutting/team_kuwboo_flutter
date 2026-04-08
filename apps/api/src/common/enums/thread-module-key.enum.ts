@@ -1,0 +1,6 @@
+export enum ThreadModuleKey {
+  VIDEO_MAKING = 'VIDEO_MAKING',
+  BUY_SELL = 'BUY_SELL',
+  DATING = 'DATING',
+  SOCIAL_STUMBLE = 'SOCIAL_STUMBLE',
+}
