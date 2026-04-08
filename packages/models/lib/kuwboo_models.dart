@@ -14,3 +14,4 @@ export 'src/feed.dart';
 export 'src/product.dart';
 export 'src/thread.dart';
 export 'src/auction.dart';
+export 'src/yoyo.dart';

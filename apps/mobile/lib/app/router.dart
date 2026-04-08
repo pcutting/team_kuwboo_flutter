@@ -8,6 +8,7 @@ import '../features/auth/otp_screen.dart';
 import '../features/chat/chat_conversation_screen.dart';
 import '../features/chat/chat_inbox_screen.dart';
 import '../features/home/home_shell.dart';
+import '../features/profile/notification_preferences_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/shop/auction_detail_screen.dart';
 import '../features/shop/create_listing_screen.dart';
@@ -15,7 +16,9 @@ import '../features/shop/product_detail_screen.dart';
 import '../features/shop/shop_browse_screen.dart';
 import '../features/social/social_feed_screen.dart';
 import '../features/video/video_feed_screen.dart';
-import '../features/yoyo/yoyo_screen.dart';
+import '../features/yoyo/yoyo_nearby_screen.dart';
+import '../features/yoyo/yoyo_settings_screen.dart';
+import '../features/yoyo/yoyo_waves_screen.dart';
 import '../providers/auth_provider.dart';
 
 // ─── Navigation Keys ─────────────────────────────────────────────────────
@@ -92,7 +95,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/yoyo',
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: YoyoScreen(),
+              child: YoyoNearbyScreen(),
             ),
           ),
           GoRoute(
@@ -102,6 +105,18 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
         ],
+      ),
+
+      // ── YoYo Routes ──────────────────────────────────────────────────
+      GoRoute(
+        path: '/yoyo/settings',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const YoyoSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/yoyo/waves',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const YoyoWavesScreen(),
       ),
 
       // ── Shop Detail Routes ───────────────────────────────────────────
@@ -125,6 +140,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           return AuctionDetailScreen(auctionId: id);
         },
+      ),
+
+      // ── Profile Routes ───────────────────────────────────────────────
+      GoRoute(
+        path: '/profile/notification-preferences',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) =>
+            const NotificationPreferencesScreen(),
       ),
 
       // ── Chat Routes ──────────────────────────────────────────────────
