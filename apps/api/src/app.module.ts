@@ -24,6 +24,12 @@ import { MediaModule } from './modules/media/media.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ConsentModule } from './modules/consent/consent.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { ContentModule } from './modules/content/content.module';
+import { InteractionsModule } from './modules/interactions/interactions.module';
+import { CommentsModule } from './modules/comments/comments.module';
+import { ConnectionsModule } from './modules/connections/connections.module';
+import { ReportsModule } from './modules/reports/reports.module';
+import { FeedModule } from './modules/feed/feed.module';
 
 @Module({
   imports: [
@@ -77,6 +83,12 @@ import { AdminModule } from './modules/admin/admin.module';
     NotificationsModule,
     ConsentModule,
     AdminModule,
+    ContentModule,
+    InteractionsModule,
+    CommentsModule,
+    ConnectionsModule,
+    ReportsModule,
+    FeedModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
