@@ -30,3 +30,4 @@ coverage/
 # Node.js (apps/api)
 apps/api/node_modules/
 apps/api/dist/
+.claude/
