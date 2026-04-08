@@ -1,0 +1,23 @@
+export enum ReportTargetType {
+  CONTENT = 'CONTENT',
+  USER = 'USER',
+  COMMENT = 'COMMENT',
+  MESSAGE = 'MESSAGE',
+}
+
+export enum ReportReason {
+  SPAM = 'SPAM',
+  ABUSE = 'ABUSE',
+  ILLEGAL = 'ILLEGAL',
+  INAPPROPRIATE = 'INAPPROPRIATE',
+  MISLEADING = 'MISLEADING',
+  COPYRIGHT = 'COPYRIGHT',
+}
+
+export enum ReportStatus {
+  PENDING = 'PENDING',
+  IN_REVIEW = 'IN_REVIEW',
+  DISMISSED = 'DISMISSED',
+  RESOLVED = 'RESOLVED',
+  ESCALATED = 'ESCALATED',
+}
