@@ -32,6 +32,7 @@ import { ReportsModule } from './modules/reports/reports.module';
 import { FeedModule } from './modules/feed/feed.module';
 import { MessagingModule } from './modules/messaging/messaging.module';
 import { MarketplaceModule } from './modules/marketplace/marketplace.module';
+import { SponsoredModule } from './modules/sponsored/sponsored.module';
 
 @Module({
   imports: [
@@ -93,6 +94,7 @@ import { MarketplaceModule } from './modules/marketplace/marketplace.module';
     FeedModule,
     MessagingModule,
     MarketplaceModule,
+    SponsoredModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
