@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 import { listUsers } from '../api/client';
 
@@ -101,8 +102,13 @@ export function UsersPage() {
           <tbody className="divide-y divide-stone-50">
             {users.map((u) => (
               <tr key={u.id} className="hover:bg-stone-50/50">
-                <td className="px-4 py-3 text-sm font-medium text-stone-900">
-                  {u.name}
+                <td className="px-4 py-3 text-sm font-medium">
+                  <Link
+                    to={`/dashboard/users/${u.id}`}
+                    className="text-stone-900 hover:text-amber-700 transition-colors"
+                  >
+                    {u.name}
+                  </Link>
                 </td>
                 <td className="px-4 py-3 text-sm text-stone-500">
                   {u.phone || u.email || '\u2014'}
