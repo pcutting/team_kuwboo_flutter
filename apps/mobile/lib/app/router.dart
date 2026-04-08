@@ -5,9 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/onboarding_screen.dart';
 import '../features/auth/otp_screen.dart';
+import '../features/chat/chat_conversation_screen.dart';
+import '../features/chat/chat_inbox_screen.dart';
 import '../features/home/home_shell.dart';
 import '../features/profile/profile_screen.dart';
-import '../features/shop/shop_screen.dart';
+import '../features/shop/auction_detail_screen.dart';
+import '../features/shop/create_listing_screen.dart';
+import '../features/shop/product_detail_screen.dart';
+import '../features/shop/shop_browse_screen.dart';
 import '../features/social/social_feed_screen.dart';
 import '../features/video/video_feed_screen.dart';
 import '../features/yoyo/yoyo_screen.dart';
@@ -81,7 +86,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/shop',
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: ShopScreen(),
+              child: ShopBrowseScreen(),
             ),
           ),
           GoRoute(
@@ -97,6 +102,44 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
         ],
+      ),
+
+      // ── Shop Detail Routes ───────────────────────────────────────────
+      GoRoute(
+        path: '/shop/product/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return ProductDetailScreen(productId: id);
+        },
+      ),
+      GoRoute(
+        path: '/shop/create',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const CreateListingScreen(),
+      ),
+      GoRoute(
+        path: '/shop/auction/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return AuctionDetailScreen(auctionId: id);
+        },
+      ),
+
+      // ── Chat Routes ──────────────────────────────────────────────────
+      GoRoute(
+        path: '/chat',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ChatInboxScreen(),
+      ),
+      GoRoute(
+        path: '/chat/:threadId',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final threadId = state.pathParameters['threadId']!;
+          return ChatConversationScreen(threadId: threadId);
+        },
       ),
     ],
   );

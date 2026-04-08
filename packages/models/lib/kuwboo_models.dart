@@ -11,3 +11,6 @@ export 'src/comment.dart';
 export 'src/connection.dart';
 export 'src/notification_model.dart';
 export 'src/feed.dart';
+export 'src/product.dart';
+export 'src/thread.dart';
+export 'src/auction.dart';
