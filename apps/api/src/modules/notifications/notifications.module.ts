@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { JwtModule } from '@nestjs/jwt';
 import { Notification } from './entities/notification.entity';
+import { NotificationPreference } from './entities/notification-preference.entity';
 import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
 import { NotificationGateway } from './notification.gateway';
@@ -10,7 +11,7 @@ import { WsAuthGuard } from '../../common/guards/ws-auth.guard';
 
 @Module({
   imports: [
-    MikroOrmModule.forFeature([Notification]),
+    MikroOrmModule.forFeature([Notification, NotificationPreference]),
     DevicesModule,
     JwtModule.register({}),
   ],

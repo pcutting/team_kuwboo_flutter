@@ -18,3 +18,4 @@ export { AuctionStatus } from './auction-status.enum';
 export { CampaignStatus } from './campaign-status.enum';
 export { ProductCondition } from './product-condition.enum';
 export { ThreadModuleKey } from './thread-module-key.enum';
+export { YoyoOverrideAction, WaveStatus } from './yoyo.enum';

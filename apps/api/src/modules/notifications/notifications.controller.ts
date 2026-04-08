@@ -1,7 +1,8 @@
-import { Controller, Get, Patch, Param, Query, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, Query, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 
 @ApiTags('notifications')
 @ApiBearerAuth()
@@ -37,5 +38,18 @@ export class NotificationsController {
   async markAllRead(@CurrentUser('id') userId: string) {
     const count = await this.notificationsService.markAllRead(userId);
     return { message: `${count} notifications marked as read` };
+  }
+
+  @Get('preferences')
+  async getPreferences(@CurrentUser('id') userId: string) {
+    return this.notificationsService.getPreferences(userId);
+  }
+
+  @Patch('preferences')
+  async updatePreferences(
+    @CurrentUser('id') userId: string,
+    @Body() dto: UpdatePreferencesDto,
+  ) {
+    return this.notificationsService.updatePreferences(userId, dto.preferences);
   }
 }
