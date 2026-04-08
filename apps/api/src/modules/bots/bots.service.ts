@@ -171,6 +171,58 @@ export class BotsService {
     return { totalBots, runningBots, pausedBots, idleBots, errorBots, actionsToday };
   }
 
+  async resetBot(id: string): Promise<BotProfile> {
+    const profile = await this.findById(id);
+    profile.simulationStatus = BotSimulationStatus.IDLE;
+    profile.errorMessage = undefined;
+    await this.em.flush();
+    return profile;
+  }
+
+  async getActivityStats(botProfileId: string): Promise<Record<string, unknown>> {
+    const profile = await this.findById(botProfileId);
+
+    const totalActions = await this.em.count(BotActivityLog, {
+      botProfile: botProfileId,
+    });
+
+    const successfulActions = await this.em.count(BotActivityLog, {
+      botProfile: botProfileId,
+      success: true,
+    });
+
+    const successRate = totalActions > 0
+      ? Math.round((successfulActions / totalActions) * 10000) / 100
+      : 0;
+
+    const now = new Date();
+    const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    const actionsLast24h = await this.em.count(BotActivityLog, {
+      botProfile: botProfileId,
+      executedAt: { $gte: last24h },
+    });
+
+    const knex = this.em.getKnex();
+    const actionsByTypeRows = await knex('bot_activity_logs')
+      .select('action_type')
+      .count('* as count')
+      .where('bot_profile_id', botProfileId)
+      .groupBy('action_type');
+
+    const actionsByType: Record<string, number> = {};
+    for (const row of actionsByTypeRows) {
+      actionsByType[row.action_type] = Number(row.count);
+    }
+
+    return {
+      totalActions,
+      successRate,
+      actionsLast24h,
+      actionsByType,
+    };
+  }
+
   private buildBehaviorConfig(
     persona: string,
     overrides?: Record<string, unknown>,

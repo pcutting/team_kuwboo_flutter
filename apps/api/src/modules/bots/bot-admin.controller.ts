@@ -130,4 +130,16 @@ export class BotAdminController {
     const result = await this.engine.executeRandomAction(profile);
     return result;
   }
+
+  @Post(':id/reset')
+  async resetBot(@Param('id', ParseUUIDPipe) id: string) {
+    const profile = await this.botsService.resetBot(id);
+    await this.scheduler.startBot(id);
+    return { message: 'Bot reset and started', profile };
+  }
+
+  @Get(':id/activity/stats')
+  async getActivityStats(@Param('id', ParseUUIDPipe) id: string) {
+    return this.botsService.getActivityStats(id);
+  }
 }
