@@ -1,4 +1,13 @@
 /// Shared Kuwboo data models.
 ///
-/// This package will contain data models shared between web and mobile apps.
+/// Immutable models with JSON serialization, built with freezed.
 library kuwboo_models;
+
+export 'src/enums.dart';
+export 'src/user.dart';
+export 'src/auth.dart';
+export 'src/content.dart';
+export 'src/comment.dart';
+export 'src/connection.dart';
+export 'src/notification_model.dart';
+export 'src/feed.dart';

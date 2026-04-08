@@ -7,3 +7,12 @@ environment:
   sdk: ^3.11.1
 
 resolution: workspace
+
+dependencies:
+  freezed_annotation: ^3.0.0
+  json_annotation: ^4.9.0
+
+dev_dependencies:
+  freezed: ^3.0.0
+  json_serializable: ^6.8.0
+  build_runner: ^2.4.0

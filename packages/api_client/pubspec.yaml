@@ -1,5 +1,5 @@
 name: kuwboo_api_client
-description: Kuwboo API client (future OpenAPI generated)
+description: Kuwboo API client with Dio HTTP and auth interceptor
 publish_to: 'none'
 version: 0.1.0
 
@@ -7,3 +7,11 @@ environment:
   sdk: ^3.11.1
 
 resolution: workspace
+
+dependencies:
+  dio: ^5.7.0
+  flutter_secure_storage: ^9.2.0
+  kuwboo_models:
+    path: ../models
+
+dependency_overrides: {}
