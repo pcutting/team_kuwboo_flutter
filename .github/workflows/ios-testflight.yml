@@ -37,7 +37,6 @@ jobs:
 
     env:
       FLUTTER_VERSION: "3.41.4"
-      XCODE_VERSION: "16.0"
 
     steps:
       - name: Checkout repo
@@ -45,9 +44,23 @@ jobs:
         with:
           fetch-depth: 0  # Full history for changelog generation
 
-      - name: Select Xcode version
-        run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app || sudo xcode-select -s /Applications/Xcode.app
+      - name: Log Xcode + iOS SDK versions
         working-directory: .
+        run: |
+          echo "--- Available Xcode apps ---"
+          ls -1 /Applications | grep -i "^Xcode" || true
+          echo ""
+          echo "--- Current xcode-select path ---"
+          xcode-select -p
+          echo ""
+          echo "--- xcodebuild -version ---"
+          xcodebuild -version
+          echo ""
+          echo "--- Installed iOS SDKs ---"
+          xcodebuild -showsdks 2>&1 | grep -iE "iOS|iphoneos" || true
+          echo ""
+          echo "--- Installed iOS runtimes (simulator) ---"
+          xcrun simctl list runtimes 2>&1 | grep -i iOS || true
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
