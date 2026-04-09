@@ -11,10 +11,17 @@
 	<key>uploadSymbols</key>
 	<true/>
 	<key>signingStyle</key>
-	<string>automatic</string>
+	<string>manual</string>
 	<key>stripSwiftSymbols</key>
 	<true/>
 	<key>destination</key>
 	<string>export</string>
+	<key>signingCertificate</key>
+	<string>Apple Distribution</string>
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>com.kuwboo.mobile</key>
+		<string>Kuwboo Mobile App Store</string>
+	</dict>
 </dict>
 </plist>
