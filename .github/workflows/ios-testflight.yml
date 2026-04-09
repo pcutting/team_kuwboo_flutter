@@ -36,7 +36,7 @@ jobs:
         working-directory: apps/mobile
 
     env:
-      FLUTTER_VERSION: "3.35.0"
+      FLUTTER_VERSION: "3.41.4"
       XCODE_VERSION: "16.0"
 
     steps:
