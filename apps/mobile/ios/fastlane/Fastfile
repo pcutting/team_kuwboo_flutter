@@ -63,28 +63,49 @@ platform :ios do
     # Load App Store Connect API key from environment
     api_key = load_app_store_connect_api_key
 
-    # Flutter build (creates .xcarchive-ready artifacts)
+    # Step 1: Flutter compiles Dart + produces an xcarchive with --no-codesign.
+    #
+    # Why --no-codesign: Flutter's built-in codesign preflight in
+    # code_signing.dart uses a regex that only matches certificates whose
+    # Common Name contains "Develop(ment|er)". Apple Distribution certs are
+    # therefore invisible to it, even when xcodebuild can find them just
+    # fine in the keychain. Passing --no-codesign sets CODE_SIGNING_ALLOWED=NO
+    # in xcodebuild so Flutter's preflight is skipped entirely and the
+    # archive is built unsigned. We then do the actual signing in step 2.
     Dir.chdir(MOBILE_ROOT) do
       sh("flutter clean")
       sh("flutter pub get")
       sh("cd ios && pod install --repo-update")
-      sh("flutter build ipa --release " \
+      sh("flutter build ipa --release --no-codesign " \
          "--build-number=#{build_number} " \
-         "--dart-define=KUWBOO_ENV=#{kuwboo_env} " \
-         "--export-options-plist=ios/ExportOptions.plist")
+         "--dart-define=KUWBOO_ENV=#{kuwboo_env}")
     end
 
-    ipa_path = File.join(MOBILE_ROOT, "build", "ios", "ipa", "kuwboo_mobile.ipa")
+    # Step 2: Sign and export the unsigned xcarchive into a distributable
+    # .ipa using xcodebuild directly. xcodebuild finds the Apple Distribution
+    # cert in the keychain and the App Store provisioning profile in
+    # ~/Library/MobileDevice/Provisioning Profiles/ (both installed by the
+    # workflow before this lane runs). -allowProvisioningUpdates lets
+    # xcodebuild use the App Store Connect API key for any cert/profile
+    # refresh the team may need.
+    archive_path = File.join(MOBILE_ROOT, "build", "ios", "archive", "Runner.xcarchive")
+    export_dir = File.join(MOBILE_ROOT, "build", "ios", "ipa")
+    export_plist = File.join(IOS_ROOT, "ExportOptions.plist")
 
-    unless File.exist?(ipa_path)
-      # Fallback: check common alternate names
-      Dir.glob(File.join(MOBILE_ROOT, "build", "ios", "ipa", "*.ipa")).each do |f|
-        ipa_path = f
-        break
-      end
-    end
+    UI.user_error!("xcarchive not found at #{archive_path}") unless Dir.exist?(archive_path)
+    UI.user_error!("ExportOptions.plist not found at #{export_plist}") unless File.exist?(export_plist)
 
-    UI.user_error!("IPA not found at #{ipa_path}") unless File.exist?(ipa_path)
+    FileUtils.mkdir_p(export_dir)
+    sh("xcodebuild -exportArchive " \
+       "-archivePath '#{archive_path}' " \
+       "-exportPath '#{export_dir}' " \
+       "-exportOptionsPlist '#{export_plist}' " \
+       "-allowProvisioningUpdates")
+
+    # Locate the produced .ipa (xcodebuild names it from the product name,
+    # typically Runner.ipa or kuwboo_mobile.ipa depending on PRODUCT_NAME).
+    ipa_path = Dir.glob(File.join(export_dir, "*.ipa")).first
+    UI.user_error!("No .ipa found in #{export_dir} after export") unless ipa_path && File.exist?(ipa_path)
 
     upload_to_testflight(
       api_key: api_key,
