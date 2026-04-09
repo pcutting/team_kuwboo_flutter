@@ -86,13 +86,19 @@ jobs:
           # Decode base64 into a temporary .p12 file
           printf '%s' "$P12_BASE64" | base64 --decode > "$CERT_PATH"
 
-          # Create a fresh temporary keychain scoped to this job
+          # Remove any prior keychain at this path (idempotency across re-runs)
+          security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true
+
+          # Create fresh keychain, disable auto-lock, unlock
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-          # Prepend our keychain to the search list so codesign finds it
-          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | xargs)
+          # REPLACE the user search list with our keychain (not prepend)
+          # and set as default keychain. This is the pattern apple-actions/
+          # import-codesign-certs uses and is known to persist across GH Actions steps.
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+          security default-keychain -d user -s "$KEYCHAIN_PATH"
 
           # Import the distribution cert + private key
           security import "$CERT_PATH" -P "$P12_PASSWORD" -k "$KEYCHAIN_PATH" \
@@ -120,6 +126,21 @@ jobs:
             > "$PROFILE_DIR/$PROFILE_UUID.mobileprovision"
           echo "Installed provisioning profile: $PROFILE_UUID"
           ls -la "$PROFILE_DIR"
+
+      - name: Verify keychain state before Fastlane
+        working-directory: .
+        run: |
+          echo "--- search list (user) ---"
+          security list-keychains -d user
+          echo ""
+          echo "--- default keychain (user) ---"
+          security default-keychain -d user
+          echo ""
+          echo "--- codesigning identities ---"
+          security find-identity -p codesigning -v
+          echo ""
+          echo "--- provisioning profiles ---"
+          ls -la "$HOME/Library/MobileDevice/Provisioning Profiles/" 2>&1 || true
 
       - name: Run Fastlane beta
         working-directory: apps/mobile/ios
