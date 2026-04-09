@@ -37,6 +37,13 @@ Private technical documentation for the Kuwboo project.
 | [MOBILE_STRATEGY_ANALYSIS.md](MOBILE_STRATEGY_ANALYSIS.md) | Mobile development strategy |
 | [FEATURE_COMPARISON.md](FEATURE_COMPARISON.md) | iOS vs Android features |
 
+### Operations / Deployment
+
+| Document | Description |
+|----------|-------------|
+| [team/internal/TESTFLIGHT_RUNBOOK.md](team/internal/TESTFLIGHT_RUNBOOK.md) | **iOS TestFlight deployment** — trigger builds, generate signing certs, rotate profiles, troubleshoot. Includes the hard-won lessons from the initial 10-run debug session. |
+| [team/internal/INFRASTRUCTURE.md](team/internal/INFRASTRUCTURE.md) | AWS resource inventory and backend deployment |
+
 ### Client Communications
 
 | Document | Description |
