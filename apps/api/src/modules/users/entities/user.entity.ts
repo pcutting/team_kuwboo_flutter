@@ -22,6 +22,7 @@ export class User {
     | 'status'
     | 'onlineStatus'
     | 'isBot'
+    | 'appleEmailIsPrivateRelay'
     | 'createdAt'
     | 'updatedAt';
 
@@ -63,6 +64,31 @@ export class User {
 
   @Property({ type: 'varchar', length: 255, nullable: true, unique: true })
   appleId?: string;
+
+  /**
+   * True when the email stored above is an Apple private-relay address
+   * that is currently forwarding. Updated on Apple S2S email-disabled /
+   * email-enabled events, and set at sign-in from the is_private_email
+   * claim on the identity token.
+   */
+  @Property({ type: 'boolean', default: false })
+  appleEmailIsPrivateRelay: boolean = false;
+
+  /**
+   * Set when Apple sends a consent-revoked S2S notification. The user's
+   * sessions are revoked but the account is not deleted — they can still
+   * sign in via phone / Google / email. Cleared on successful re-link.
+   */
+  @Property({ type: 'timestamptz', nullable: true })
+  appleConsentRevokedAt?: Date;
+
+  /**
+   * Set when Apple sends an account-delete S2S notification. Always
+   * accompanies a soft-delete on the user (deletedAt also set). Preserved
+   * for audit even after hard-delete.
+   */
+  @Property({ type: 'timestamptz', nullable: true })
+  appleAccountDeletedAt?: Date;
 
   @Property({ type: 'boolean', default: false })
   @Index()

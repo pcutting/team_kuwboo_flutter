@@ -9,16 +9,35 @@ import {
 import { randomUUID } from 'crypto';
 import { User } from '../../users/entities/user.entity';
 
+/**
+ * Who (or what) performed the action being audited.
+ *
+ * - 'admin' — a human admin via the admin dashboard. adminUser is required.
+ * - 'system' — an automated process (e.g. Apple S2S webhook handlers,
+ *   cron jobs, BullMQ workers). adminUser is NULL.
+ *
+ * Enforced at the DB level by admin_audit_logs_actor_check.
+ */
+export type AuditActorType = 'admin' | 'system';
+
 @Entity({ tableName: 'admin_audit_logs' })
 @Index({ properties: ['adminUser', 'createdAt'] })
 export class AdminAuditLog {
-  [OptionalProps]?: 'createdAt';
+  [OptionalProps]?: 'actorType' | 'createdAt';
 
   @PrimaryKey({ type: 'uuid' })
   id: string = randomUUID();
 
-  @ManyToOne(() => User)
-  adminUser!: User;
+  /**
+   * The admin who performed the action. NULL for system-initiated
+   * audits (actorType = 'system'). Uses ON DELETE SET NULL so deleting
+   * an admin user preserves their audit history.
+   */
+  @ManyToOne(() => User, { nullable: true })
+  adminUser?: User;
+
+  @Property({ type: 'varchar', length: 20, default: 'admin' })
+  actorType: AuditActorType = 'admin';
 
   @Property({ type: 'varchar', length: 50 })
   actionType!: string;
