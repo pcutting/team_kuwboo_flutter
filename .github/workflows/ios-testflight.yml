@@ -73,78 +73,13 @@ jobs:
         run: bundle exec pod install --repo-update
         working-directory: apps/mobile/ios
 
-      - name: Install Apple signing certificate
+      - name: Install signing material and run Fastlane beta
+        working-directory: apps/mobile/ios
         env:
           P12_BASE64: ${{ secrets.APPLE_CERT_P12_BASE64 }}
           P12_PASSWORD: ${{ secrets.APPLE_CERT_P12_PASSWORD }}
-        working-directory: .
-        run: |
-          CERT_PATH="$RUNNER_TEMP/cert.p12"
-          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
-          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
-
-          # Decode base64 into a temporary .p12 file
-          printf '%s' "$P12_BASE64" | base64 --decode > "$CERT_PATH"
-
-          # Remove any prior keychain at this path (idempotency across re-runs)
-          security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true
-
-          # Create fresh keychain, disable auto-lock, unlock
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-
-          # REPLACE the user search list with our keychain (not prepend)
-          # and set as default keychain. This is the pattern apple-actions/
-          # import-codesign-certs uses and is known to persist across GH Actions steps.
-          security list-keychains -d user -s "$KEYCHAIN_PATH"
-          security default-keychain -d user -s "$KEYCHAIN_PATH"
-
-          # Import the distribution cert + private key
-          security import "$CERT_PATH" -P "$P12_PASSWORD" -k "$KEYCHAIN_PATH" \
-            -T /usr/bin/codesign -T /usr/bin/security
-
-          # Allow codesign to use the private key non-interactively
-          security set-key-partition-list -S apple-tool:,apple:,codesign: \
-            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" > /dev/null
-
-          # Sanity check — should list our Apple Distribution identity
-          security find-identity -p codesigning -v
-
-          # Clean up the decoded .p12 (key is now in the keychain)
-          rm -f "$CERT_PATH"
-
-      - name: Install provisioning profile
-        env:
           PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}
           PROFILE_UUID: ${{ secrets.APPLE_PROVISIONING_PROFILE_UUID }}
-        working-directory: .
-        run: |
-          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
-          mkdir -p "$PROFILE_DIR"
-          printf '%s' "$PROFILE_BASE64" | base64 --decode \
-            > "$PROFILE_DIR/$PROFILE_UUID.mobileprovision"
-          echo "Installed provisioning profile: $PROFILE_UUID"
-          ls -la "$PROFILE_DIR"
-
-      - name: Verify keychain state before Fastlane
-        working-directory: .
-        run: |
-          echo "--- search list (user) ---"
-          security list-keychains -d user
-          echo ""
-          echo "--- default keychain (user) ---"
-          security default-keychain -d user
-          echo ""
-          echo "--- codesigning identities ---"
-          security find-identity -p codesigning -v
-          echo ""
-          echo "--- provisioning profiles ---"
-          ls -la "$HOME/Library/MobileDevice/Provisioning Profiles/" 2>&1 || true
-
-      - name: Run Fastlane beta
-        working-directory: apps/mobile/ios
-        env:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APPLE_KEY_ID }}
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APPLE_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APPLE_KEY_P8_BASE64 }}
@@ -154,7 +89,59 @@ jobs:
           FASTLANE_HIDE_CHANGELOG: "1"
           FASTLANE_SKIP_UPDATE_CHECK: "1"
           FASTLANE_DISABLE_COLORS: "1"
-        run: bundle exec fastlane beta
+        run: |
+          set -e
+
+          # =====================================================
+          # 1. Install Apple Distribution cert into a fresh keychain
+          # =====================================================
+          CERT_PATH="$RUNNER_TEMP/cert.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+
+          printf '%s' "$P12_BASE64" | base64 --decode > "$CERT_PATH"
+
+          security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Replace user search list (not prepend); set as default keychain
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+          security default-keychain -d user -s "$KEYCHAIN_PATH"
+
+          security import "$CERT_PATH" -P "$P12_PASSWORD" -k "$KEYCHAIN_PATH" \
+            -T /usr/bin/codesign -T /usr/bin/security
+
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" > /dev/null
+
+          rm -f "$CERT_PATH"
+
+          echo "=== Signing identity visible in this shell ==="
+          security find-identity -p codesigning -v
+
+          # =====================================================
+          # 2. Install provisioning profile
+          # =====================================================
+          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILE_DIR"
+          printf '%s' "$PROFILE_BASE64" | base64 --decode \
+            > "$PROFILE_DIR/$PROFILE_UUID.mobileprovision"
+          echo "=== Provisioning profiles ==="
+          ls -la "$PROFILE_DIR"
+
+          # =====================================================
+          # 3. Flush cfprefsd cache so subprocesses see fresh prefs
+          # (belt-and-braces: macOS CFPreferences has a caching daemon
+          #  that can serve stale values to new processes)
+          # =====================================================
+          killall cfprefsd 2>/dev/null || true
+
+          # =====================================================
+          # 4. Run Fastlane beta (same shell, no step boundary)
+          # =====================================================
+          bundle exec fastlane beta
 
       - name: Upload build artifacts (on failure)
         if: failure()
