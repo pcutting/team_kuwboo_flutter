@@ -36,6 +36,12 @@ apps/api/dist/
 *.p8
 AuthKey_*.p8
 apps/mobile/ios/secrets/
+/keys/
+*.key
+*.cer
+*.p12
+*.mobileprovision
+*.certSigningRequest
 
 # Fastlane runtime artifacts
 apps/mobile/ios/fastlane/report.xml
