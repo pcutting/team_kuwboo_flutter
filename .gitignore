@@ -31,3 +31,10 @@ coverage/
 apps/api/node_modules/
 apps/api/dist/
 .claude/
+
+# Apple signing keys — NEVER COMMIT
+*.p8
+AuthKey_*.p8
+apps/mobile/ios/secrets/
+apps/mobile/ios/fastlane/report.xml
+apps/mobile/ios/fastlane/README.md
