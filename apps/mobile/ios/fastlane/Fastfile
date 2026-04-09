@@ -76,7 +76,7 @@ platform :ios do
       sh("flutter clean")
       sh("flutter pub get")
       sh("cd ios && pod install --repo-update")
-      sh("flutter build ipa --release --no-codesign " \
+      sh("flutter -v build ipa --release --no-codesign " \
          "--build-number=#{build_number} " \
          "--dart-define=KUWBOO_ENV=#{kuwboo_env}")
     end
