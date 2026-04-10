@@ -158,4 +158,29 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   emitToUser(userId: string, event: string, data: any): void {
     this.server.to(`user:${userId}`).emit(event, data);
   }
+
+  /**
+   * Force-disconnect all chat sockets belonging to a user after sending
+   * a `client:state` killed event. Called from RealtimeRevocationService
+   * when sessions are revoked (e.g. Apple S2S consent-revoked /
+   * account-delete). Errors are swallowed so session revocation is never
+   * blocked by socket failures.
+   */
+  async killUser(
+    userId: string,
+    payload: { state: string; reason?: string },
+  ): Promise<void> {
+    const room = `user:${userId}`;
+    this.server.to(room).emit('client:state', payload);
+    try {
+      const sockets = await this.server.in(room).fetchSockets();
+      for (const socket of sockets) {
+        socket.disconnect(true);
+      }
+    } catch (err) {
+      this.logger.warn(
+        `killUser disconnect failed for ${userId}: ${(err as Error).message}`,
+      );
+    }
+  }
 }

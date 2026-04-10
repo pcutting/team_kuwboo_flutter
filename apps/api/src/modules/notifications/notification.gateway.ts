@@ -78,4 +78,33 @@ export class NotificationGateway implements OnGatewayConnection {
       .to(`user:${userId}`)
       .emit('badge:update', { count });
   }
+
+  /**
+   * Force-disconnect all sockets belonging to a user after sending a
+   * `client:state` killed event. Called from RealtimeRevocationService
+   * when sessions are revoked — e.g. via an Apple S2S consent-revoked
+   * or account-delete notification.
+   *
+   * Fires and discards errors so session-revocation paths are not
+   * blocked by socket failures. The Redis adapter (when enabled) fans
+   * out the room broadcast cross-instance; `fetchSockets()` on a room
+   * name is the canonical way to iterate remote sockets in a cluster.
+   */
+  async killUser(
+    userId: string,
+    payload: { state: string; reason?: string },
+  ): Promise<void> {
+    const room = `user:${userId}`;
+    this.server.to(room).emit('client:state', payload);
+    try {
+      const sockets = await this.server.in(room).fetchSockets();
+      for (const socket of sockets) {
+        socket.disconnect(true);
+      }
+    } catch (err) {
+      this.logger.warn(
+        `killUser disconnect failed for ${userId}: ${(err as Error).message}`,
+      );
+    }
+  }
 }

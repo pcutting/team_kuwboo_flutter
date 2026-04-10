@@ -118,4 +118,35 @@ export class FeedGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ): void {
     this.server.to(`feed:${tab}`).emit('engagement:update', payload);
   }
+
+  /**
+   * Force-disconnect all feed sockets belonging to a user after sending
+   * a `client:state` killed event. Called from RealtimeRevocationService
+   * when sessions are revoked.
+   *
+   * Unlike the chat / notifications / presence gateways, feed sockets
+   * do NOT join a `user:${id}` room — they only join `feed:${tab}`
+   * rooms for content broadcast. So we cannot use room-based fan-out
+   * and instead iterate all namespace sockets, filtering by
+   * `socket.data.userId`. This is O(N connected feed sockets) but
+   * revocation is a low-rate event so the cost is acceptable.
+   */
+  async killUser(
+    userId: string,
+    payload: { state: string; reason?: string },
+  ): Promise<void> {
+    try {
+      const sockets = await this.server.fetchSockets();
+      for (const socket of sockets) {
+        if (socket.data?.userId === userId) {
+          socket.emit('client:state', payload);
+          socket.disconnect(true);
+        }
+      }
+    } catch (err) {
+      this.logger.warn(
+        `killUser disconnect failed for ${userId}: ${(err as Error).message}`,
+      );
+    }
+  }
 }

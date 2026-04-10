@@ -88,4 +88,29 @@ export class PresenceGateway
   getOnlineCount(): number {
     return this.connectedUsers.size;
   }
+
+  /**
+   * Force-disconnect a user's presence socket after sending a
+   * `client:state` killed event. Called from RealtimeRevocationService
+   * when sessions are revoked. The subsequent handleDisconnect handles
+   * cleanup of the in-memory presence map and broadcasts the OFFLINE
+   * transition automatically.
+   */
+  async killUser(
+    userId: string,
+    payload: { state: string; reason?: string },
+  ): Promise<void> {
+    const room = `user:${userId}`;
+    this.server.to(room).emit('client:state', payload);
+    try {
+      const sockets = await this.server.in(room).fetchSockets();
+      for (const socket of sockets) {
+        socket.disconnect(true);
+      }
+    } catch (err) {
+      this.logger.warn(
+        `killUser disconnect failed for ${userId}: ${(err as Error).message}`,
+      );
+    }
+  }
 }
