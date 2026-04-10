@@ -40,7 +40,7 @@ class ProtoTopBar extends StatelessWidget {
     final isInnerCircle = activeModule == ProtoModule.yoyo && state.yoyoMode == 1;
 
     return Container(
-      padding: const EdgeInsets.only(top: 14, left: 16, right: 16, bottom: 8),
+      padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top, left: 16, right: 16, bottom: 8),
       decoration: BoxDecoration(
         color: theme.surface,
         // Warm gradient overlay for Inner Circle mode

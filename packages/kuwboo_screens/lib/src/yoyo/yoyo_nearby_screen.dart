@@ -102,18 +102,14 @@ class _YoyoNearbyScreenState extends State<YoyoNearbyScreen> {
       return const InnerCircleNearbyView();
     }
 
-    return ProtoScaffold(
-      activeModule: ProtoModule.yoyo,
-      tabBadges: const {2: 2}, // 2 unread waves on Wave tab
-      body: state.yoyoVariant == 1
-          ? const _YoyoV2NearbyView()
-          : AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: state.isYoyoAreaView
-                  ? const _YoyoAreaView(key: ValueKey('area'))
-                  : _YoyoListView(key: ValueKey('list-${state.yoyoRange}')),
-            ),
-    );
+    return state.yoyoVariant == 1
+        ? const _YoyoV2NearbyView()
+        : AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: state.isYoyoAreaView
+                ? const _YoyoAreaView(key: ValueKey('area'))
+                : _YoyoListView(key: ValueKey('list-${state.yoyoRange}')),
+          );
   }
 }
 
@@ -1036,9 +1032,11 @@ class _V2RadarArea extends StatelessWidget {
       }
       final angle = (i * 137.5 * pi / 180) + rng.nextDouble() * 0.4;
       final r = maxRadius * fraction;
+      final xMax = (cx * 2 - 35).clamp(35.0, double.infinity);
+      final yMax = (cy * 2 - 35).clamp(35.0, double.infinity);
       return Offset(
-        (cx + r * cos(angle)).clamp(35, cx * 2 - 35),
-        (cy + r * sin(angle)).clamp(35, cy * 2 - 35),
+        (cx + r * cos(angle)).clamp(35, xMax),
+        (cy + r * sin(angle)).clamp(35, yMax),
       );
     });
   }
@@ -1362,21 +1360,24 @@ class _YoyoListViewState extends State<_YoyoListView> {
           ],
         ),
         // Range slider
-        SliderTheme(
-          data: SliderThemeData(
-            activeTrackColor: theme.primary,
-            thumbColor: theme.primary,
-            inactiveTrackColor: theme.textTertiary.withValues(alpha: 0.15),
-            trackHeight: 2,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-            overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-          ),
-          child: Slider(
-            min: 1,
-            max: 30,
-            divisions: 29,
-            value: state.yoyoRange,
-            onChanged: state.onYoyoRangeChanged,
+        Material(
+          type: MaterialType.transparency,
+          child: SliderTheme(
+            data: SliderThemeData(
+              activeTrackColor: theme.primary,
+              thumbColor: theme.primary,
+              inactiveTrackColor: theme.textTertiary.withValues(alpha: 0.15),
+              trackHeight: 2,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+            ),
+            child: Slider(
+              min: 1,
+              max: 30,
+              divisions: 29,
+              value: state.yoyoRange,
+              onChanged: state.onYoyoRangeChanged,
+            ),
           ),
         ),
 
@@ -1504,9 +1505,15 @@ class _YoyoAreaView extends StatelessWidget {
         // Radar area (anonymous circles when hidden, real markers when live)
         Expanded(child: _RadarArea(theme: theme)),
         // Card carousel (anonymous when hidden)
-        isLive ? _NearbyUserCardRow(theme: theme) : _AnonymousCardRow(theme: theme),
+        Flexible(
+          flex: 0,
+          child: isLive ? _NearbyUserCardRow(theme: theme) : _AnonymousCardRow(theme: theme),
+        ),
         // Bottom: Go Live panel when hidden, wave bar when live
-        isLive ? _YoyoActionBar(theme: theme) : _GoLivePanel(theme: theme),
+        Flexible(
+          flex: 0,
+          child: isLive ? _YoyoActionBar(theme: theme) : _GoLivePanel(theme: theme),
+        ),
         const SizedBox(height: 8),
       ],
     );
@@ -1539,20 +1546,23 @@ class _RadarControlBar extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: SliderTheme(
-              data: SliderThemeData(
-                activeTrackColor: theme.primary,
-                thumbColor: theme.primary,
-                inactiveTrackColor: theme.textTertiary.withValues(alpha: 0.15),
-                trackHeight: 2,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-              ),
-              child: Slider(
-                min: 1,
-                max: 20000,
-                value: state.yoyoRange,
-                onChanged: state.onYoyoRangeChanged,
+            child: Material(
+              type: MaterialType.transparency,
+              child: SliderTheme(
+                data: SliderThemeData(
+                  activeTrackColor: theme.primary,
+                  thumbColor: theme.primary,
+                  inactiveTrackColor: theme.textTertiary.withValues(alpha: 0.15),
+                  trackHeight: 2,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                ),
+                child: Slider(
+                  min: 1,
+                  max: 20000,
+                  value: state.yoyoRange,
+                  onChanged: state.onYoyoRangeChanged,
+                ),
               ),
             ),
           ),
@@ -1993,9 +2003,11 @@ class _RadarArea extends StatelessWidget {
       // Golden-angle spread with slight randomness
       final angle = (i * 137.5 * pi / 180) + rng.nextDouble() * 0.4;
       final r = maxRadius * fraction + rng.nextDouble() * 12 - 6;
+      final xMax = (cx * 2 - 35).clamp(35.0, double.infinity);
+      final yMax = (cy * 2 - 35).clamp(35.0, double.infinity);
       return Offset(
-        (cx + r * cos(angle)).clamp(35, cx * 2 - 35),
-        (cy + r * sin(angle)).clamp(35, cy * 2 - 35),
+        (cx + r * cos(angle)).clamp(35, xMax),
+        (cy + r * sin(angle)).clamp(35, yMax),
       );
     });
   }

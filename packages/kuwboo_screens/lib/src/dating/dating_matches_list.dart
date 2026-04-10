@@ -9,11 +9,8 @@ class DatingMatchesList extends StatelessWidget {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
 
-    return ProtoScaffold(
-      activeModule: ProtoModule.dating,
-      activeTab: 1,
-      body: ProtoDemoData.matches.isEmpty
-          ? const ProtoEmptyState(
+    return ProtoDemoData.matches.isEmpty
+        ? const ProtoEmptyState(
               icon: Icons.favorite_outline_rounded,
               title: 'No matches yet',
               subtitle: 'Keep swiping to find your people',
@@ -125,7 +122,6 @@ class DatingMatchesList extends StatelessWidget {
             );
           }),
         ],
-      ),
-    );
+      );
   }
 }

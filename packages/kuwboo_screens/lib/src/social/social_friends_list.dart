@@ -22,10 +22,7 @@ class _SocialFriendsListState extends State<SocialFriendsList> {
         : allUsers;
     final onlineCount = allUsers.where((u) => u.isOnline).length;
 
-    return ProtoScaffold(
-      activeModule: ProtoModule.social,
-      activeTab: 1,
-      body: Column(
+    return Column(
         children: [
           // Search
           Padding(
@@ -135,7 +132,6 @@ class _SocialFriendsListState extends State<SocialFriendsList> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 }

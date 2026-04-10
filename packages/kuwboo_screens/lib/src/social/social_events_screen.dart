@@ -7,10 +7,7 @@ class SocialEventsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
-    return ProtoScaffold(
-      activeModule: ProtoModule.social,
-      activeTab: 2,
-      body: ListView(
+    return ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         children: [
           const SizedBox(height: 12),
@@ -67,7 +64,6 @@ class SocialEventsScreen extends StatelessWidget {
             ),
           )),
         ],
-      ),
-    );
+      );
   }
 }

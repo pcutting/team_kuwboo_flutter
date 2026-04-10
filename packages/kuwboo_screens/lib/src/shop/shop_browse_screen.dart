@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
+import '../sponsored/sponsored_inline.dart';
 
 class ShopBrowseScreen extends StatefulWidget {
   const ShopBrowseScreen({super.key});
@@ -19,10 +20,8 @@ class _ShopBrowseScreenState extends State<ShopBrowseScreen> {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
 
-    return ProtoScaffold(
-      activeModule: ProtoModule.shop,
-      body: DemoDataExtended.products.isEmpty
-          ? const ProtoEmptyState(
+    return DemoDataExtended.products.isEmpty
+        ? const ProtoEmptyState(
               icon: Icons.storefront_outlined,
               title: 'No listings nearby',
               subtitle: 'Check back soon or expand your search area',
@@ -197,7 +196,6 @@ class _ShopBrowseScreenState extends State<ShopBrowseScreen> {
           ),
           const SizedBox(height: 12),
         ],
-      ),
-    );
+      );
   }
 }

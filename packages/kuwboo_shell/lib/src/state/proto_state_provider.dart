@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../routes/proto_routes.dart';
 import 'proto_module.dart';
+export 'proto_module.dart';
 
 // ─── Shell State (global app-level) ─────────────────────────────────────
 
@@ -263,6 +266,7 @@ class ProtoStateAccess extends InheritedWidget {
   final YoyoState yoyo;
   final ShellStateNotifier shellNotifier;
   final YoyoStateNotifier yoyoNotifier;
+  final GlobalKey<NavigatorState>? navigatorKey;
 
   const ProtoStateAccess({
     super.key,
@@ -270,6 +274,7 @@ class ProtoStateAccess extends InheritedWidget {
     required this.yoyo,
     required this.shellNotifier,
     required this.yoyoNotifier,
+    this.navigatorKey,
     required super.child,
   });
 
@@ -330,7 +335,68 @@ class ProtoStateAccess extends InheritedWidget {
   void onDarkModeChanged(bool v) => shellNotifier.setDarkMode(v);
   void onModuleChanged(ProtoModule m) => shellNotifier.switchModule(m);
 
+  // ── Navigation (delegates to GoRouter via navigatorKey context) ──
+
+  void push(String route) {
+    final ctx = navigatorKey?.currentContext;
+    if (ctx != null) GoRouter.of(ctx).push(route);
+  }
+
+  void pushWithArgs(String route, Object arguments) {
+    final ctx = navigatorKey?.currentContext;
+    if (ctx != null) GoRouter.of(ctx).push(route, extra: arguments);
+  }
+
+  void pop() {
+    final ctx = navigatorKey?.currentContext;
+    if (ctx != null) {
+      final router = GoRouter.of(ctx);
+      if (router.canPop()) {
+        router.pop();
+      } else {
+        final home = _homeRoute(shell.activeModule);
+        router.go(home);
+      }
+    }
+  }
+
+  void switchModule(ProtoModule module) {
+    shellNotifier.switchModule(module);
+    final ctx = navigatorKey?.currentContext;
+    if (ctx != null) GoRouter.of(ctx).go(_homeRoute(module));
+  }
+
+  void switchTab(int tabIndex) {
+    final route = ProtoRoutes.tabRoute(
+      shell.activeModule.name,
+      tabIndex,
+    );
+    if (route != null) {
+      final ctx = navigatorKey?.currentContext;
+      if (ctx != null) GoRouter.of(ctx).go(route);
+    }
+  }
+
+  static String _homeRoute(ProtoModule module) {
+    switch (module) {
+      case ProtoModule.video:
+        return ProtoRoutes.videoFeed;
+      case ProtoModule.dating:
+        return ProtoRoutes.datingCards;
+      case ProtoModule.yoyo:
+        return ProtoRoutes.yoyoNearby;
+      case ProtoModule.social:
+        return ProtoRoutes.socialFeed;
+      case ProtoModule.shop:
+        return ProtoRoutes.shopBrowse;
+    }
+  }
+
   @override
   bool updateShouldNotify(ProtoStateAccess oldWidget) =>
       shell != oldWidget.shell || yoyo != oldWidget.yoyo;
 }
+
+/// Backwards-compatible alias so screens that reference the old web-app name
+/// continue to compile without changes.
+typedef PrototypeStateProvider = ProtoStateAccess;

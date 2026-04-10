@@ -163,6 +163,7 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     // Fills parent — parent should use Positioned.fill in its Stack.
     // Non-interactive areas (above bar, when popup is closed) pass taps
@@ -192,12 +193,12 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
           bottom: 0,
           left: 0,
           right: 0,
-          child: _buildBar(theme),
+          child: _buildBar(theme, bottomInset),
         ),
 
         // FAB sitting in the right-side notch
         Positioned(
-          bottom: _height - _fabSize / 2,
+          bottom: bottomInset + _height - _fabSize / 2,
           right: _fabRightOffset,
           child: _buildFab(theme),
         ),
@@ -205,12 +206,12 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
     );
   }
 
-  Widget _buildBar(ProtoTheme theme) {
+  Widget _buildBar(ProtoTheme theme, double bottomInset) {
     final tabs = _tabs(theme);
     final borderColor = theme.text.withValues(alpha: 0.08);
 
     return SizedBox(
-      height: _height,
+      height: _height + bottomInset,
       child: CustomPaint(
         painter: _RightNotchedBarPainter(
           backgroundColor: theme.surface,
@@ -220,8 +221,9 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
           borderColor: borderColor,
         ),
         child: Padding(
-          // Right padding to make room for the FAB notch
-          padding: EdgeInsets.only(right: _fabSize + 28),
+          // Right padding to make room for the FAB notch,
+          // bottom padding for home indicator on modern iPhones
+          padding: EdgeInsets.only(right: _fabSize + 28, bottom: bottomInset),
           child: Row(
             children: List.generate(tabs.length, (i) {
               final tab = tabs[i];
@@ -342,11 +344,12 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
   }
 
   Widget _buildScrimPanel(ProtoTheme theme) {
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
     return Positioned(
       top: 0,
       left: 0,
       right: 0,
-      bottom: _height,
+      bottom: _height + bottomInset,
       child: AnimatedBuilder(
         animation: _expandAnimation,
         builder: (context, child) {
@@ -364,6 +367,7 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
 
   List<Widget> _buildServicePopup(ProtoTheme theme) {
     final services = ProtoModule.values;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
     final List<Widget> widgets = [];
 
     for (int i = 0; i < services.length; i++) {
@@ -371,7 +375,7 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
       final isCurrent = service == widget.activeModule;
       // Stack items from bottom to top: index 0 is highest
       final bottomOffset =
-          _height + (_fabSize / 2) + _notchMargin +
+          bottomInset + _height + (_fabSize / 2) + _notchMargin +
           8 + (services.length - 1 - i) * 52.0;
 
       widgets.add(

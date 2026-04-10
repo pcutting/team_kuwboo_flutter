@@ -48,10 +48,7 @@ class _YoyoWaveScreenState extends State<YoyoWaveScreen> {
       return const InnerCircleWaveView();
     }
 
-    return ProtoScaffold(
-      activeModule: ProtoModule.yoyo,
-      activeTab: 2,
-      body: ListView(
+    return ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         children: [
           const SizedBox(height: 12),
@@ -337,8 +334,7 @@ class _YoyoWaveScreenState extends State<YoyoWaveScreen> {
               }),
             ],
         ],
-      ),
-    );
+      );
   }
 }
 

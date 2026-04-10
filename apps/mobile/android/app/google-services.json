@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "194532972891",
+    "project_id": "kuwboo-mobile",
+    "storage_bucket": "kuwboo-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:194532972891:android:490bc0fd866aaeb43ce27e",
+        "android_client_info": {
+          "package_name": "com.kuwboo.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJi6YhDtNU3P5x4NrFoAyUZHXA_vU-t64"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

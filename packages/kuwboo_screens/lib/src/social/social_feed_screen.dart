@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
+import '../sponsored/sponsored_inline.dart';
 
 class SocialFeedScreen extends StatefulWidget {
   const SocialFeedScreen({super.key});
@@ -16,10 +17,7 @@ class _SocialFeedScreenState extends State<SocialFeedScreen> {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
 
-    return ProtoScaffold(
-      activeModule: ProtoModule.social,
-      showTopBar: false,
-      body: Column(
+    return Column(
         children: [
           // Custom top bar
           const _SocialTopBar(),
@@ -119,8 +117,7 @@ class _SocialFeedScreenState extends State<SocialFeedScreen> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildStoriesRow(BuildContext context, PrototypeStateProvider state, ProtoTheme theme) {

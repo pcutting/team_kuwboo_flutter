@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
+import '../sponsored/sponsored_inline.dart';
 
 /// Per-video interaction state (independent for each video in the feed).
 class _VideoInteractionState {
@@ -189,18 +190,14 @@ class _VideoFeedScreenState extends State<VideoFeedScreen>
 
   @override
   Widget build(BuildContext context) {
-    return ProtoScaffold(
-      activeModule: ProtoModule.video,
-      showTopBar: false,
-      tabBadges: const {1: 3},
-      body: widget.isFollowingFeed && _videos.isEmpty
-          ? const ProtoEmptyState(
-              icon: Icons.people_outline_rounded,
-              title: 'No followed creators yet',
-              subtitle: 'Follow creators to see their videos here',
-              actionLabel: 'Discover Creators',
-            )
-          : Stack(
+    return widget.isFollowingFeed && _videos.isEmpty
+        ? const ProtoEmptyState(
+            icon: Icons.people_outline_rounded,
+            title: 'No followed creators yet',
+            subtitle: 'Follow creators to see their videos here',
+            actionLabel: 'Discover Creators',
+          )
+        : Stack(
         children: [
           // Vertical swipeable feed
           PageView.builder(
@@ -222,8 +219,7 @@ class _VideoFeedScreenState extends State<VideoFeedScreen>
           // YoYo icon (left) + chat & profile (right) — at bevel level
           _buildTopBar(context),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildVideoPage(BuildContext context, int index) {

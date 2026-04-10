@@ -174,9 +174,7 @@ class _DatingCardStackState extends State<DatingCardStack>
     final screenWidth = MediaQuery.sizeOf(context).width;
     final rotation = (offset.dx / screenWidth) * _maxRotation;
 
-    return ProtoScaffold(
-      activeModule: ProtoModule.dating,
-      body: Padding(
+    return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Column(
           children: [
@@ -245,8 +243,7 @@ class _DatingCardStackState extends State<DatingCardStack>
             const SizedBox(height: 4),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildTopRow(BuildContext context, PrototypeStateProvider state, ProtoTheme theme) {

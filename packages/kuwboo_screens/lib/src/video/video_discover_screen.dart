@@ -18,10 +18,7 @@ class _VideoDiscoverScreenState extends State<VideoDiscoverScreen> {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
 
-    return ProtoScaffold(
-      activeModule: ProtoModule.video,
-      activeTab: 2,
-      body: ListView(
+    return ListView(
         padding: const EdgeInsets.symmetric(horizontal: 12),
         children: [
           const SizedBox(height: 12),
@@ -125,7 +122,6 @@ class _VideoDiscoverScreenState extends State<VideoDiscoverScreen> {
             )),
           ),
         ],
-      ),
-    );
+      );
   }
 }

@@ -46,10 +46,7 @@ class _DatingLikesScreenState extends State<DatingLikesScreen> {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
 
-    return ProtoScaffold(
-      activeModule: ProtoModule.dating,
-      activeTab: 2,
-      body: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
@@ -199,8 +196,7 @@ class _DatingLikesScreenState extends State<DatingLikesScreen> {
                   ),
           ),
         ],
-      ),
-    );
+      );
   }
 }
 

@@ -26,10 +26,7 @@ class _ShopDealsScreenState extends State<ShopDealsScreen> {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
 
-    return ProtoScaffold(
-      activeModule: ProtoModule.shop,
-      activeTab: 1,
-      body: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
@@ -162,8 +159,7 @@ class _ShopDealsScreenState extends State<ShopDealsScreen> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 }
 

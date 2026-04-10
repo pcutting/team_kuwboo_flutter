@@ -12,7 +12,7 @@ import '../providers/auth_provider.dart';
 
 // ─── Navigation Keys ─────────────────────────────────────────────────────
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 // ─── Proto Shell Widget ─────────────────────────────────────────────────
@@ -41,7 +41,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
 
   return GoRouter(
-    navigatorKey: _rootNavigatorKey,
+    navigatorKey: rootNavigatorKey,
     initialLocation: ProtoRoutes.yoyoNearby,
     redirect: (context, state) {
       if (authState.isLoading) return null;
@@ -61,12 +61,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Auth Routes ──────────────────────────────────────────────────
       GoRoute(
         path: '/login',
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
         path: '/otp',
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) {
           final phone = state.extra as String? ?? '';
           return OtpScreen(phone: phone);
@@ -74,7 +74,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/onboarding',
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const OnboardingScreen(),
       ),
 
@@ -218,92 +218,92 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Sub-screens (push on top of shell) ──────────────────────────
       GoRoute(
         path: ProtoRoutes.yoyoSettings,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const YoyoSettingsScreen(),
       ),
       GoRoute(
         path: ProtoRoutes.yoyoProfile,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const YoyoUserProfile(),
       ),
       GoRoute(
         path: ProtoRoutes.yoyoFilters,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const YoyoFilterSheet(),
       ),
       GoRoute(
         path: ProtoRoutes.videoComments,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const VideoCommentsSheet(),
       ),
       GoRoute(
         path: ProtoRoutes.videoEdit,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const VideoEditScreen(),
       ),
       GoRoute(
         path: ProtoRoutes.videoCreator,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const VideoCreatorProfile(),
       ),
       GoRoute(
         path: ProtoRoutes.videoSound,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const VideoSoundScreen(),
       ),
       GoRoute(
         path: ProtoRoutes.datingProfile,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const DatingExpandedProfile(),
       ),
       GoRoute(
         path: ProtoRoutes.datingMatch,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const DatingMatchOverlay(),
       ),
       GoRoute(
         path: ProtoRoutes.datingFilters,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const DatingFiltersSheet(),
       ),
       GoRoute(
         path: ProtoRoutes.shopProduct,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const ShopProductDetail(),
       ),
       GoRoute(
         path: ProtoRoutes.shopSeller,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const ShopSellerProfile(),
       ),
       GoRoute(
         path: ProtoRoutes.shopAuction,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const ShopAuctionDetail(),
       ),
       GoRoute(
         path: ProtoRoutes.chatConversation,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const ChatConversationScreen(),
       ),
       GoRoute(
         path: ProtoRoutes.profileMy,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const ProfileMyScreen(),
       ),
       GoRoute(
         path: ProtoRoutes.profileEdit,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const ProfileEditScreen(),
       ),
       GoRoute(
         path: ProtoRoutes.profileSettings,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const ProfileSettingsScreen(),
       ),
       GoRoute(
         path: ProtoRoutes.profileNotifications,
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const ProfileNotificationsScreen(),
       ),
     ],

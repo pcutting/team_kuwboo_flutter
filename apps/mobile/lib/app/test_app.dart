@@ -5,9 +5,10 @@ import 'package:kuwboo_shell/kuwboo_shell.dart';
 import 'router.dart';
 import 'theme.dart';
 
-/// Root widget for the Kuwboo mobile application.
-class KuwbooApp extends ConsumerWidget {
-  const KuwbooApp({super.key});
+/// Test-friendly version of KuwbooApp that skips Firebase initialization.
+/// Used by integration tests to avoid Firebase blocking on simulators.
+class KuwbooTestApp extends ConsumerWidget {
+  const KuwbooTestApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

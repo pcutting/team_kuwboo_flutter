@@ -47,10 +47,7 @@ class _YoyoConnectScreenState extends State<YoyoConnectScreen> {
       return const InnerCircleConnectView();
     }
 
-    return ProtoScaffold(
-      activeModule: ProtoModule.yoyo,
-      activeTab: 1,
-      body: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
@@ -208,8 +205,7 @@ class _YoyoConnectScreenState extends State<YoyoConnectScreen> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildV2ConnectList(BuildContext context, ProtoTheme theme, PrototypeStateProvider state) {

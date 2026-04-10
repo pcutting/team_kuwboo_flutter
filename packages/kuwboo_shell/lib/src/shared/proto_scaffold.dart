@@ -50,7 +50,9 @@ class ProtoScaffold extends StatelessWidget {
                 Positioned.fill(
                   child: Padding(
                     padding: EdgeInsets.only(
-                      bottom: showBottomNav ? _barHeight : 0,
+                      bottom: showBottomNav
+                          ? _barHeight + MediaQuery.paddingOf(context).bottom
+                          : 0,
                     ),
                     child: body,
                   ),
@@ -101,7 +103,7 @@ class ProtoSubBar extends StatelessWidget {
     final theme = ProtoTheme.of(context);
 
     return Container(
-      padding: const EdgeInsets.only(top: 14, left: 8, right: 16, bottom: 8),
+      padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top, left: 8, right: 16, bottom: 8),
       decoration: BoxDecoration(
         color: theme.surface,
         border: Border(
