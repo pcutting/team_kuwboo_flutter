@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kuwboo_ui/kuwboo_ui.dart';
+import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 /// Builds a [ThemeData] from the Kuwboo design system tokens.
 ///

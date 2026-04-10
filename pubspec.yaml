@@ -10,3 +10,6 @@ workspace:
   - packages/ui
   - packages/models
   - packages/api_client
+  - packages/kuwboo_shell
+  - packages/kuwboo_screens
+  - packages/kuwboo_chat

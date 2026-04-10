@@ -1,0 +1,24 @@
+name: kuwboo_chat
+description: Kuwboo canonical chat module — one inbox, one conversation, shared card atom
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.11.1
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  kuwboo_shell:
+    path: ../kuwboo_shell
+  kuwboo_models:
+    path: ../models
+  kuwboo_api_client:
+    path: ../api_client
+  flutter_riverpod: ^2.6.0
+  go_router: ^14.0.0
+
+flutter:
+  uses-material-design: true

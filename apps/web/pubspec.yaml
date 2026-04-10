@@ -13,6 +13,12 @@ dependencies:
     sdk: flutter
   kuwboo_ui:
     path: ../../packages/ui
+  kuwboo_shell:
+    path: ../../packages/kuwboo_shell
+  kuwboo_screens:
+    path: ../../packages/kuwboo_screens
+  kuwboo_chat:
+    path: ../../packages/kuwboo_chat
   google_fonts: ^8.0.0
   phosphor_flutter: ^2.1.0
   lucide_icons_flutter: ^3.1.10
