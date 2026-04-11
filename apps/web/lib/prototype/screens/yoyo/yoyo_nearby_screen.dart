@@ -1201,7 +1201,7 @@ class _HiddenV2RadarArea extends StatelessWidget {
                 child: Stack(
                   children: [
                     // Range rings
-                    ..._V2RadarArea._buildV2RangeRings(cx, cy, maxRadius, theme),
+                    ..._V2RadarArea._buildV2RangeRings(cx, cy, maxRadius, theme, state.yoyoRange),
 
                     // "You" marker with hidden badge
                     Positioned(
