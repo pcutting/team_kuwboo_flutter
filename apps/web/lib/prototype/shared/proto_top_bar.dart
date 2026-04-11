@@ -9,10 +9,12 @@ import 'proto_dialogs.dart';
 /// YoYo icon LEFT (doubles as area/list toggle), Profile avatar RIGHT, Chat with badge.
 class ProtoTopBar extends StatelessWidget {
   final ProtoModule activeModule;
+  final bool transparent;
 
   const ProtoTopBar({
     super.key,
     required this.activeModule,
+    this.transparent = false,
   });
 
   String _title(int yoyoMode) {
@@ -42,7 +44,9 @@ class ProtoTopBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.only(top: 14, left: 16, right: 16, bottom: 8),
       decoration: BoxDecoration(
-        color: theme.surface,
+        color: transparent
+            ? theme.surface.withValues(alpha: 0.7)
+            : theme.surface,
         // Warm gradient overlay for Inner Circle mode
         gradient: isInnerCircle
             ? LinearGradient(
@@ -54,13 +58,15 @@ class ProtoTopBar extends StatelessWidget {
                 end: Alignment.bottomRight,
               )
             : null,
-        border: Border(
-          bottom: BorderSide(
-            color: isInnerCircle
-                ? _warmAmber.withValues(alpha: 0.15)
-                : theme.text.withValues(alpha: 0.06),
-          ),
-        ),
+        border: transparent
+            ? null
+            : Border(
+                bottom: BorderSide(
+                  color: isInnerCircle
+                      ? _warmAmber.withValues(alpha: 0.15)
+                      : theme.text.withValues(alpha: 0.06),
+                ),
+              ),
       ),
       child: Row(
         children: [

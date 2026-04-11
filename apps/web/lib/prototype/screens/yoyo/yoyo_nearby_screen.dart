@@ -153,6 +153,9 @@ class _YoyoNearbyScreenState extends State<YoyoNearbyScreen> {
 
     return ProtoScaffold(
       activeModule: ProtoModule.yoyo,
+      overlayTopBar: true,
+      showTopBar: !state.isRadarFullscreen,
+      showBottomNav: !state.isRadarFullscreen,
       tabBadges: const {2: 2}, // 2 unread waves on Wave tab
       body: const _YoyoV2NearbyView(),
     );
@@ -356,8 +359,25 @@ class _V2ListView extends StatelessWidget {
     final theme = ProtoTheme.of(context);
     final encounters = _filteredV2Encounters(state);
 
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+    return Stack(
+      children: [
+        // Radar gradient background (shows through transparent nav)
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: const Alignment(0, -0.5),
+                radius: 0.8,
+                colors: [
+                  theme.secondary.withValues(alpha: 0.04),
+                  theme.background,
+                ],
+              ),
+            ),
+          ),
+        ),
+        ListView(
+      padding: const EdgeInsets.only(left: 12, right: 12, top: 52),
       children: [
         // Encounter type filter chips
         Padding(
@@ -405,6 +425,8 @@ class _V2ListView extends StatelessWidget {
           enc.consentStatus == ConsentStatus.shared
               ? _V2RevealedCard(encounter: enc)
               : _V2TeaserCard(encounter: enc),
+      ],
+    ),
       ],
     );
   }
@@ -842,6 +864,7 @@ class _V2AreaView extends StatelessWidget {
 
     return Column(
       children: [
+        const SizedBox(height: 44), // space for transparent overlay nav
         _V2RadarControlBar(theme: theme, state: state),
         Expanded(
           child: state.yoyoLiveActive

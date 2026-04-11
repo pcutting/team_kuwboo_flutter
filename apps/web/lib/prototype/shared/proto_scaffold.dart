@@ -11,6 +11,7 @@ class ProtoScaffold extends StatelessWidget {
   final Widget body;
   final bool showTopBar;
   final bool showBottomNav;
+  final bool overlayTopBar;
   final Color? backgroundColor;
   final int activeTab;
   final Map<int, int>? tabBadges;
@@ -21,6 +22,7 @@ class ProtoScaffold extends StatelessWidget {
     required this.body,
     this.showTopBar = true,
     this.showBottomNav = true,
+    this.overlayTopBar = false,
     this.backgroundColor,
     this.activeTab = 0,
     this.tabBadges,
@@ -35,18 +37,57 @@ class ProtoScaffold extends StatelessWidget {
     final theme = ProtoTheme.of(context);
     final bg = backgroundColor ?? theme.background;
 
+    // Overlay mode: top bar floats over the body (transparent, radar shows through)
+    if (overlayTopBar && showTopBar) {
+      return Container(
+        color: bg,
+        child: Stack(
+          children: [
+            // Body fills entire space (extends behind top bar)
+            Positioned.fill(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: showBottomNav ? _barHeight : 0,
+                ),
+                child: body,
+              ),
+            ),
+            // Transparent top bar floats on top
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: ProtoTopBar(activeModule: activeModule, transparent: true),
+            ),
+            // Bottom nav
+            if (showBottomNav)
+              Positioned.fill(
+                child: ProtoBottomNavC(
+                  activeModule: activeModule,
+                  activeTab: activeTab,
+                  tabBadges: tabBadges,
+                  onTabTapped: (tabIndex) {
+                    if (state != null) state.switchTab(tabIndex);
+                  },
+                  onServiceSelected: (module) {
+                    if (state != null) state.switchModule(module);
+                  },
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    // Standard mode: top bar in Column above body
     return Container(
       color: bg,
       child: Column(
         children: [
           if (showTopBar) ProtoTopBar(activeModule: activeModule),
-          // Stack layout: body fills available space, bottom nav floats above.
-          // This ensures the FAB and popup can receive taps outside
-          // the strict nav bar bounds.
           Expanded(
             child: Stack(
               children: [
-                // Body with bottom padding so content doesn't hide behind nav
                 Positioned.fill(
                   child: Padding(
                     padding: EdgeInsets.only(
@@ -55,8 +96,6 @@ class ProtoScaffold extends StatelessWidget {
                     child: body,
                   ),
                 ),
-                // Bottom nav fills the Stack area so popup items can receive
-                // taps above the bar. Non-interactive areas pass taps through.
                 if (showBottomNav)
                   Positioned.fill(
                     child: ProtoBottomNavC(
