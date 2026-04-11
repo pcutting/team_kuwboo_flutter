@@ -868,21 +868,141 @@ class _V2AreaView extends StatelessWidget {
       return _FullscreenRadarView(theme: theme);
     }
 
+    // Hidden mode: cleaner layout — radar fills space, controls at bottom
+    if (!state.yoyoLiveActive) {
+      return Column(
+        children: [
+          const SizedBox(height: 44), // space for transparent overlay nav
+          // Minimal control bar: just live button + filter + settings (no slider)
+          _HiddenControlBar(theme: theme, state: state),
+          // Radar fills remaining space
+          Expanded(child: _HiddenV2RadarArea(theme: theme)),
+          // Range slider at bottom (above duration chips)
+          _BottomRangeSlider(theme: theme, state: state),
+          // Duration chips + Go Live button
+          _V2ActionBar(theme: theme),
+          const SizedBox(height: 8),
+        ],
+      );
+    }
+
+    // Live mode: full layout with encounter cards
     return Column(
       children: [
         const SizedBox(height: 44), // space for transparent overlay nav
         _V2RadarControlBar(theme: theme, state: state),
-        Expanded(
-          child: state.yoyoLiveActive
-              ? _V2RadarArea(theme: theme)
-              : _HiddenV2RadarArea(theme: theme),
-        ),
-        state.yoyoLiveActive
-            ? _V2EncounterCardRow(theme: theme)
-            : _AnonymousCardRow(theme: theme),
+        Expanded(child: _V2RadarArea(theme: theme)),
+        _V2EncounterCardRow(theme: theme),
         _V2ActionBar(theme: theme),
         const SizedBox(height: 8),
       ],
+    );
+  }
+}
+
+// ─── Hidden-Mode Control Bar (minimal — no slider) ──────────────────
+
+class _HiddenControlBar extends StatelessWidget {
+  final ProtoTheme theme;
+  final PrototypeStateProvider state;
+  const _HiddenControlBar({required this.theme, required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 12, right: 8, top: 0, bottom: 4),
+      child: Row(
+        children: [
+          // Inline live status
+          _InlineLiveButton(theme: theme),
+          const Spacer(),
+          // Filter button
+          ProtoPressButton(
+            onTap: () => state.push(ProtoRoutes.yoyoFilters),
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: (state.yoyoFriendsOnly || state.yoyoSelectedInterests.isNotEmpty)
+                    ? theme.primary.withValues(alpha: 0.15)
+                    : theme.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: theme.textTertiary.withValues(alpha: 0.2)),
+              ),
+              child: Icon(
+                theme.icons.tune, size: 16,
+                color: (state.yoyoFriendsOnly || state.yoyoSelectedInterests.isNotEmpty)
+                    ? theme.primary : theme.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          // Settings gear
+          ProtoPressButton(
+            onTap: () => state.push(ProtoRoutes.yoyoSettings),
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: theme.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: theme.textTertiary.withValues(alpha: 0.2)),
+              ),
+              child: Icon(theme.icons.settings, size: 16, color: theme.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Bottom Range Slider (hidden mode) ──────────────────────────────
+
+class _BottomRangeSlider extends StatelessWidget {
+  final ProtoTheme theme;
+  final PrototypeStateProvider state;
+  const _BottomRangeSlider({required this.theme, required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: theme.surface.withValues(alpha: 0.8),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.radar_rounded, size: 14, color: theme.secondary),
+            const SizedBox(width: 6),
+            Text(
+              _formatRange(state.yoyoRange),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: theme.secondary),
+            ),
+            Expanded(
+              child: SliderTheme(
+                data: SliderThemeData(
+                  activeTrackColor: theme.primary,
+                  thumbColor: theme.primary,
+                  inactiveTrackColor: theme.textTertiary.withValues(alpha: 0.15),
+                  trackHeight: 2,
+                  thumbShape: const _StopButtonThumbShape(),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                ),
+                child: Slider(
+                  min: 0,
+                  max: 1,
+                  value: _kmToLogSlider(state.yoyoRange),
+                  onChanged: (t) => state.onYoyoRangeChanged(_logSliderToKm(t)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -1902,12 +2022,12 @@ class _V2ActionBar extends StatelessWidget {
                   gradient: LinearGradient(colors: [theme.primary, theme.secondary]),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(theme.icons.wavingHand, size: 18, color: Colors.white),
-                    const SizedBox(width: 8),
-                    const Text('Wave All Nearby', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
+                    Icon(Icons.sensors_rounded, size: 18, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text('Go Live', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
                   ],
                 ),
               ),
