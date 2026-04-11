@@ -843,8 +843,14 @@ class _V2AreaView extends StatelessWidget {
     return Column(
       children: [
         _V2RadarControlBar(theme: theme, state: state),
-        Expanded(child: _V2RadarArea(theme: theme)),
-        _V2EncounterCardRow(theme: theme),
+        Expanded(
+          child: state.yoyoLiveActive
+              ? _V2RadarArea(theme: theme)
+              : _HiddenV2RadarArea(theme: theme),
+        ),
+        state.yoyoLiveActive
+            ? _V2EncounterCardRow(theme: theme)
+            : _AnonymousCardRow(theme: theme),
         _V2ActionBar(theme: theme),
         const SizedBox(height: 8),
       ],
@@ -1148,6 +1154,224 @@ class _V2RadarArea extends StatelessWidget {
   }
 }
 
+// ─── Hidden V2 Radar Area (anonymous markers with friend badges) ────
+
+class _HiddenV2RadarArea extends StatelessWidget {
+  final ProtoTheme theme;
+  const _HiddenV2RadarArea({required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = PrototypeStateProvider.of(context);
+    final encounters = _filteredV2Encounters(state);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final h = constraints.maxHeight;
+        final cx = w / 2;
+        final cy = h * 0.46;
+        final maxRadius = min(w, h) * 0.45;
+
+        final positions = _V2RadarArea._generateV2Positions(encounters, cx, cy, maxRadius);
+
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0, -0.08),
+                    radius: 0.9,
+                    colors: [
+                      theme.secondary.withValues(alpha: 0.06),
+                      theme.background,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 3.0,
+              boundaryMargin: const EdgeInsets.all(80),
+              child: SizedBox(
+                width: w,
+                height: h,
+                child: Stack(
+                  children: [
+                    // Range rings
+                    ..._V2RadarArea._buildV2RangeRings(cx, cy, maxRadius, theme),
+
+                    // "You" marker with hidden badge
+                    Positioned(
+                      left: cx - 29,
+                      top: cy - 29,
+                      child: Column(
+                        children: [
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Opacity(
+                                opacity: 0.6,
+                                child: _OrganicAvatar(
+                                  size: 52,
+                                  imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+                                  borderColor: theme.surface,
+                                  borderWidth: 3,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: theme.primary.withValues(alpha: 0.3),
+                                      blurRadius: 16,
+                                      spreadRadius: 4,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Hidden badge overlay (eye-off icon)
+                              Positioned(
+                                right: -2,
+                                top: -2,
+                                child: Container(
+                                  width: 18,
+                                  height: 18,
+                                  decoration: BoxDecoration(
+                                    color: theme.textSecondary,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: theme.surface,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    theme.icons.visibilityOff,
+                                    size: 10,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: theme.primary,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'You',
+                              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Anonymous markers — friends get a subtle star badge
+                    for (int i = 0; i < encounters.length && i < positions.length; i++)
+                      Positioned(
+                        left: positions[i].dx - 35,
+                        top: positions[i].dy - 35,
+                        child: _AnonymousV2Marker(
+                          size: 30.0 + (i % 3) * 10.0,
+                          theme: theme,
+                          isFriend: encounters[i].relationship == RelationshipType.friend
+                              || encounters[i].relationship == RelationshipType.partner
+                              || encounters[i].relationship == RelationshipType.family,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Count badge
+            Positioned(
+              bottom: 8,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: theme.surface.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.sensors_rounded, size: 16, color: theme.secondary),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${encounters.length} nearby',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: theme.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// ─── Anonymous V2 Marker (friend-aware) ─────────────────────────────
+
+class _AnonymousV2Marker extends StatelessWidget {
+  final double size;
+  final ProtoTheme theme;
+  final bool isFriend;
+
+  const _AnonymousV2Marker({
+    required this.size,
+    required this.theme,
+    required this.isFriend,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: theme.textTertiary.withValues(alpha: 0.2),
+            border: Border.all(
+              color: isFriend
+                  ? theme.secondary.withValues(alpha: 0.3)
+                  : theme.textTertiary.withValues(alpha: 0.1),
+              width: isFriend ? 1.5 : 1,
+            ),
+          ),
+        ),
+        // Friend star badge
+        if (isFriend)
+          Positioned(
+            right: -3,
+            top: -3,
+            child: Container(
+              width: 14,
+              height: 14,
+              decoration: BoxDecoration(
+                color: Colors.amber.shade100,
+                shape: BoxShape.circle,
+                border: Border.all(color: theme.surface, width: 1),
+              ),
+              child: Icon(Icons.star_rounded, size: 8, color: Colors.amber.shade700),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 // ─── V2 Area Marker ─────────────────────────────────────────────────
 
 class _V2AreaMarker extends StatelessWidget {
@@ -1321,9 +1545,20 @@ class _V2ActionBar extends StatelessWidget {
   final ProtoTheme theme;
   const _V2ActionBar({required this.theme});
 
+  static const _durationLabels = ['30m', '2h', '8h', 'Always On'];
+
   @override
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
+
+    if (state.yoyoLiveActive) {
+      return _buildLiveBar(context, state);
+    }
+    return _buildHiddenBar(context, state);
+  }
+
+  /// Live mode — "Wave All Nearby" gradient button.
+  Widget _buildLiveBar(BuildContext context, PrototypeStateProvider state) {
     final encounterCount = _filteredV2Encounters(state).length;
 
     return Padding(
@@ -1350,6 +1585,83 @@ class _V2ActionBar extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// Hidden mode — duration chips + "Go Live" button.
+  Widget _buildHiddenBar(BuildContext context, PrototypeStateProvider state) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Duration chips row
+          Row(
+            children: [
+              for (int i = 0; i < _durationLabels.length; i++) ...[
+                if (i > 0) const SizedBox(width: 6),
+                ProtoPressButton(
+                  onTap: () => state.onYoyoLiveDurationChanged(i),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: state.yoyoLiveDuration == i
+                          ? theme.primary.withValues(alpha: 0.15)
+                          : theme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: state.yoyoLiveDuration == i
+                            ? theme.primary
+                            : theme.textTertiary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Text(
+                      _durationLabels[i],
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: state.yoyoLiveDuration == i ? theme.primary : theme.textSecondary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Go Live gradient button
+          SizedBox(
+            width: double.infinity,
+            child: ProtoPressButton(
+              onTap: () {
+                state.onYoyoLiveToggle();
+                final label = _durationLabels[state.yoyoLiveDuration];
+                ProtoToast.show(
+                  context,
+                  Icons.sensors_rounded,
+                  label == 'Always On' ? 'You\'re now live' : 'Live for $label',
+                );
+              },
+              child: Container(
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [theme.primary, theme.secondary]),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(theme.icons.wavingHand, size: 18, color: Colors.white),
+                    const SizedBox(width: 8),
+                    const Text('Wave All Nearby', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
