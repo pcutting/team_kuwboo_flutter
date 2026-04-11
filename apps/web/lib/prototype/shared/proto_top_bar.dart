@@ -41,13 +41,32 @@ class ProtoTopBar extends StatelessWidget {
     final theme = ProtoTheme.of(context);
     final isInnerCircle = activeModule == ProtoModule.yoyo && state.yoyoMode == 1;
 
+    // In transparent/overlay mode, use a Column: opaque status bar + translucent nav
+    if (transparent) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Faux status bar — slightly opaque so time/battery area is visible
+          Container(
+            height: 20,
+            color: theme.surface.withValues(alpha: 0.85),
+          ),
+          // Nav bar content — more transparent, radar shows through
+          Container(
+            padding: const EdgeInsets.only(left: 16, right: 16, top: 4, bottom: 6),
+            decoration: BoxDecoration(
+              color: theme.surface.withValues(alpha: 0.6),
+            ),
+            child: _buildNavContent(state, theme, isInnerCircle),
+          ),
+        ],
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.only(top: 14, left: 16, right: 16, bottom: 8),
       decoration: BoxDecoration(
-        color: transparent
-            ? theme.surface.withValues(alpha: 0.7)
-            : theme.surface,
-        // Warm gradient overlay for Inner Circle mode
+        color: theme.surface,
         gradient: isInnerCircle
             ? LinearGradient(
                 colors: [
@@ -58,17 +77,20 @@ class ProtoTopBar extends StatelessWidget {
                 end: Alignment.bottomRight,
               )
             : null,
-        border: transparent
-            ? null
-            : Border(
-                bottom: BorderSide(
-                  color: isInnerCircle
-                      ? _warmAmber.withValues(alpha: 0.15)
-                      : theme.text.withValues(alpha: 0.06),
-                ),
-              ),
+        border: Border(
+          bottom: BorderSide(
+            color: isInnerCircle
+                ? _warmAmber.withValues(alpha: 0.15)
+                : theme.text.withValues(alpha: 0.06),
+          ),
+        ),
       ),
-      child: Row(
+      child: _buildNavContent(state, theme, isInnerCircle),
+    );
+  }
+
+  Widget _buildNavContent(PrototypeStateProvider state, ProtoTheme theme, bool isInnerCircle) {
+    return Row(
         children: [
           // YoYo icon — toggles area/list when in YoYo Social, or shows people icon in Inner Circle
           if (isInnerCircle)
@@ -105,7 +127,6 @@ class ProtoTopBar extends StatelessWidget {
                   ),
                 ),
               ),
-              // Inner Circle toggle removed — feature deferred
             ],
           ),
 
@@ -129,7 +150,6 @@ class ProtoTopBar extends StatelessWidget {
                       color: theme.textSecondary,
                     ),
                   ),
-                  // Unread badge
                   Positioned(
                     right: 2,
                     top: 4,
@@ -141,16 +161,8 @@ class ProtoTopBar extends StatelessWidget {
                         shape: BoxShape.circle,
                         border: Border.all(color: theme.surface, width: 1.5),
                       ),
-                      // Demo: static unread count
                       child: const Center(
-                        child: Text(
-                          '3',
-                          style: TextStyle(
-                            fontSize: 8,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
+                        child: Text('3', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w700, color: Colors.white)),
                       ),
                     ),
                   ),
@@ -161,7 +173,7 @@ class ProtoTopBar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
 
-          // Profile avatar with notification dot — goes directly to profile
+          // Profile avatar with notification dot
           Semantics(
             label: 'My profile, has notifications',
             button: true,
@@ -183,15 +195,12 @@ class ProtoTopBar extends StatelessWidget {
                           width: 2,
                         ),
                         image: const DecorationImage(
-                          image: NetworkImage(
-                            ProtoDemoData.currentUserAvatar,
-                          ),
+                          image: NetworkImage(ProtoDemoData.currentUserAvatar),
                           fit: BoxFit.cover,
                         ),
                       ),
                     ),
                   ),
-                  // Notification dot
                   Positioned(
                     right: 0,
                     top: 2,
@@ -211,7 +220,6 @@ class ProtoTopBar extends StatelessWidget {
           ),
           ),
         ],
-      ),
     );
   }
 }

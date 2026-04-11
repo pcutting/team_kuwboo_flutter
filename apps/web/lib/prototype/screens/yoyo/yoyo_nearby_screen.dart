@@ -868,17 +868,18 @@ class _V2AreaView extends StatelessWidget {
       return _FullscreenRadarView(theme: theme);
     }
 
-    // Hidden mode: cleaner layout — radar fills space, controls at bottom
+    // Hidden mode: radar fills space, controls at bottom with inline slider
     if (!state.yoyoLiveActive) {
       return Column(
         children: [
-          const SizedBox(height: 44), // space for transparent overlay nav
-          // Minimal control bar: just live button + filter + settings (no slider)
+          const SizedBox(height: 52), // status bar + transparent nav
+          // Minimal control bar: just live button (no slider, no filter)
           _HiddenControlBar(theme: theme, state: state),
           // Radar fills remaining space
           Expanded(child: _HiddenV2RadarArea(theme: theme)),
-          // Range slider at bottom (above duration chips)
-          _BottomRangeSlider(theme: theme, state: state),
+          // Range slider with filter + settings inline
+          _BottomControlStrip(theme: theme, state: state),
+          const SizedBox(height: 6),
           // Duration chips + Go Live button
           _V2ActionBar(theme: theme),
           const SizedBox(height: 8),
@@ -886,15 +887,27 @@ class _V2AreaView extends StatelessWidget {
       );
     }
 
-    // Live mode: full layout with encounter cards
-    return Column(
+    // Live mode: radar-first, wave button top, controls at bottom
+    return Stack(
       children: [
-        const SizedBox(height: 44), // space for transparent overlay nav
-        _V2RadarControlBar(theme: theme, state: state),
-        Expanded(child: _V2RadarArea(theme: theme)),
-        _V2EncounterCardRow(theme: theme),
-        _V2ActionBar(theme: theme),
-        const SizedBox(height: 8),
+        // Radar fills the entire area (behind everything)
+        Positioned.fill(
+          child: _V2RadarArea(theme: theme),
+        ),
+        // Layered UI on top
+        Column(
+          children: [
+            const SizedBox(height: 52), // status bar + transparent nav
+            // Centered wave button
+            _WaveButton(theme: theme),
+            const Spacer(),
+            // Encounter card row (transparent background)
+            _V2EncounterCardRow(theme: theme, transparent: true),
+            // Slider + filter + settings just above bottom nav
+            _BottomControlStrip(theme: theme, state: state),
+            const SizedBox(height: 8),
+          ],
+        ),
       ],
     );
   }
@@ -910,47 +923,10 @@ class _HiddenControlBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 12, right: 8, top: 0, bottom: 4),
+      padding: const EdgeInsets.only(left: 12, right: 12, top: 0, bottom: 4),
       child: Row(
         children: [
-          // Inline live status
           _InlineLiveButton(theme: theme),
-          const Spacer(),
-          // Filter button
-          ProtoPressButton(
-            onTap: () => state.push(ProtoRoutes.yoyoFilters),
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: (state.yoyoFriendsOnly || state.yoyoSelectedInterests.isNotEmpty)
-                    ? theme.primary.withValues(alpha: 0.15)
-                    : theme.surface,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: theme.textTertiary.withValues(alpha: 0.2)),
-              ),
-              child: Icon(
-                theme.icons.tune, size: 16,
-                color: (state.yoyoFriendsOnly || state.yoyoSelectedInterests.isNotEmpty)
-                    ? theme.primary : theme.textSecondary,
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
-          // Settings gear
-          ProtoPressButton(
-            onTap: () => state.push(ProtoRoutes.yoyoSettings),
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: theme.surface,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: theme.textTertiary.withValues(alpha: 0.2)),
-              ),
-              child: Icon(theme.icons.settings, size: 16, color: theme.textSecondary),
-            ),
-          ),
         ],
       ),
     );
@@ -959,28 +935,30 @@ class _HiddenControlBar extends StatelessWidget {
 
 // ─── Bottom Range Slider (hidden mode) ──────────────────────────────
 
-class _BottomRangeSlider extends StatelessWidget {
+/// Bottom control strip: range slider + filter + settings in one row.
+/// Used in both hidden and live modes above the bottom nav.
+class _BottomControlStrip extends StatelessWidget {
   final ProtoTheme theme;
   final PrototypeStateProvider state;
-  const _BottomRangeSlider({required this.theme, required this.state});
+  const _BottomControlStrip({required this.theme, required this.state});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding: const EdgeInsets.only(left: 10, right: 4, top: 2, bottom: 2),
         decoration: BoxDecoration(
-          color: theme.surface.withValues(alpha: 0.8),
+          color: theme.surface.withValues(alpha: 0.75),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
           children: [
             Icon(Icons.radar_rounded, size: 14, color: theme.secondary),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
             Text(
               _formatRange(state.yoyoRange),
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: theme.secondary),
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: theme.secondary),
             ),
             Expanded(
               child: SliderTheme(
@@ -990,7 +968,7 @@ class _BottomRangeSlider extends StatelessWidget {
                   inactiveTrackColor: theme.textTertiary.withValues(alpha: 0.15),
                   trackHeight: 2,
                   thumbShape: const _StopButtonThumbShape(),
-                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
                 ),
                 child: Slider(
                   min: 0,
@@ -1000,7 +978,82 @@ class _BottomRangeSlider extends StatelessWidget {
                 ),
               ),
             ),
+            // Filter button (inline)
+            ProtoPressButton(
+              onTap: () => state.push(ProtoRoutes.yoyoFilters),
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: (state.yoyoFriendsOnly || state.yoyoSelectedInterests.isNotEmpty)
+                      ? theme.primary.withValues(alpha: 0.15)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Icon(
+                  theme.icons.tune, size: 14,
+                  color: (state.yoyoFriendsOnly || state.yoyoSelectedInterests.isNotEmpty)
+                      ? theme.primary : theme.textTertiary,
+                ),
+              ),
+            ),
+            // Settings button (inline)
+            ProtoPressButton(
+              onTap: () => state.push(ProtoRoutes.yoyoSettings),
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Icon(theme.icons.settings, size: 14, color: theme.textTertiary),
+              ),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Wave Button (live mode — small centered button under nav) ──────
+
+class _WaveButton extends StatelessWidget {
+  final ProtoTheme theme;
+  const _WaveButton({required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = PrototypeStateProvider.of(context);
+    final encounterCount = _filteredV2Encounters(state).length;
+
+    return Center(
+      child: ProtoPressButton(
+        onTap: () {
+          ProtoToast.show(context, theme.icons.wavingHand, 'Waved to $encounterCount people nearby!');
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [theme.primary, theme.secondary]),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: theme.primary.withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(theme.icons.wavingHand, size: 16, color: Colors.white),
+              const SizedBox(width: 6),
+              const Text('Wave All', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+            ],
+          ),
         ),
       ),
     );
@@ -1837,7 +1890,8 @@ class _V2AreaMarker extends StatelessWidget {
 
 class _V2EncounterCardRow extends StatelessWidget {
   final ProtoTheme theme;
-  const _V2EncounterCardRow({required this.theme});
+  final bool transparent;
+  const _V2EncounterCardRow({required this.theme, this.transparent = false});
 
   @override
   Widget build(BuildContext context) {
