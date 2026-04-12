@@ -6,18 +6,38 @@ Instructions for AI agents (Claude, Cursor, etc.) working in this repository.
 
 Kuwboo multi-platform app monorepo. Flutter for mobile (iOS + Android), NestJS for the backend API, and shared packages. Managed with Melos + pub workspaces. Primary active product is the Flutter mobile app shipping to TestFlight.
 
-| Path | Purpose |
-|---|---|
-| `apps/mobile/` | Flutter iOS + Android app (active) |
-| `apps/api/` | NestJS backend (active) |
-| `apps/admin/` | React admin dashboard (active) |
-| `apps/web/` | Prototype + design viewer (active, Vercel-deployed) |
-| `packages/ui/` | Shared Flutter theme + widgets |
-| `packages/models/` | Shared data models |
-| `packages/api_client/` | Generated API client |
-| `docs/` | Project documentation — see `docs/README.md` for the index |
-| `keys/` | **Gitignored.** Local Apple signing material (`.p12`, `.mobileprovision`, `.key`, CSR, password). Never commit. |
-| `.github/workflows/` | CI — includes `ios-testflight.yml` and `ios-pr-validation.yml` |
+| Path | Purpose | Deploy |
+|---|---|---|
+| `apps/mobile/` | Flutter iOS + Android app (**primary focus**) | TestFlight via GH Actions |
+| `apps/api/` | NestJS backend | EC2 (`35.177.230.139`, eu-west-2) |
+| `apps/admin/` | React 19 + Vite SPA (client-side only) | Vercel static — `team_kuwboo_admin` |
+| `apps/web/` | Flutter web prototype + design viewer | Vercel static — `team_kuwboo_flutter` (prebuilt `build/web`) |
+| `packages/ui/` | Shared Flutter theme + widgets | — |
+| `packages/models/` | Shared data models | — |
+| `packages/api_client/` | Generated API client | — |
+| `docs/` | Project documentation — see `docs/README.md` for the index | — |
+| `keys/` | **Gitignored.** Local Apple signing material (`.p12`, `.mobileprovision`, `.key`, CSR, password). Never commit. | — |
+| `.github/workflows/` | CI — includes `ios-testflight.yml` and `ios-pr-validation.yml` | — |
+
+### Deployment architecture (read this before suggesting SSR/Functions/middleware)
+
+All web hosting is **static on Vercel**. No SSR, no Next.js, no Vercel Functions, no middleware, no edge compute in this repo today.
+- `apps/web` — prebuilt Flutter web bundle; root `vercel.json` has empty `buildCommand` and serves `apps/web/build/web`.
+- `apps/admin` — Vite SPA; Vercel builds from source with the project's root dir set to `apps/admin`.
+- `apps/api` — NestJS on EC2 (PM2 + Nginx). Not on Vercel.
+
+If the current task involves server rendering, API routes, or middleware, **stop and confirm with the user** — that's a deliberate architectural change, not an extension of what's here.
+
+#### Vercel project reference
+
+| Project | ID | Prod URL |
+|---|---|---|
+| `team_kuwboo_flutter` | `prj_MDdvTr6oesYSHnX0ftH1KFXOSNiB` | https://teamkuwbooflutter.vercel.app |
+| `team_kuwboo_admin` | `prj_VsJKIEkqT1F2WojX4bzGprfY1lQb` | https://teamkuwbooadmin.vercel.app |
+
+Scope: `cuttingphilipgmailcoms-projects` · Org ID: `team_TW4qL9Ys2A7v8aNY4EH3Jic0` · Auth: `cuttingphilip@gmail.com` Google SSO.
+
+Both apps are CLI-linked (`.vercel/project.json` gitignored). Run `vercel env pull`, `vercel logs <url>`, etc. from inside `apps/web/` or `apps/admin/`. Deploys happen automatically via the Vercel ↔ GitHub App integration — do not run `vercel deploy` manually unless instructed.
 
 ## Critical conventions
 
