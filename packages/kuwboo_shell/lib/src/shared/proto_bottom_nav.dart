@@ -227,7 +227,17 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
           // Right padding to make room for the FAB notch,
           // bottom padding for home indicator on modern iPhones
           padding: EdgeInsets.only(right: _fabSize + 20, bottom: bottomInset),
-          child: Row(
+          child: Stack(
+            children: [
+              // Sliding pill indicator — tweens behind the active tab.
+              Positioned.fill(
+                child: _TabIndicatorPill(
+                  tabCount: tabs.length,
+                  activeIndex: widget.activeTab,
+                  color: theme.primary.withValues(alpha: 0.16),
+                ),
+              ),
+              Row(
             children: List.generate(tabs.length, (i) {
               final tab = tabs[i];
               final isActive = i == widget.activeTab;
@@ -301,6 +311,8 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
                 ),
               );
             }),
+          ),
+            ],
           ),
         ),
       ),
@@ -539,4 +551,46 @@ class _RightNotchedBarPainter extends CustomPainter {
       fabSize != oldDelegate.fabSize ||
       fabOverhang != oldDelegate.fabOverhang ||
       barHeight != oldDelegate.barHeight;
+}
+
+/// Sliding pill indicator that tweens behind the active tab when the
+/// selection changes. Draws a rounded rectangle filling one tab slot
+/// and animates horizontally between slots.
+class _TabIndicatorPill extends StatelessWidget {
+  final int tabCount;
+  final int activeIndex;
+  final Color color;
+
+  const _TabIndicatorPill({
+    required this.tabCount,
+    required this.activeIndex,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Map activeIndex [0..tabCount-1] to Alignment.x in [-1..1].
+    final double x = tabCount > 1
+        ? (activeIndex / (tabCount - 1)) * 2 - 1
+        : 0.0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      child: AnimatedAlign(
+        alignment: Alignment(x, 0),
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+        child: FractionallySizedBox(
+          widthFactor: 1 / tabCount,
+          heightFactor: 1,
+          child: Container(
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
