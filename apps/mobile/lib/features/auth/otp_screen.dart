@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,12 +19,34 @@ class OtpScreen extends ConsumerStatefulWidget {
 class _OtpScreenState extends ConsumerState<OtpScreen> {
   final _otpController = TextEditingController();
   bool _isVerifying = false;
+  bool _isResending = false;
   String? _error;
+
+  static const _resendSeconds = 30;
+  int _secondsRemaining = _resendSeconds;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startResendTimer();
+  }
 
   @override
   void dispose() {
     _otpController.dispose();
+    _timer?.cancel();
     super.dispose();
+  }
+
+  void _startResendTimer() {
+    _secondsRemaining = _resendSeconds;
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) return;
+      setState(() => _secondsRemaining--);
+      if (_secondsRemaining <= 0) t.cancel();
+    });
   }
 
   Future<void> _verify() async {
@@ -37,33 +61,45 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       _error = null;
     });
 
-    // TODO: call API to verify OTP, receive tokens
-    await Future<void>.delayed(const Duration(milliseconds: 500));
+    try {
+      await ref
+          .read(authProvider.notifier)
+          .verifyOtp(widget.phone, code);
+      if (!mounted) return;
+      // Router redirect handles the next destination based on
+      // isNewUser / isAuthenticated. Nothing else to do here.
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _isVerifying = false);
+    }
+  }
 
-    if (!mounted) return;
-
-    // Placeholder: simulate successful verification.
-    await ref.read(authProvider.notifier).login(
-          accessToken: 'placeholder_access_token',
-          refreshToken: 'placeholder_refresh_token',
-          userId: 'placeholder_user_id',
-          isNewUser: false,
-        );
-
-    if (!mounted) return;
-    setState(() => _isVerifying = false);
-
-    final auth = ref.read(authProvider);
-    if (auth.isNewUser) {
-      context.go('/onboarding');
-    } else {
-      context.go('/video');
+  Future<void> _resend() async {
+    setState(() {
+      _isResending = true;
+      _error = null;
+    });
+    try {
+      await ref.read(authProvider.notifier).requestOtp(widget.phone);
+      if (!mounted) return;
+      _startResendTimer();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Code resent')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _isResending = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final canResend = _secondsRemaining <= 0 && !_isResending;
 
     return Scaffold(
       appBar: AppBar(
@@ -100,6 +136,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 keyboardType: TextInputType.number,
                 maxLength: 6,
                 textAlign: TextAlign.center,
+                autofocus: true,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   letterSpacing: 12,
                 ),
@@ -120,6 +157,15 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Text('Verify'),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: canResend ? _resend : null,
+                child: Text(
+                  canResend
+                      ? 'Resend code'
+                      : 'Resend in ${_secondsRemaining}s',
+                ),
               ),
             ],
           ),
