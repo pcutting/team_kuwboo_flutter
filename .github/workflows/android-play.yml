@@ -1,0 +1,144 @@
+name: Android Play
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "KUWBOO_ENV to build"
+        required: true
+        default: "prod"
+        type: choice
+        options:
+          - prod
+          - staging
+      track:
+        description: "Play Store track"
+        required: true
+        default: "internal"
+        type: choice
+        options:
+          - internal
+      build_number:
+        description: "Explicit build number (leave blank for auto)"
+        required: false
+        default: ""
+
+  push:
+    tags:
+      - "android-v*"
+
+concurrency:
+  group: android-play
+  cancel-in-progress: false
+
+jobs:
+  play-internal:
+    name: Build AAB and upload to Play internal
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: apps/mobile
+
+    env:
+      FLUTTER_VERSION: "3.41.4"
+      JAVA_VERSION: "17"
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Flutter doctor
+        run: flutter doctor -v
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: apps/mobile/android
+
+      - name: Decode signing material and run Fastlane internal
+        working-directory: apps/mobile/android
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          PLAY_JSON_BASE64: ${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          INPUT_ENV: ${{ github.event.inputs.environment }}
+          INPUT_BUILD_NUMBER: ${{ github.event.inputs.build_number }}
+          GH_RUN_NUMBER: ${{ github.run_number }}
+          FASTLANE_HIDE_CHANGELOG: "1"
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
+          FASTLANE_DISABLE_COLORS: "1"
+        run: |
+          set -e
+
+          export KUWBOO_ENV="${INPUT_ENV:-prod}"
+          export BUILD_NUMBER="${INPUT_BUILD_NUMBER:-$GH_RUN_NUMBER}"
+
+          # =====================================================
+          # 1. Decode keystore from base64 secret
+          # =====================================================
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "error: ANDROID_KEYSTORE_BASE64 secret is not set." >&2
+            echo "See docs/team/internal/ANDROID_PLAY_RUNBOOK.md for setup." >&2
+            exit 1
+          fi
+          KEYSTORE_PATH="$RUNNER_TEMP/kuwboo-upload.jks"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+          export ANDROID_KEYSTORE_PATH="$KEYSTORE_PATH"
+
+          # =====================================================
+          # 2. Decode Play Console service account JSON
+          # =====================================================
+          if [ -z "$PLAY_JSON_BASE64" ]; then
+            echo "error: ANDROID_PLAY_SERVICE_ACCOUNT_JSON_BASE64 secret is not set." >&2
+            exit 1
+          fi
+          PLAY_JSON_PATH="$RUNNER_TEMP/kuwboo-play-ci.json"
+          printf '%s' "$PLAY_JSON_BASE64" | base64 --decode > "$PLAY_JSON_PATH"
+          export ANDROID_PLAY_SERVICE_ACCOUNT_JSON="$PLAY_JSON_PATH"
+
+          # =====================================================
+          # 3. Sanity-check keystore is readable
+          # =====================================================
+          keytool -list -keystore "$KEYSTORE_PATH" \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            -alias "$ANDROID_KEY_ALIAS" >/dev/null
+          echo "Keystore + alias OK"
+
+          # =====================================================
+          # 4. Run Fastlane (same shell, keeps all env vars)
+          # =====================================================
+          bundle exec fastlane internal
+
+      - name: Upload build artifacts (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-logs
+          path: |
+            apps/mobile/build/app/outputs/bundle/release/
+            apps/mobile/android/fastlane/report.xml
+          retention-days: 7
+          if-no-files-found: ignore

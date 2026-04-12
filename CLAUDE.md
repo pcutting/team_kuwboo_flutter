@@ -105,6 +105,45 @@ Manage via `gh secret set NAME --repo pcutting/team_kuwboo < path/to/base64/file
 
 Cert rotation (emergency or annual renewal) is a fully automated Python script that runs against the App Store Connect API. See the runbook's "Emergency cert rotation" section (if added) or the chat history from 2026-04-09 for the proven procedure.
 
+## Deploying to Play Store (Android)
+
+### One-line trigger
+
+```bash
+gh workflow run android-play.yml --ref main -f environment=prod -f track=internal --repo pcutting/team_kuwboo
+```
+
+Wait ~6-9 minutes. Build appears in Play Console → Kuwboo → Testing → Internal testing as a draft release (promote manually).
+
+### Key facts for Android deployment
+
+| Fact | Value |
+|---|---|
+| Package name | `com.kuwboo.mobile` (matches iOS bundle ID) |
+| Workflow | `.github/workflows/android-play.yml` |
+| Fastfile lane | `bundle exec fastlane internal` from `apps/mobile/android/` |
+| Runner | `ubuntu-latest` (no macOS needed) |
+| Java | Temurin 17 |
+| Flutter | 3.41.4 (same pin as iOS) |
+| Signing | Upload keystore (JKS) decoded from `ANDROID_KEYSTORE_BASE64` into a temp file |
+| Upload auth | Play Developer API service account JSON |
+| Track | `internal` (promote to production manually from Play Console) |
+| Artifact | AAB (Android App Bundle) at `build/app/outputs/bundle/release/app-release.aab` |
+
+### GitHub Secrets required by the workflow
+
+| Secret | Purpose |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | Upload keystore (`.jks`) contents, base64 |
+| `ANDROID_KEYSTORE_PASSWORD` | Keystore password |
+| `ANDROID_KEY_ALIAS` | Key alias inside the keystore |
+| `ANDROID_KEY_PASSWORD` | Key password (same as keystore when generated via our script) |
+| `ANDROID_PLAY_SERVICE_ACCOUNT_JSON_BASE64` | Play Console service account JSON, base64 |
+
+See [`docs/team/internal/ANDROID_PLAY_RUNBOOK.md`](docs/team/internal/ANDROID_PLAY_RUNBOOK.md) for first-time setup (keystore generation via `scripts/generate-android-keystore.sh`, Play Console service account creation, Play App Signing enrollment, and rotation procedures).
+
+**First-run note:** The Play Developer API cannot create the very first release for an app. Upload one AAB manually via Play Console before the CI workflow can succeed. The runbook covers this in detail.
+
 ## Backend deployment
 
 See `docs/team/internal/INFRASTRUCTURE.md` for AWS resource inventory and backend deployment procedures.
