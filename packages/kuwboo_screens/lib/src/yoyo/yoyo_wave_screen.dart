@@ -14,7 +14,7 @@ class YoyoWaveScreen extends StatefulWidget {
 class _YoyoWaveScreenState extends State<YoyoWaveScreen> {
   bool _waveSent = false;
   final Set<int> _wavedBackIndices = {};
-  int _v2WaveType = 0; // 0 = Quick Wave, 1 = Full Wave
+  int _waveType = 0; // 0 = Quick Wave, 1 = Full Wave
 
   void _handleSendWave() {
     setState(() => _waveSent = true);
@@ -58,7 +58,7 @@ class _YoyoWaveScreenState extends State<YoyoWaveScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: state.yoyoV2SessionActive
+                color: state.yoyoSessionActive
                     ? theme.secondary.withValues(alpha: 0.1)
                     : theme.textTertiary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(10),
@@ -66,14 +66,14 @@ class _YoyoWaveScreenState extends State<YoyoWaveScreen> {
               child: Row(
                 children: [
                   Icon(
-                    state.yoyoV2SessionActive ? Icons.sensors_rounded : Icons.sensors_off_rounded,
+                    state.yoyoSessionActive ? Icons.sensors_rounded : Icons.sensors_off_rounded,
                     size: 16,
-                    color: state.yoyoV2SessionActive ? theme.secondary : theme.textTertiary,
+                    color: state.yoyoSessionActive ? theme.secondary : theme.textTertiary,
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    state.yoyoV2SessionActive ? 'Session active' : 'No active session',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: state.yoyoV2SessionActive ? theme.secondary : theme.textTertiary),
+                    state.yoyoSessionActive ? 'Session active' : 'No active session',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: state.yoyoSessionActive ? theme.secondary : theme.textTertiary),
                   ),
                 ],
               ),
@@ -91,12 +91,12 @@ class _YoyoWaveScreenState extends State<YoyoWaveScreen> {
                   for (int t = 0; t < 2; t++)
                     Expanded(
                       child: ProtoPressButton(
-                        onTap: () => setState(() => _v2WaveType = t),
+                        onTap: () => setState(() => _waveType = t),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color: _v2WaveType == t ? theme.primary : Colors.transparent,
+                            color: _waveType == t ? theme.primary : Colors.transparent,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Column(
@@ -104,16 +104,16 @@ class _YoyoWaveScreenState extends State<YoyoWaveScreen> {
                               Icon(
                                 t == 0 ? Icons.flash_on_rounded : Icons.pin_drop_rounded,
                                 size: 18,
-                                color: _v2WaveType == t ? Colors.white : theme.textSecondary,
+                                color: _waveType == t ? Colors.white : theme.textSecondary,
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 t == 0 ? 'Quick Wave' : 'Full Wave',
-                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _v2WaveType == t ? Colors.white : theme.textSecondary),
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _waveType == t ? Colors.white : theme.textSecondary),
                               ),
                               Text(
                                 t == 0 ? 'Pass-by, no reveal' : 'Nearby, invites connect',
-                                style: TextStyle(fontSize: 9, color: _v2WaveType == t ? Colors.white.withValues(alpha: 0.8) : theme.textTertiary),
+                                style: TextStyle(fontSize: 9, color: _waveType == t ? Colors.white.withValues(alpha: 0.8) : theme.textTertiary),
                               ),
                             ],
                           ),
@@ -127,7 +127,7 @@ class _YoyoWaveScreenState extends State<YoyoWaveScreen> {
             // Reach indicator
             Center(
               child: Text(
-                _v2WaveType == 0 ? 'Reaches ~12 users passing by' : 'Reaches ~5 users within 500m',
+                _waveType == 0 ? 'Reaches ~12 users passing by' : 'Reaches ~5 users within 500m',
                 style: theme.caption.copyWith(color: theme.textSecondary),
               ),
             ),
@@ -196,9 +196,9 @@ class _YoyoWaveScreenState extends State<YoyoWaveScreen> {
           const SizedBox(height: 10),
 
           // Waves with encounter context
-          for (int i = 0; i < ProtoDemoData.v2Waves.length; i++) ...[
+          for (int i = 0; i < ProtoDemoData.waves.length; i++) ...[
               Builder(builder: (context) {
-                final wave = ProtoDemoData.v2Waves[i];
+                final wave = ProtoDemoData.waves[i];
                 final hasWavedBack = _wavedBackIndices.contains(i);
                 return ProtoPressButton(
                   duration: const Duration(milliseconds: 100),

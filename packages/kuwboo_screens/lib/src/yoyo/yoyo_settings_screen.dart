@@ -33,13 +33,13 @@ class _YoyoSettingsScreenState extends State<YoyoSettingsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               children: [
                 // Session Scheduling
-                  _V2SessionSchedulingCard(theme: theme),
+                  _SessionSchedulingCard(theme: theme),
                   const SizedBox(height: 12),
                   // Data Retention
-                  _V2DataRetentionCard(theme: theme, state: state),
+                  _DataRetentionCard(theme: theme, state: state),
                   const SizedBox(height: 12),
                   // Visibility
-                  _V2VisibilityCard(theme: theme, state: state),
+                  _VisibilityCard(theme: theme, state: state),
                   const SizedBox(height: 12),
                   // Do Not Disturb
                   Container(
@@ -84,7 +84,7 @@ class _YoyoSettingsScreenState extends State<YoyoSettingsScreen> {
                         Container(
                           width: 40, height: 40,
                           decoration: BoxDecoration(color: theme.background, shape: BoxShape.circle),
-                          child: Icon(Icons.visibility_rounded, size: 20, color: state.yoyoV2EncounterTransparency ? theme.secondary : theme.textTertiary),
+                          child: Icon(Icons.visibility_rounded, size: 20, color: state.yoyoEncounterTransparency ? theme.secondary : theme.textTertiary),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
@@ -98,8 +98,8 @@ class _YoyoSettingsScreenState extends State<YoyoSettingsScreen> {
                           ),
                         ),
                         Switch(
-                          value: state.yoyoV2EncounterTransparency,
-                          onChanged: state.onYoyoV2EncounterTransparencyChanged,
+                          value: state.yoyoEncounterTransparency,
+                          onChanged: state.onYoyoEncounterTransparencyChanged,
                           activeThumbColor: theme.secondary,
                         ),
                       ],
@@ -342,15 +342,15 @@ class _ToggleRow extends StatelessWidget {
 
 // ─── V2 Settings cards ──────────────────────────────────────────────
 
-class _V2SessionSchedulingCard extends StatefulWidget {
+class _SessionSchedulingCard extends StatefulWidget {
   final ProtoTheme theme;
-  const _V2SessionSchedulingCard({required this.theme});
+  const _SessionSchedulingCard({required this.theme});
 
   @override
-  State<_V2SessionSchedulingCard> createState() => _V2SessionSchedulingCardState();
+  State<_SessionSchedulingCard> createState() => _SessionSchedulingCardState();
 }
 
-class _V2SessionSchedulingCardState extends State<_V2SessionSchedulingCard> {
+class _SessionSchedulingCardState extends State<_SessionSchedulingCard> {
   final _selectedTimes = <String>{};
   final _selectedDays = <String>{'Mon', 'Wed', 'Fri'};
 
@@ -415,17 +415,17 @@ class _V2SessionSchedulingCardState extends State<_V2SessionSchedulingCard> {
   }
 }
 
-class _V2DataRetentionCard extends StatelessWidget {
+class _DataRetentionCard extends StatelessWidget {
   final ProtoTheme theme;
   final PrototypeStateProvider state;
-  const _V2DataRetentionCard({required this.theme, required this.state});
+  const _DataRetentionCard({required this.theme, required this.state});
 
   static const _stops = [1, 12, 24, 32, 72, 168]; // hours
   static const _labels = ['1h', '12h', '24h', '32h', '3d', '7d'];
 
   @override
   Widget build(BuildContext context) {
-    final idx = _stops.indexOf(state.yoyoV2DataRetentionHours).clamp(0, _stops.length - 1);
+    final idx = _stops.indexOf(state.yoyoDataRetentionHours).clamp(0, _stops.length - 1);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: theme.cardDecoration,
@@ -454,7 +454,7 @@ class _V2DataRetentionCard extends StatelessWidget {
               min: 0,
               max: (_stops.length - 1).toDouble(),
               divisions: _stops.length - 1,
-              onChanged: (v) => state.onYoyoV2DataRetentionChanged(_stops[v.round()]),
+              onChanged: (v) => state.onYoyoDataRetentionChanged(_stops[v.round()]),
             ),
           ),
           Row(
@@ -467,10 +467,10 @@ class _V2DataRetentionCard extends StatelessWidget {
   }
 }
 
-class _V2VisibilityCard extends StatelessWidget {
+class _VisibilityCard extends StatelessWidget {
   final ProtoTheme theme;
   final PrototypeStateProvider state;
-  const _V2VisibilityCard({required this.theme, required this.state});
+  const _VisibilityCard({required this.theme, required this.state});
 
   static const _tiers = [
     ('Public', 'Everyone can see your teaser', Icons.public_rounded),
@@ -498,28 +498,28 @@ class _V2VisibilityCard extends StatelessWidget {
           for (int i = 0; i < _tiers.length; i++) ...[
             if (i > 0) const SizedBox(height: 6),
             ProtoPressButton(
-              onTap: () => state.onYoyoV2VisibilityTierChanged(i),
+              onTap: () => state.onYoyoVisibilityTierChanged(i),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: state.yoyoV2VisibilityTier == i ? theme.primary.withValues(alpha: 0.1) : theme.background,
+                  color: state.yoyoVisibilityTier == i ? theme.primary.withValues(alpha: 0.1) : theme.background,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: state.yoyoV2VisibilityTier == i ? theme.primary : theme.textTertiary.withValues(alpha: 0.15)),
+                  border: Border.all(color: state.yoyoVisibilityTier == i ? theme.primary : theme.textTertiary.withValues(alpha: 0.15)),
                 ),
                 child: Row(
                   children: [
-                    Icon(_tiers[i].$3, size: 18, color: state.yoyoV2VisibilityTier == i ? theme.primary : theme.textSecondary),
+                    Icon(_tiers[i].$3, size: 18, color: state.yoyoVisibilityTier == i ? theme.primary : theme.textSecondary),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_tiers[i].$1, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: state.yoyoV2VisibilityTier == i ? theme.primary : theme.text)),
+                          Text(_tiers[i].$1, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: state.yoyoVisibilityTier == i ? theme.primary : theme.text)),
                           Text(_tiers[i].$2, style: theme.caption),
                         ],
                       ),
                     ),
-                    if (state.yoyoV2VisibilityTier == i)
+                    if (state.yoyoVisibilityTier == i)
                       Icon(Icons.check_circle_rounded, size: 18, color: theme.primary),
                   ],
                 ),

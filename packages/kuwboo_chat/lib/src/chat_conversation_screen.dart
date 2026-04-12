@@ -291,7 +291,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
         children: [
           _ChatHeader(theme: theme),
           Expanded(
-            child: _V2TransactionList(
+            child: _TransactionList(
               theme: theme,
               scrollController: _scrollController,
             ),
@@ -306,11 +306,11 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
 
 // ── V2 Transaction List ─────────────────────────────────────────────────────
 
-class _V2TransactionList extends StatelessWidget {
+class _TransactionList extends StatelessWidget {
   final ProtoTheme theme;
   final ScrollController scrollController;
 
-  const _V2TransactionList({
+  const _TransactionList({
     required this.theme,
     required this.scrollController,
   });
@@ -342,7 +342,7 @@ class _V2TransactionList extends StatelessWidget {
             theme,
             item,
             widgets.length,
-            _V2MessageBubble(
+            _MessageBubble(
               theme: theme,
               item: item,
               outgoingNum: item.isMine ? outgoingNum : 0,
@@ -391,7 +391,7 @@ Widget _swipeableChatItem(
     direction: item.isMine
         ? DismissDirection.endToStart
         : DismissDirection.startToEnd,
-    confirmDismiss: (_) => _showDeleteSheetV2(context, theme, item),
+    confirmDismiss: (_) => _showDeleteSheet(context, theme, item),
     background: Container(
       alignment: item.isMine ? Alignment.centerRight : Alignment.centerLeft,
       padding: item.isMine
@@ -409,7 +409,7 @@ Widget _swipeableChatItem(
   );
 }
 
-Future<bool> _showDeleteSheetV2(
+Future<bool> _showDeleteSheet(
     BuildContext context, ProtoTheme theme, _ChatItem item) async {
   await showModalBottomSheet(
     context: context,
@@ -620,14 +620,14 @@ class _ChatHeader extends StatelessWidget {
 
 // ── Message Bubble with Read Receipts & Reaction ────────────────────────────
 
-class _V2MessageBubble extends StatelessWidget {
+class _MessageBubble extends StatelessWidget {
   final ProtoTheme theme;
   final _ChatItem item;
   final int outgoingNum;
   final int incomingNum;
   final int totalOutgoing;
 
-  const _V2MessageBubble({
+  const _MessageBubble({
     required this.theme,
     required this.item,
     required this.outgoingNum,

@@ -10,7 +10,7 @@ enum VisibilityTier { public, friendsOnly, familyOnly, private }
 
 // ─── V2 YoYo models ─────────────────────────────────────────────────
 
-class DemoV2Encounter {
+class DemoEncounter {
   final String name;
   final String imageUrl;
   final List<String> interests;
@@ -21,7 +21,7 @@ class DemoV2Encounter {
   final String? ageRange;
   final bool isOnline;
   final String encounterTime;
-  const DemoV2Encounter({
+  const DemoEncounter({
     required this.name,
     required this.imageUrl,
     required this.interests,
@@ -35,14 +35,14 @@ class DemoV2Encounter {
   });
 }
 
-class DemoV2Wave {
+class DemoWave {
   final String name;
   final String imageUrl;
   final String timeAgo;
   final bool isIncoming;
   final EncounterType encounterType;
   final ConsentStatus consentStatus;
-  const DemoV2Wave({
+  const DemoWave({
     required this.name,
     required this.imageUrl,
     required this.timeAgo,
@@ -52,14 +52,14 @@ class DemoV2Wave {
   });
 }
 
-class DemoV2Connection {
+class DemoConnection {
   final String name;
   final String imageUrl;
   final String timeAgo;
   final bool isIncoming;
   final EncounterType howMet;
   final List<String> mutualInterests;
-  const DemoV2Connection({
+  const DemoConnection({
     required this.name,
     required this.imageUrl,
     required this.timeAgo,
@@ -304,34 +304,34 @@ class ProtoDemoData {
 
   // ─── V2 YoYo demo data ────────────────────────────────────────────
 
-  static const v2Encounters = [
+  static const encounters = [
     // 3 nearby (dwell)
-    DemoV2Encounter(name: 'Maya', imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop', interests: ['music', 'coffee', 'yoga'], encounterType: EncounterType.nearby, consentStatus: ConsentStatus.shared, relationship: RelationshipType.friend, distanceCategory: DistanceCategory.veryNear, ageRange: '25-30', isOnline: true, encounterTime: '2m ago'),
-    DemoV2Encounter(name: 'Jordan', imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop', interests: ['tech', 'photography'], encounterType: EncounterType.nearby, consentStatus: ConsentStatus.shared, relationship: RelationshipType.stranger, distanceCategory: DistanceCategory.nearby, ageRange: '28-35', isOnline: true, encounterTime: '5m ago'),
-    DemoV2Encounter(name: 'Sam', imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop', interests: ['cooking', 'travel', 'nature'], encounterType: EncounterType.nearby, consentStatus: ConsentStatus.pending, relationship: RelationshipType.stranger, distanceCategory: DistanceCategory.veryNear, encounterTime: '8m ago'),
+    DemoEncounter(name: 'Maya', imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop', interests: ['music', 'coffee', 'yoga'], encounterType: EncounterType.nearby, consentStatus: ConsentStatus.shared, relationship: RelationshipType.friend, distanceCategory: DistanceCategory.veryNear, ageRange: '25-30', isOnline: true, encounterTime: '2m ago'),
+    DemoEncounter(name: 'Jordan', imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop', interests: ['tech', 'photography'], encounterType: EncounterType.nearby, consentStatus: ConsentStatus.shared, relationship: RelationshipType.stranger, distanceCategory: DistanceCategory.nearby, ageRange: '28-35', isOnline: true, encounterTime: '5m ago'),
+    DemoEncounter(name: 'Sam', imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop', interests: ['cooking', 'travel', 'nature'], encounterType: EncounterType.nearby, consentStatus: ConsentStatus.pending, relationship: RelationshipType.stranger, distanceCategory: DistanceCategory.veryNear, encounterTime: '8m ago'),
     // 4 pass-by (brief)
-    DemoV2Encounter(name: 'Riley', imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop', interests: ['art', 'reading'], encounterType: EncounterType.passby, consentStatus: ConsentStatus.pending, relationship: RelationshipType.stranger, distanceCategory: DistanceCategory.passing, ageRange: '22-28', encounterTime: '12m ago'),
-    DemoV2Encounter(name: 'Alex', imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop', interests: ['music', 'tech', 'coffee'], encounterType: EncounterType.passby, consentStatus: ConsentStatus.declined, relationship: RelationshipType.stranger, distanceCategory: DistanceCategory.passing, encounterTime: '20m ago'),
-    DemoV2Encounter(name: 'Charlie', imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop', interests: ['hiking', 'photography'], encounterType: EncounterType.passby, consentStatus: ConsentStatus.expired, relationship: RelationshipType.stranger, distanceCategory: DistanceCategory.nearby, encounterTime: '45m ago'),
-    DemoV2Encounter(name: 'Ava', imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop', interests: ['yoga', 'nature', 'art'], encounterType: EncounterType.passby, consentStatus: ConsentStatus.declined, relationship: RelationshipType.stranger, distanceCategory: DistanceCategory.passing, ageRange: '30-35', encounterTime: '1h ago'),
+    DemoEncounter(name: 'Riley', imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop', interests: ['art', 'reading'], encounterType: EncounterType.passby, consentStatus: ConsentStatus.pending, relationship: RelationshipType.stranger, distanceCategory: DistanceCategory.passing, ageRange: '22-28', encounterTime: '12m ago'),
+    DemoEncounter(name: 'Alex', imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop', interests: ['music', 'tech', 'coffee'], encounterType: EncounterType.passby, consentStatus: ConsentStatus.declined, relationship: RelationshipType.stranger, distanceCategory: DistanceCategory.passing, encounterTime: '20m ago'),
+    DemoEncounter(name: 'Charlie', imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop', interests: ['hiking', 'photography'], encounterType: EncounterType.passby, consentStatus: ConsentStatus.expired, relationship: RelationshipType.stranger, distanceCategory: DistanceCategory.nearby, encounterTime: '45m ago'),
+    DemoEncounter(name: 'Ava', imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop', interests: ['yoga', 'nature', 'art'], encounterType: EncounterType.passby, consentStatus: ConsentStatus.declined, relationship: RelationshipType.stranger, distanceCategory: DistanceCategory.passing, ageRange: '30-35', encounterTime: '1h ago'),
     // 3 friends/partner
-    DemoV2Encounter(name: 'Kai', imageUrl: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=100&h=100&fit=crop', interests: ['coffee', 'music', 'travel'], encounterType: EncounterType.nearby, consentStatus: ConsentStatus.shared, relationship: RelationshipType.partner, distanceCategory: DistanceCategory.veryNear, isOnline: true, encounterTime: '1m ago'),
-    DemoV2Encounter(name: 'Taylor', imageUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&h=100&fit=crop', interests: ['design', 'cooking'], encounterType: EncounterType.nearby, consentStatus: ConsentStatus.shared, relationship: RelationshipType.friend, distanceCategory: DistanceCategory.nearby, isOnline: true, encounterTime: '10m ago'),
-    DemoV2Encounter(name: 'Luca', imageUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=100&h=100&fit=crop', interests: ['tech', 'reading', 'coffee'], encounterType: EncounterType.passby, consentStatus: ConsentStatus.expired, relationship: RelationshipType.family, distanceCategory: DistanceCategory.passing, encounterTime: '2h ago'),
+    DemoEncounter(name: 'Kai', imageUrl: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=100&h=100&fit=crop', interests: ['coffee', 'music', 'travel'], encounterType: EncounterType.nearby, consentStatus: ConsentStatus.shared, relationship: RelationshipType.partner, distanceCategory: DistanceCategory.veryNear, isOnline: true, encounterTime: '1m ago'),
+    DemoEncounter(name: 'Taylor', imageUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&h=100&fit=crop', interests: ['design', 'cooking'], encounterType: EncounterType.nearby, consentStatus: ConsentStatus.shared, relationship: RelationshipType.friend, distanceCategory: DistanceCategory.nearby, isOnline: true, encounterTime: '10m ago'),
+    DemoEncounter(name: 'Luca', imageUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=100&h=100&fit=crop', interests: ['tech', 'reading', 'coffee'], encounterType: EncounterType.passby, consentStatus: ConsentStatus.expired, relationship: RelationshipType.family, distanceCategory: DistanceCategory.passing, encounterTime: '2h ago'),
   ];
 
-  static const v2Waves = [
-    DemoV2Wave(name: 'Maya', imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop', timeAgo: '2m ago', isIncoming: true, encounterType: EncounterType.nearby, consentStatus: ConsentStatus.shared),
-    DemoV2Wave(name: 'Jordan', imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop', timeAgo: '15m ago', isIncoming: false, encounterType: EncounterType.passby, consentStatus: ConsentStatus.pending),
-    DemoV2Wave(name: 'Sam', imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop', timeAgo: '1h ago', isIncoming: true, encounterType: EncounterType.nearby, consentStatus: ConsentStatus.shared),
-    DemoV2Wave(name: 'Riley', imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop', timeAgo: '3h ago', isIncoming: false, encounterType: EncounterType.passby, consentStatus: ConsentStatus.expired),
+  static const waves = [
+    DemoWave(name: 'Maya', imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop', timeAgo: '2m ago', isIncoming: true, encounterType: EncounterType.nearby, consentStatus: ConsentStatus.shared),
+    DemoWave(name: 'Jordan', imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop', timeAgo: '15m ago', isIncoming: false, encounterType: EncounterType.passby, consentStatus: ConsentStatus.pending),
+    DemoWave(name: 'Sam', imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop', timeAgo: '1h ago', isIncoming: true, encounterType: EncounterType.nearby, consentStatus: ConsentStatus.shared),
+    DemoWave(name: 'Riley', imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop', timeAgo: '3h ago', isIncoming: false, encounterType: EncounterType.passby, consentStatus: ConsentStatus.expired),
   ];
 
-  static const v2Connections = [
-    DemoV2Connection(name: 'Maya', imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop', timeAgo: '5m ago', isIncoming: true, howMet: EncounterType.nearby, mutualInterests: ['music', 'coffee']),
-    DemoV2Connection(name: 'Jordan', imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop', timeAgo: '1h ago', isIncoming: false, howMet: EncounterType.passby, mutualInterests: ['tech']),
-    DemoV2Connection(name: 'Sam', imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop', timeAgo: '3h ago', isIncoming: true, howMet: EncounterType.nearby, mutualInterests: ['cooking', 'travel', 'nature']),
-    DemoV2Connection(name: 'Riley', imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop', timeAgo: '1d ago', isIncoming: false, howMet: EncounterType.passby, mutualInterests: ['art']),
+  static const connections = [
+    DemoConnection(name: 'Maya', imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop', timeAgo: '5m ago', isIncoming: true, howMet: EncounterType.nearby, mutualInterests: ['music', 'coffee']),
+    DemoConnection(name: 'Jordan', imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop', timeAgo: '1h ago', isIncoming: false, howMet: EncounterType.passby, mutualInterests: ['tech']),
+    DemoConnection(name: 'Sam', imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop', timeAgo: '3h ago', isIncoming: true, howMet: EncounterType.nearby, mutualInterests: ['cooking', 'travel', 'nature']),
+    DemoConnection(name: 'Riley', imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop', timeAgo: '1d ago', isIncoming: false, howMet: EncounterType.passby, mutualInterests: ['art']),
   ];
 
   static const stories = [

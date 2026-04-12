@@ -91,21 +91,21 @@ class YoyoFilterSheet extends StatelessWidget {
                           if (label != 'all') const SizedBox(width: 8),
                           Expanded(
                             child: ProtoPressButton(
-                              onTap: () => state.onYoyoV2EncounterFilterChanged(label),
+                              onTap: () => state.onYoyoEncounterFilterChanged(label),
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 200),
                                 padding: const EdgeInsets.symmetric(vertical: 10),
                                 decoration: BoxDecoration(
-                                  color: state.yoyoV2EncounterFilter == label ? theme.primary : theme.background,
+                                  color: state.yoyoEncounterFilter == label ? theme.primary : theme.background,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: state.yoyoV2EncounterFilter == label
+                                  border: state.yoyoEncounterFilter == label
                                       ? null
                                       : Border.all(color: theme.text.withValues(alpha: 0.1)),
                                 ),
                                 child: Center(
                                   child: Text(
                                     label == 'all' ? 'All' : label == 'passby' ? 'Pass-by' : 'Nearby',
-                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: state.yoyoV2EncounterFilter == label ? Colors.white : theme.textSecondary),
+                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: state.yoyoEncounterFilter == label ? Colors.white : theme.textSecondary),
                                   ),
                                 ),
                               ),
@@ -124,21 +124,21 @@ class YoyoFilterSheet extends StatelessWidget {
                           if (label != 'all') const SizedBox(width: 6),
                           Expanded(
                             child: ProtoPressButton(
-                              onTap: () => state.onYoyoV2RelationshipFilterChanged(label),
+                              onTap: () => state.onYoyoRelationshipFilterChanged(label),
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 200),
                                 padding: const EdgeInsets.symmetric(vertical: 10),
                                 decoration: BoxDecoration(
-                                  color: state.yoyoV2RelationshipFilter == label ? theme.primary : theme.background,
+                                  color: state.yoyoRelationshipFilter == label ? theme.primary : theme.background,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: state.yoyoV2RelationshipFilter == label
+                                  border: state.yoyoRelationshipFilter == label
                                       ? null
                                       : Border.all(color: theme.text.withValues(alpha: 0.1)),
                                 ),
                                 child: Center(
                                   child: Text(
                                     label[0].toUpperCase() + label.substring(1),
-                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: state.yoyoV2RelationshipFilter == label ? Colors.white : theme.textSecondary),
+                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: state.yoyoRelationshipFilter == label ? Colors.white : theme.textSecondary),
                                   ),
                                 ),
                               ),
