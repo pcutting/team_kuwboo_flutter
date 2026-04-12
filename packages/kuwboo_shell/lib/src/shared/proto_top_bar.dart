@@ -3,16 +3,17 @@ import '../theme/proto_theme.dart';
 import '../data/proto_demo_data.dart';
 import '../state/proto_state_provider.dart';
 import '../routes/proto_routes.dart';
-import 'proto_dialogs.dart';
 
 /// Interactive top bar matching the Kuwboo design.
 /// YoYo icon LEFT (doubles as area/list toggle), Profile avatar RIGHT, Chat with badge.
 class ProtoTopBar extends StatelessWidget {
   final ProtoModule activeModule;
+  final bool transparent;
 
   const ProtoTopBar({
     super.key,
     required this.activeModule,
+    this.transparent = false,
   });
 
   String _title(int yoyoMode) {
@@ -38,9 +39,19 @@ class ProtoTopBar extends StatelessWidget {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
     final isInnerCircle = activeModule == ProtoModule.yoyo && state.yoyoMode == 1;
+    final safeTop = MediaQuery.paddingOf(context).top;
+
+    // In transparent/overlay mode, no background — radar flows behind everything.
+    // Icons get frosted backings so they remain legible over arbitrary backgrounds.
+    if (transparent) {
+      return Padding(
+        padding: EdgeInsets.only(top: safeTop + 6, left: 16, right: 16, bottom: 6),
+        child: _buildNavContent(state, theme, isInnerCircle, withShadows: true),
+      );
+    }
 
     return Container(
-      padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top, left: 16, right: 16, bottom: 8),
+      padding: EdgeInsets.only(top: safeTop, left: 16, right: 16, bottom: 8),
       decoration: BoxDecoration(
         color: theme.surface,
         // Warm gradient overlay for Inner Circle mode
@@ -62,56 +73,89 @@ class ProtoTopBar extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
-        children: [
-          // YoYo icon — toggles area/list when in YoYo Social, or shows people icon in Inner Circle
-          if (isInnerCircle)
-            _InnerCircleIcon(theme: theme)
-          else
-            _YoyoIconToggle(
-              activeModule: activeModule,
-              isYoyoAreaView: state.isYoyoAreaView,
-              onTap: () {
-                if (activeModule == ProtoModule.yoyo) {
-                  state.onYoyoViewToggle();
-                } else {
-                  state.switchModule(ProtoModule.yoyo);
-                }
-              },
-              theme: theme,
+      child: _buildNavContent(state, theme, isInnerCircle),
+    );
+  }
+
+  Widget _buildNavContent(
+    PrototypeStateProvider state,
+    ProtoTheme theme,
+    bool isInnerCircle, {
+    bool withShadows = false,
+  }) {
+    // When transparent, give icons a subtle frosted backing so they pop over radar
+    Widget iconBacking(Widget child) {
+      if (!withShadows) return child;
+      return Container(
+        decoration: BoxDecoration(
+          color: theme.surface.withValues(alpha: 0.45),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 4,
             ),
+          ],
+        ),
+        child: child,
+      );
+    }
 
-          const Spacer(),
+    // Title gets a subtle text shadow when floating over radar
+    final titleStyle = theme.label.copyWith(
+      fontSize: 14,
+      letterSpacing: 2,
+      color: isInnerCircle ? _warmAmber : theme.text,
+      shadows: withShadows
+          ? [Shadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 4)]
+          : null,
+    );
 
-          // Title + mode toggle icon
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: Text(
-                  _title(state.yoyoMode),
-                  key: ValueKey(_title(state.yoyoMode)),
-                  style: theme.label.copyWith(
-                    fontSize: 14,
-                    letterSpacing: 2,
-                    color: isInnerCircle ? _warmAmber : theme.text,
-                  ),
-                ),
-              ),
-              // Inner Circle toggle removed — feature deferred
-            ],
+    return Row(
+      children: [
+        // YoYo icon — toggles area/list when in YoYo Social, or shows people icon in Inner Circle
+        if (isInnerCircle)
+          _InnerCircleIcon(theme: theme)
+        else
+          _YoyoIconToggle(
+            activeModule: activeModule,
+            isYoyoAreaView: state.isYoyoAreaView,
+            onTap: () {
+              if (activeModule == ProtoModule.yoyo) {
+                state.onYoyoViewToggle();
+              } else {
+                state.switchModule(ProtoModule.yoyo);
+              }
+            },
+            theme: theme,
           ),
 
-          const Spacer(),
+        const Spacer(),
 
-          // Chat icon with badge
-          Semantics(
-            label: 'Chat inbox, 3 unread messages',
-            button: true,
-            child: GestureDetector(
+        // Title
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: Text(
+                _title(state.yoyoMode),
+                key: ValueKey(_title(state.yoyoMode)),
+                style: titleStyle,
+              ),
+            ),
+          ],
+        ),
+
+        const Spacer(),
+
+        // Chat icon with badge
+        Semantics(
+          label: 'Chat inbox, 3 unread messages',
+          button: true,
+          child: GestureDetector(
             onTap: () => state.push(ProtoRoutes.chatInbox),
-            child: SizedBox(
+            child: iconBacking(SizedBox(
               width: 36,
               height: 36,
               child: Stack(
@@ -120,10 +164,9 @@ class ProtoTopBar extends StatelessWidget {
                     child: Icon(
                       theme.icons.chatBubbleOutline,
                       size: 22,
-                      color: theme.textSecondary,
+                      color: withShadows ? theme.text : theme.textSecondary,
                     ),
                   ),
-                  // Unread badge
                   Positioned(
                     right: 2,
                     top: 4,
@@ -135,7 +178,6 @@ class ProtoTopBar extends StatelessWidget {
                         shape: BoxShape.circle,
                         border: Border.all(color: theme.surface, width: 1.5),
                       ),
-                      // Demo: static unread count
                       child: const Center(
                         child: Text(
                           '3',
@@ -150,18 +192,18 @@ class ProtoTopBar extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
+            )),
           ),
-          ),
-          const SizedBox(width: 8),
+        ),
+        const SizedBox(width: 8),
 
-          // Profile avatar with notification dot — goes directly to profile
-          Semantics(
-            label: 'My profile, has notifications',
-            button: true,
-            child: GestureDetector(
+        // Profile avatar with notification dot — goes directly to profile
+        Semantics(
+          label: 'My profile, has notifications',
+          button: true,
+          child: GestureDetector(
             onTap: () => state.push(ProtoRoutes.profileMy),
-            child: SizedBox(
+            child: iconBacking(SizedBox(
               width: 36,
               height: 36,
               child: Stack(
@@ -173,7 +215,9 @@ class ProtoTopBar extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: theme.primary.withValues(alpha: 0.3),
+                          color: withShadows
+                              ? theme.surface.withValues(alpha: 0.8)
+                              : theme.primary.withValues(alpha: 0.3),
                           width: 2,
                         ),
                         image: const DecorationImage(
@@ -185,7 +229,6 @@ class ProtoTopBar extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Notification dot
                   Positioned(
                     right: 0,
                     top: 2,
@@ -201,11 +244,10 @@ class ProtoTopBar extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
+            )),
           ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
