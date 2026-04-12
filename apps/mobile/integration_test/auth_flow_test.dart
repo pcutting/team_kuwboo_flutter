@@ -4,15 +4,14 @@ import 'package:integration_test/integration_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:kuwboo_mobile/app/test_app.dart';
-import 'package:kuwboo_mobile/providers/auth_provider.dart';
+import 'package:kuwboo_mobile/features/auth/data/token_storage.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('Auth flow', () {
     testWidgets('login -> OTP -> lands on home screen', (tester) async {
-      final authNotifier = AuthNotifier();
-      await authNotifier.logout();
+      await TokenStorage().clear();
 
       await tester.pumpWidget(const ProviderScope(child: KuwbooTestApp()));
       await tester.pumpAndSettle(const Duration(seconds: 2));
@@ -55,8 +54,7 @@ void main() {
     });
 
     testWidgets('OTP screen shows error for short code', (tester) async {
-      final authNotifier = AuthNotifier();
-      await authNotifier.logout();
+      await TokenStorage().clear();
 
       await tester.pumpWidget(const ProviderScope(child: KuwbooTestApp()));
       await tester.pumpAndSettle(const Duration(seconds: 2));
@@ -85,8 +83,7 @@ void main() {
     });
 
     testWidgets('login screen ignores empty phone number', (tester) async {
-      final authNotifier = AuthNotifier();
-      await authNotifier.logout();
+      await TokenStorage().clear();
 
       await tester.pumpWidget(const ProviderScope(child: KuwbooTestApp()));
       await tester.pumpAndSettle(const Duration(seconds: 2));

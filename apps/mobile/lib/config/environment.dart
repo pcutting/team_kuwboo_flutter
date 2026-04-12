@@ -19,22 +19,40 @@ class Environment {
     defaultValue: 'dev',
   );
 
-  /// API base URL. Can be overridden via `--dart-define=KUWBOO_API_URL=...`
-  /// but defaults to the correct URL for the [current] environment.
+  /// API base URL. Can be overridden via
+  /// `--dart-define=KUWBOO_API_BASE_URL=...` (preferred) or the legacy
+  /// `KUWBOO_API_URL` name. Otherwise defaults based on [current].
+  ///
+  /// The dev default points to the EC2 greenfield instance over plain HTTP
+  /// until TLS is provisioned.
   static String get apiBaseUrl {
-    const override = String.fromEnvironment('KUWBOO_API_URL');
+    const override = String.fromEnvironment('KUWBOO_API_BASE_URL');
     if (override.isNotEmpty) return override;
+    const legacy = String.fromEnvironment('KUWBOO_API_URL');
+    if (legacy.isNotEmpty) return legacy;
 
     switch (current) {
       case 'prod':
         return 'https://api.kuwboo.com';
       case 'staging':
-        return 'https://kuwboo-api.codiantdev.com';
       case 'dev':
       default:
-        return 'https://kuwboo-api.codiantdev.com';
+        return 'http://35.177.230.139';
     }
   }
+
+  /// When true, the client accepts a fixed bypass OTP (`000000`) and skips
+  /// the `send-otp` call. Used only while the SMS provider on the backend
+  /// is unconfigured. Enable with `--dart-define=KUWBOO_DEV_AUTH=1`.
+  static const String _devAuthFlag = String.fromEnvironment(
+    'KUWBOO_DEV_AUTH',
+    defaultValue: '',
+  );
+  static bool get devAuthBypass =>
+      _devAuthFlag == '1' || _devAuthFlag.toLowerCase() == 'true';
+
+  /// The bypass OTP accepted when [devAuthBypass] is enabled.
+  static const String devBypassOtp = '000000';
 
   /// Whether this build should show debug UI, extra logging, etc.
   static bool get isProduction => current == 'prod';
