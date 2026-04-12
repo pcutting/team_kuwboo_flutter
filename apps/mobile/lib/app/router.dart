@@ -68,7 +68,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   // the entire GoRouter. Rebuilding would recreate the shell navigator and
   // collide with the existing `_shellNavigatorKey` still mounted.
   final refresh = ValueNotifier<int>(0);
-  ref.listen(authProvider, (_, __) => refresh.value++);
+  ref.listen(authProvider, (_, next) => refresh.value++);
   ref.onDispose(refresh.dispose);
 
   return GoRouter(
