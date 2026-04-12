@@ -19,31 +19,64 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 /// Wraps the active screen in ProtoScaffold with the right-side notched FAB
 /// service switcher and 4 per-service sub-tabs.
-class _ProtoShellWrapper extends ConsumerWidget {
+class _ProtoShellWrapper extends StatelessWidget {
   final Widget child;
   const _ProtoShellWrapper({required this.child});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final shell = ref.watch(shellStateProvider);
+  Widget build(BuildContext context) {
+    // Derive module + tab from the current GoRouter location instead of
+    // watching a Riverpod provider. Watching here would make the shell rebuild
+    // in the same frame as GoRouter's own ShellRoute rebuild, leaving two
+    // copies of the child Navigator (with its GlobalKey) in the tree.
+    final location = GoRouterState.of(context).matchedLocation;
+    final activeModule = _moduleFor(location);
+    final activeTab = _tabFor(location);
+    final isYoyoNearby = activeModule == ProtoModule.yoyo && activeTab == 0;
 
     return ProtoScaffold(
-      activeModule: shell.activeModule,
-      activeTab: shell.activeTab,
+      activeModule: activeModule,
+      activeTab: activeTab,
+      tabBadges: isYoyoNearby ? const {2: 2} : null,
       body: child,
     );
+  }
+
+  static ProtoModule _moduleFor(String loc) {
+    if (loc.startsWith('/yoyo')) return ProtoModule.yoyo;
+    if (loc.startsWith('/video')) return ProtoModule.video;
+    if (loc.startsWith('/dating')) return ProtoModule.dating;
+    if (loc.startsWith('/social')) return ProtoModule.social;
+    if (loc.startsWith('/shop')) return ProtoModule.shop;
+    return ProtoModule.yoyo;
+  }
+
+  static int _tabFor(String loc) {
+    // YoYo: 0=nearby 1=connect 2=wave 3=chat
+    if (loc == ProtoRoutes.yoyoNearby) return 0;
+    if (loc == ProtoRoutes.yoyoConnect) return 1;
+    if (loc == ProtoRoutes.yoyoWave) return 2;
+    if (loc == ProtoRoutes.yoyoChat) return 3;
+    return 0;
   }
 }
 
 // ─── Router Provider ─────────────────────────────────────────────────────
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  // Refresh the router whenever auth state changes, instead of rebuilding
+  // the entire GoRouter. Rebuilding would recreate the shell navigator and
+  // collide with the existing `_shellNavigatorKey` still mounted.
+  final refresh = ValueNotifier<int>(0);
+  ref.listen(authProvider, (_, __) => refresh.value++);
+  ref.onDispose(refresh.dispose);
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: ProtoRoutes.yoyoNearby,
+    refreshListenable: refresh,
     redirect: (context, state) {
+      final authState = ref.read(authProvider);
       if (authState.isLoading) return null;
 
       final isAuth = authState.isAuthenticated;

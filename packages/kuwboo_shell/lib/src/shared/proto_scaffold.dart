@@ -42,7 +42,9 @@ class ProtoScaffold extends StatelessWidget {
 
     // Overlay mode: top bar floats over the body (transparent, radar shows through)
     if (overlayTopBar && showTopBar) {
-      return Container(
+      return Material(
+        type: MaterialType.transparency,
+        child: Container(
         color: bg,
         child: Stack(
           children: [
@@ -74,10 +76,13 @@ class ProtoScaffold extends StatelessWidget {
               ),
           ],
         ),
+        ),
       );
     }
 
-    return Container(
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
       color: bg,
       child: Column(
         children: [
@@ -119,6 +124,7 @@ class ProtoScaffold extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

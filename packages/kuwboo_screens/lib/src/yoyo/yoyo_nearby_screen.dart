@@ -145,14 +145,11 @@ class _YoyoNearbyScreenState extends State<YoyoNearbyScreen> {
       return const InnerCircleNearbyView();
     }
 
-    return ProtoScaffold(
-      activeModule: ProtoModule.yoyo,
-      overlayTopBar: true,
-      showTopBar: !state.isRadarFullscreen,
-      showBottomNav: !state.isRadarFullscreen,
-      tabBadges: const {2: 2}, // 2 unread waves on Wave tab
-      body: const _YoyoV2NearbyView(),
-    );
+    // The outer ProtoScaffold is provided by the app shell (router).
+    // This screen just returns its body. The shell reads the
+    // `isRadarFullscreen` flag to hide the top bar + bottom nav and passes
+    // overlayTopBar for the transparent-over-radar layout.
+    return const _YoyoV2NearbyView();
   }
 }
 
