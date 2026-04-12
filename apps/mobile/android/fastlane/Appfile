@@ -1,0 +1,12 @@
+# Google Play Console / Android app identifiers.
+#
+# Safe to commit. The Play Console service account JSON is kept outside the
+# repo (keys/kuwboo-play-ci.json, gitignored) and passed to fastlane via
+# environment variable ANDROID_PLAY_SERVICE_ACCOUNT_JSON in CI.
+
+package_name("com.kuwboo.mobile")
+
+# Path to service account JSON. CI writes it to a temp file and overrides
+# this via the ANDROID_PLAY_SERVICE_ACCOUNT_JSON env var used in the Fastfile;
+# this default covers local runs where the file is already on disk.
+json_key_file(ENV["ANDROID_PLAY_SERVICE_ACCOUNT_JSON"] || "../../../keys/kuwboo-play-ci.json")

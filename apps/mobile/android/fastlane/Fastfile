@@ -1,0 +1,118 @@
+# Kuwboo Android Fastfile
+#
+# Lanes:
+#   fastlane internal   — Build AAB and upload to Play Store internal track
+#   fastlane build      — Just build the AAB (no upload)
+#
+# Required environment variables (CI loads these from GitHub Secrets):
+#   ANDROID_KEYSTORE_PATH              — Absolute path to the .jks file
+#   ANDROID_KEYSTORE_PASSWORD          — Keystore password
+#   ANDROID_KEY_ALIAS                  — Key alias (e.g. "kuwboo-upload")
+#   ANDROID_KEY_PASSWORD               — Key password (same as keystore by default)
+#   ANDROID_PLAY_SERVICE_ACCOUNT_JSON  — Path to Play Console service account JSON
+#
+# Optional:
+#   KUWBOO_ENV     — dev | staging | prod (default: prod for internal lane)
+#   BUILD_NUMBER   — Override versionCode (otherwise uses GITHUB_RUN_NUMBER or timestamp)
+
+default_platform(:android)
+
+ANDROID_ROOT = File.expand_path("..", __dir__)
+MOBILE_ROOT = File.expand_path("../..", __dir__)
+PROJECT_ROOT = File.expand_path("../../../..", __dir__)
+
+platform :android do
+  before_all do
+    Dir.chdir(ANDROID_ROOT)
+  end
+
+  desc "Build Android App Bundle (no upload). Used for PR validation."
+  lane :build do
+    kuwboo_env = ENV["KUWBOO_ENV"] || "staging"
+    build_number = resolve_build_number
+
+    Dir.chdir(MOBILE_ROOT) do
+      sh("flutter clean")
+      sh("flutter pub get")
+      sh("flutter build appbundle --release " \
+         "--build-number=#{build_number} " \
+         "--dart-define=KUWBOO_ENV=#{kuwboo_env}")
+    end
+
+    UI.success("Android AAB built for env=#{kuwboo_env}, build=#{build_number}")
+  end
+
+  desc "Build and upload to Play Store internal track"
+  lane :internal do
+    kuwboo_env = ENV["KUWBOO_ENV"] || "prod"
+    build_number = resolve_build_number
+
+    UI.message("Building Kuwboo for Play Internal: env=#{kuwboo_env}, build=#{build_number}")
+
+    ensure_signing_env!
+    json_key_path = ensure_play_service_account!
+
+    Dir.chdir(MOBILE_ROOT) do
+      sh("flutter clean")
+      sh("flutter pub get")
+      sh("flutter build appbundle --release " \
+         "--build-number=#{build_number} " \
+         "--dart-define=KUWBOO_ENV=#{kuwboo_env}")
+    end
+
+    aab_path = File.join(MOBILE_ROOT, "build", "app", "outputs", "bundle", "release", "app-release.aab")
+    UI.user_error!("AAB not found at #{aab_path}") unless File.exist?(aab_path)
+
+    upload_to_play_store(
+      package_name: "com.kuwboo.mobile",
+      track: "internal",
+      aab: aab_path,
+      json_key: json_key_path,
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      release_status: "draft",
+    )
+
+    UI.success("✅ Uploaded build #{build_number} to Play internal track")
+  end
+
+  # ------------------------------------------------------------------
+  # Helpers
+  # ------------------------------------------------------------------
+
+  def ensure_signing_env!
+    required = %w[
+      ANDROID_KEYSTORE_PATH
+      ANDROID_KEYSTORE_PASSWORD
+      ANDROID_KEY_ALIAS
+      ANDROID_KEY_PASSWORD
+    ]
+    missing = required.select { |k| ENV[k].nil? || ENV[k].empty? }
+    unless missing.empty?
+      UI.user_error!("Missing signing env vars: #{missing.join(', ')}")
+    end
+    unless File.exist?(ENV["ANDROID_KEYSTORE_PATH"])
+      UI.user_error!("Keystore file not found at ANDROID_KEYSTORE_PATH=#{ENV['ANDROID_KEYSTORE_PATH']}")
+    end
+  end
+
+  def ensure_play_service_account!
+    path = ENV["ANDROID_PLAY_SERVICE_ACCOUNT_JSON"]
+    UI.user_error!("ANDROID_PLAY_SERVICE_ACCOUNT_JSON not set") if path.nil? || path.empty?
+    UI.user_error!("Play service account JSON not found at #{path}") unless File.exist?(path)
+    path
+  end
+
+  def resolve_build_number
+    explicit = ENV["BUILD_NUMBER"]
+    return explicit.to_i if explicit && !explicit.empty?
+
+    gh_run = ENV["GITHUB_RUN_NUMBER"]
+    return gh_run.to_i if gh_run && !gh_run.empty?
+
+    Time.now.strftime("%y%m%d%H%M").to_i
+  end
+end

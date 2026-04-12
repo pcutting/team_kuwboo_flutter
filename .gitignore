@@ -78,3 +78,18 @@ apps/mobile/android/local.properties
 apps/mobile/android/key.properties
 apps/mobile/android/**/*.keystore
 apps/mobile/android/**/*.jks
+
+# Android signing + Play Store service account (keys/ is already globally
+# gitignored; these patterns are belt-and-braces against material landing
+# elsewhere in the tree)
+*.jks
+*.keystore
+keys/kuwboo-play-ci.json
+keys/kuwboo-upload.pem
+keys/.android_keystore_password.txt
+keys/.android_key_alias.txt
+
+# Fastlane runtime artifacts (Android)
+apps/mobile/android/fastlane/report.xml
+apps/mobile/android/fastlane/README.md
+apps/mobile/android/fastlane/test_output/
