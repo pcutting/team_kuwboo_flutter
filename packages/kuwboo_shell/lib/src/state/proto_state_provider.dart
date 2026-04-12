@@ -83,7 +83,10 @@ class YoyoState {
 
   // Go Live (visibility timer)
   final bool liveActive;
-  final int liveDuration; // 0=30m, 1=2h, 2=8h, 3=Always
+  final int liveDuration; // 0=Always, 1=15m, 2=30m, 3=1h, 4=2h, 5=4h, 6=8h, 7=12h, 8=24h
+
+  // Full-screen radar mode
+  final bool isRadarFullscreen;
 
   // Mode (0 = Social, 1 = Inner Circle)
   final int mode;
@@ -106,6 +109,7 @@ class YoyoState {
     this.v2EncounterTransparency = true,
     this.liveActive = false,
     this.liveDuration = 0,
+    this.isRadarFullscreen = false,
     this.mode = 0,
   });
 
@@ -127,6 +131,7 @@ class YoyoState {
     bool? v2EncounterTransparency,
     bool? liveActive,
     int? liveDuration,
+    bool? isRadarFullscreen,
     int? mode,
   }) {
     return YoyoState(
@@ -147,6 +152,7 @@ class YoyoState {
       v2EncounterTransparency: v2EncounterTransparency ?? this.v2EncounterTransparency,
       liveActive: liveActive ?? this.liveActive,
       liveDuration: liveDuration ?? this.liveDuration,
+      isRadarFullscreen: isRadarFullscreen ?? this.isRadarFullscreen,
       mode: mode ?? this.mode,
     );
   }
@@ -232,6 +238,10 @@ class YoyoStateNotifier extends StateNotifier<YoyoState> {
     state = state.copyWith(liveDuration: value);
   }
 
+  void toggleRadarFullscreen() {
+    state = state.copyWith(isRadarFullscreen: !state.isRadarFullscreen);
+  }
+
   // Mode
   void setMode(int value) {
     state = state.copyWith(mode: value);
@@ -298,6 +308,7 @@ class ProtoStateAccess extends InheritedWidget {
   bool get yoyoV2EncounterTransparency => yoyo.v2EncounterTransparency;
   bool get yoyoLiveActive => yoyo.liveActive;
   int get yoyoLiveDuration => yoyo.liveDuration;
+  bool get isRadarFullscreen => yoyo.isRadarFullscreen;
   int get yoyoMode => yoyo.mode;
 
   // ── Convenience setters matching old PrototypeStateProvider API ──
@@ -319,6 +330,7 @@ class ProtoStateAccess extends InheritedWidget {
   void onYoyoV2EncounterTransparencyChanged(bool v) => yoyoNotifier.setV2EncounterTransparency(v);
   void onYoyoLiveToggle() => yoyoNotifier.toggleLive();
   void onYoyoLiveDurationChanged(int v) => yoyoNotifier.setLiveDuration(v);
+  void onRadarFullscreenToggle() => yoyoNotifier.toggleRadarFullscreen();
   void onYoyoModeChanged(int v) => yoyoNotifier.setMode(v);
   void onDarkModeChanged(bool v) => shellNotifier.setDarkMode(v);
   void onModuleChanged(ProtoModule m) => shellNotifier.switchModule(m);
