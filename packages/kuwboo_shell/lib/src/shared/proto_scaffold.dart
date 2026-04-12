@@ -11,6 +11,7 @@ class ProtoScaffold extends StatelessWidget {
   final Widget body;
   final bool showTopBar;
   final bool showBottomNav;
+  final bool overlayTopBar;
   final Color? backgroundColor;
   final int activeTab;
   final Map<int, int>? tabBadges;
@@ -21,6 +22,7 @@ class ProtoScaffold extends StatelessWidget {
     required this.body,
     this.showTopBar = true,
     this.showBottomNav = true,
+    this.overlayTopBar = false,
     this.backgroundColor,
     this.activeTab = 0,
     this.tabBadges,
@@ -34,6 +36,46 @@ class ProtoScaffold extends StatelessWidget {
     final state = PrototypeStateProvider.maybeOf(context);
     final theme = ProtoTheme.of(context);
     final bg = backgroundColor ?? theme.background;
+    final bodyBottomPadding = showBottomNav
+        ? _barHeight + MediaQuery.paddingOf(context).bottom
+        : 0.0;
+
+    // Overlay mode: top bar floats over the body (transparent, radar shows through)
+    if (overlayTopBar && showTopBar) {
+      return Container(
+        color: bg,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Padding(
+                padding: EdgeInsets.only(bottom: bodyBottomPadding),
+                child: body,
+              ),
+            ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: ProtoTopBar(activeModule: activeModule, transparent: true),
+            ),
+            if (showBottomNav)
+              Positioned.fill(
+                child: ProtoBottomNavC(
+                  activeModule: activeModule,
+                  activeTab: activeTab,
+                  tabBadges: tabBadges,
+                  onTabTapped: (tabIndex) {
+                    if (state != null) state.switchTab(tabIndex);
+                  },
+                  onServiceSelected: (module) {
+                    if (state != null) state.switchModule(module);
+                  },
+                ),
+              ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       color: bg,
@@ -49,11 +91,7 @@ class ProtoScaffold extends StatelessWidget {
                 // Body with bottom padding so content doesn't hide behind nav
                 Positioned.fill(
                   child: Padding(
-                    padding: EdgeInsets.only(
-                      bottom: showBottomNav
-                          ? _barHeight + MediaQuery.paddingOf(context).bottom
-                          : 0,
-                    ),
+                    padding: EdgeInsets.only(bottom: bodyBottomPadding),
                     child: body,
                   ),
                 ),
