@@ -51,6 +51,7 @@ class YoyoFilterSheet extends StatelessWidget {
                     state.onYoyoRangeChanged(5);
                     state.onYoyoInterestsChanged({});
                     if (state.yoyoFriendsOnly) state.onYoyoFriendsOnlyToggle();
+                    state.onYoyoV2EncounterFilterChanged('all');
                     ProtoToast.show(context, theme.icons.refresh, 'Filters reset');
                   },
                   child: Text(
@@ -90,26 +91,38 @@ class YoyoFilterSheet extends StatelessWidget {
                     title: 'Encounter Type',
                     child: Row(
                       children: [
-                        for (final label in ['all', 'passby', 'nearby']) ...[
-                          if (label != 'all') const SizedBox(width: 8),
-                          Expanded(
-                            child: ProtoPressButton(
-                              onTap: () => state.onYoyoV2EncounterFilterChanged(label),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                padding: const EdgeInsets.symmetric(vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: state.yoyoV2EncounterFilter == label ? theme.primary : theme.background,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: state.yoyoV2EncounterFilter == label
-                                      ? null
-                                      : Border.all(color: theme.text.withValues(alpha: 0.1)),
+                        for (final entry in [
+                          ('all', 'All'),
+                          ('passby', 'Pass-by'),
+                          ('nearby', 'Nearby'),
+                        ]) ...[
+                          if (entry.$1 != 'all') const SizedBox(width: 8),
+                          ProtoPressButton(
+                            onTap: () => state.onYoyoV2EncounterFilterChanged(entry.$1),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: state.yoyoV2EncounterFilter == entry.$1
+                                    ? theme.primary.withValues(alpha: 0.15)
+                                    : theme.surface,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: state.yoyoV2EncounterFilter == entry.$1
+                                      ? theme.primary
+                                      : theme.textTertiary.withValues(alpha: 0.2),
                                 ),
-                                child: Center(
-                                  child: Text(
-                                    label == 'all' ? 'All' : label == 'passby' ? 'Pass-by' : 'Nearby',
-                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: state.yoyoV2EncounterFilter == label ? Colors.white : theme.textSecondary),
-                                  ),
+                              ),
+                              child: Text(
+                                entry.$2,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: state.yoyoV2EncounterFilter == entry.$1
+                                      ? theme.primary
+                                      : theme.textSecondary,
                                 ),
                               ),
                             ),

@@ -112,9 +112,10 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
   };
 
   static const _height = 56.0;
-  static const _fabSize = 50.0;
-  static const _notchMargin = 4.0;
-  static const _fabRightOffset = 16.0;
+  static const _fabSize = 42.0;
+  static const _notchMargin = 2.0;
+  static const _fabRightOffset = 15.0;
+  static const _fabOverhang = 0.0; // FAB inline with bar
 
   @override
   void initState() {
@@ -158,7 +159,7 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
 
   /// Height of the nav bar area including FAB overhang, used by ProtoScaffold
   /// for body bottom padding.
-  static double get totalHeight => _height + (_fabSize / 2) + _notchMargin;
+  static double get totalHeight => _height + _fabOverhang + _notchMargin;
 
   @override
   Widget build(BuildContext context) {
@@ -195,9 +196,9 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
           child: _buildBar(theme),
         ),
 
-        // FAB sitting in the right-side notch
+        // FAB sitting in the right-side notch (partially above bar)
         Positioned(
-          bottom: _height - _fabSize / 2,
+          bottom: _height - _fabSize + _fabOverhang,
           right: _fabRightOffset,
           child: _buildFab(theme),
         ),
@@ -214,14 +215,15 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
       child: CustomPaint(
         painter: _RightNotchedBarPainter(
           backgroundColor: theme.surface,
-          notchRadius: _fabSize / 2 + _notchMargin,
+          notchMargin: _notchMargin,
           fabRightOffset: _fabRightOffset,
           fabSize: _fabSize,
+          fabOverhang: _fabOverhang,
           borderColor: borderColor,
         ),
         child: Padding(
-          // Right padding to make room for the FAB notch
-          padding: EdgeInsets.only(right: _fabSize + 28),
+          // Right padding to make room for the FAB
+          padding: EdgeInsets.only(right: _fabSize + 20),
           child: Row(
             children: List.generate(tabs.length, (i) {
               final tab = tabs[i];
@@ -324,15 +326,15 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: ProtoTheme.kuwbooBlue.withValues(alpha: 0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
+                color: ProtoTheme.kuwbooBlue.withValues(alpha: 0.25),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
           child: Icon(
             _isExpanded ? theme.icons.close : _fabIcon(theme),
-            size: 24,
+            size: 20,
             color: Colors.white,
           ),
         ),
@@ -371,7 +373,7 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
       final isCurrent = service == widget.activeModule;
       // Stack items from bottom to top: index 0 is highest
       final bottomOffset =
-          _height + (_fabSize / 2) + _notchMargin +
+          _height + _fabOverhang + _notchMargin +
           8 + (services.length - 1 - i) * 52.0;
 
       widgets.add(
@@ -474,25 +476,43 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
 }
 
 /// Paints the bottom bar background with a semicircular notch on the right side
-/// for the docked FAB.
+/// for the docked FAB. Uses Flutter's built-in CircularNotchedRectangle for
+/// mathematically correct notch geometry.
 class _RightNotchedBarPainter extends CustomPainter {
   final Color backgroundColor;
-  final double notchRadius;
+  final double notchMargin;
   final double fabRightOffset;
   final double fabSize;
+  final double fabOverhang;
   final Color? borderColor;
 
   _RightNotchedBarPainter({
     required this.backgroundColor,
-    required this.notchRadius,
+    required this.notchMargin,
     required this.fabRightOffset,
     required this.fabSize,
+    this.fabOverhang = 0.0,
     this.borderColor,
   });
 
+  /// Build the guest Rect representing the FAB's position relative to the bar.
+  /// Shifted up 3px from actual center so the notch clears the FAB bottom
+  /// without creating excessive gap at the top.
+  Rect _guestRect(Size size) {
+    final fabLeft = size.width - fabRightOffset - fabSize;
+    final fabTop = -fabOverhang + (size.height - fabSize) / 2 - 2;
+    return Rect.fromLTWH(fabLeft, fabTop, fabSize, fabSize);
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
-    final path = _buildNotchedPath(size);
+    final host = Offset.zero & size;
+    final guest = _guestRect(size);
+    // Uniform margin around the FAB for notch clearance
+    final expandedGuest = guest.inflate(notchMargin);
+    final shape = const CircularNotchedRectangle();
+    final path = shape.getOuterPath(host, expandedGuest);
+
     canvas.drawPath(path, Paint()..color = backgroundColor);
 
     if (borderColor != null) {
@@ -500,55 +520,18 @@ class _RightNotchedBarPainter extends CustomPainter {
         ..color = borderColor!
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1;
-      canvas.drawPath(_buildTopEdgePath(size), borderPaint);
+      // Draw just the top edge with notch
+      final topPath = shape.getOuterPath(host, expandedGuest);
+      canvas.drawPath(topPath, borderPaint);
     }
-  }
-
-  Path _buildNotchedPath(Size size) {
-    final path = Path();
-    final cx = size.width - fabRightOffset - fabSize / 2;
-    final r = notchRadius;
-
-    path.moveTo(0, 0);
-    path.lineTo(cx - r - 8, 0);
-    path.quadraticBezierTo(cx - r, 0, cx - r, r * 0.12);
-    path.arcToPoint(
-      Offset(cx + r, r * 0.12),
-      radius: Radius.circular(r * 0.85),
-      clockwise: false,
-    );
-    path.quadraticBezierTo(cx + r, 0, cx + r + 8, 0);
-    path.lineTo(size.width, 0);
-    path.lineTo(size.width, size.height);
-    path.lineTo(0, size.height);
-    path.close();
-
-    return path;
-  }
-
-  Path _buildTopEdgePath(Size size) {
-    final path = Path();
-    final cx = size.width - fabRightOffset - fabSize / 2;
-    final r = notchRadius;
-
-    path.moveTo(0, 0);
-    path.lineTo(cx - r - 8, 0);
-    path.quadraticBezierTo(cx - r, 0, cx - r, r * 0.12);
-    path.arcToPoint(
-      Offset(cx + r, r * 0.12),
-      radius: Radius.circular(r * 0.85),
-      clockwise: false,
-    );
-    path.quadraticBezierTo(cx + r, 0, cx + r + 8, 0);
-    path.lineTo(size.width, 0);
-
-    return path;
   }
 
   @override
   bool shouldRepaint(covariant _RightNotchedBarPainter oldDelegate) =>
       backgroundColor != oldDelegate.backgroundColor ||
-      notchRadius != oldDelegate.notchRadius ||
+      notchMargin != oldDelegate.notchMargin ||
       borderColor != oldDelegate.borderColor ||
-      fabRightOffset != oldDelegate.fabRightOffset;
+      fabRightOffset != oldDelegate.fabRightOffset ||
+      fabSize != oldDelegate.fabSize ||
+      fabOverhang != oldDelegate.fabOverhang;
 }

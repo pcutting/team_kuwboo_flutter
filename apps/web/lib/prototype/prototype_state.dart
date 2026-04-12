@@ -52,6 +52,10 @@ class PrototypeStateProvider extends InheritedWidget {
   final int yoyoLiveDuration; // 0=30m, 1=2h, 2=8h, 3=Always
   final ValueChanged<int> onYoyoLiveDurationChanged;
 
+  // YoYo full-screen radar
+  final bool isRadarFullscreen;
+  final VoidCallback onRadarFullscreenToggle;
+
   // YoYo mode (0 = Social, 1 = Inner Circle) — toggles context for all tabs
   final int yoyoMode;
   final ValueChanged<int> onYoyoModeChanged;
@@ -99,6 +103,8 @@ class PrototypeStateProvider extends InheritedWidget {
     required this.onYoyoLiveToggle,
     required this.yoyoLiveDuration,
     required this.onYoyoLiveDurationChanged,
+    required this.isRadarFullscreen,
+    required this.onRadarFullscreenToggle,
     required this.yoyoMode,
     required this.onYoyoModeChanged,
     required this.isDarkMode,
@@ -226,6 +232,7 @@ class PrototypeStateProvider extends InheritedWidget {
       yoyoV2EncounterTransparency != oldWidget.yoyoV2EncounterTransparency ||
       yoyoLiveActive != oldWidget.yoyoLiveActive ||
       yoyoLiveDuration != oldWidget.yoyoLiveDuration ||
+      isRadarFullscreen != oldWidget.isRadarFullscreen ||
       yoyoMode != oldWidget.yoyoMode ||
       isDarkMode != oldWidget.isDarkMode;
 }
