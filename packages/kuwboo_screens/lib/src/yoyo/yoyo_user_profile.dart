@@ -17,7 +17,7 @@ class _YoyoUserProfileState extends State<YoyoUserProfile> {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
     final user = DemoData.nearbyUsers[0];
-    final v2Encounter = ProtoDemoData.v2Encounters[0]; // Maya — shared, friend
+    final encounter = ProtoDemoData.encounters[0]; // Maya — shared, friend
 
     return Container(
       color: theme.background,
@@ -33,14 +33,14 @@ class _YoyoUserProfileState extends State<YoyoUserProfile> {
             ],
           ),
           Expanded(
-            child: _buildV2Profile(context, theme, state, user, v2Encounter),
+            child: _buildProfile(context, theme, state, user, encounter),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildV2Profile(BuildContext context, ProtoTheme theme, PrototypeStateProvider state, NearbyUser user, DemoV2Encounter enc) {
+  Widget _buildProfile(BuildContext context, ProtoTheme theme, PrototypeStateProvider state, NearbyUser user, DemoEncounter enc) {
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       children: [

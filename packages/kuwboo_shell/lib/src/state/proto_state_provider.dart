@@ -72,14 +72,14 @@ class YoyoState {
   final bool showDistance;
   final String connectFilter;
 
-  // V2 session
-  final bool v2SessionActive;
-  final int v2SessionDuration; // 0=15m, 1=30m, 2=1h, 3=2h
-  final int v2DataRetentionHours;
-  final int v2VisibilityTier; // 0=public..3=private
-  final String v2EncounterFilter;
-  final String v2RelationshipFilter;
-  final bool v2EncounterTransparency;
+  // Session
+  final bool sessionActive;
+  final int sessionDuration; // 0=15m, 1=30m, 2=1h, 3=2h
+  final int dataRetentionHours;
+  final int visibilityTier; // 0=public..3=private
+  final String encounterFilter;
+  final String relationshipFilter;
+  final bool encounterTransparency;
 
   // Go Live (visibility timer)
   final bool liveActive;
@@ -100,13 +100,13 @@ class YoyoState {
     this.showOnline = true,
     this.showDistance = true,
     this.connectFilter = 'All',
-    this.v2SessionActive = false,
-    this.v2SessionDuration = 1,
-    this.v2DataRetentionHours = 32,
-    this.v2VisibilityTier = 0,
-    this.v2EncounterFilter = 'all',
-    this.v2RelationshipFilter = 'all',
-    this.v2EncounterTransparency = true,
+    this.sessionActive = false,
+    this.sessionDuration = 1,
+    this.dataRetentionHours = 32,
+    this.visibilityTier = 0,
+    this.encounterFilter = 'all',
+    this.relationshipFilter = 'all',
+    this.encounterTransparency = true,
     this.liveActive = false,
     this.liveDuration = 0,
     this.isRadarFullscreen = false,
@@ -122,13 +122,13 @@ class YoyoState {
     bool? showOnline,
     bool? showDistance,
     String? connectFilter,
-    bool? v2SessionActive,
-    int? v2SessionDuration,
-    int? v2DataRetentionHours,
-    int? v2VisibilityTier,
-    String? v2EncounterFilter,
-    String? v2RelationshipFilter,
-    bool? v2EncounterTransparency,
+    bool? sessionActive,
+    int? sessionDuration,
+    int? dataRetentionHours,
+    int? visibilityTier,
+    String? encounterFilter,
+    String? relationshipFilter,
+    bool? encounterTransparency,
     bool? liveActive,
     int? liveDuration,
     bool? isRadarFullscreen,
@@ -143,13 +143,13 @@ class YoyoState {
       showOnline: showOnline ?? this.showOnline,
       showDistance: showDistance ?? this.showDistance,
       connectFilter: connectFilter ?? this.connectFilter,
-      v2SessionActive: v2SessionActive ?? this.v2SessionActive,
-      v2SessionDuration: v2SessionDuration ?? this.v2SessionDuration,
-      v2DataRetentionHours: v2DataRetentionHours ?? this.v2DataRetentionHours,
-      v2VisibilityTier: v2VisibilityTier ?? this.v2VisibilityTier,
-      v2EncounterFilter: v2EncounterFilter ?? this.v2EncounterFilter,
-      v2RelationshipFilter: v2RelationshipFilter ?? this.v2RelationshipFilter,
-      v2EncounterTransparency: v2EncounterTransparency ?? this.v2EncounterTransparency,
+      sessionActive: sessionActive ?? this.sessionActive,
+      sessionDuration: sessionDuration ?? this.sessionDuration,
+      dataRetentionHours: dataRetentionHours ?? this.dataRetentionHours,
+      visibilityTier: visibilityTier ?? this.visibilityTier,
+      encounterFilter: encounterFilter ?? this.encounterFilter,
+      relationshipFilter: relationshipFilter ?? this.relationshipFilter,
+      encounterTransparency: encounterTransparency ?? this.encounterTransparency,
       liveActive: liveActive ?? this.liveActive,
       liveDuration: liveDuration ?? this.liveDuration,
       isRadarFullscreen: isRadarFullscreen ?? this.isRadarFullscreen,
@@ -196,33 +196,33 @@ class YoyoStateNotifier extends StateNotifier<YoyoState> {
     state = state.copyWith(connectFilter: value);
   }
 
-  // V2 session
-  void toggleV2Session() {
-    state = state.copyWith(v2SessionActive: !state.v2SessionActive);
+  // Session
+  void toggleSession() {
+    state = state.copyWith(sessionActive: !state.sessionActive);
   }
 
-  void setV2SessionDuration(int value) {
-    state = state.copyWith(v2SessionDuration: value);
+  void setSessionDuration(int value) {
+    state = state.copyWith(sessionDuration: value);
   }
 
-  void setV2DataRetentionHours(int value) {
-    state = state.copyWith(v2DataRetentionHours: value);
+  void setDataRetentionHours(int value) {
+    state = state.copyWith(dataRetentionHours: value);
   }
 
-  void setV2VisibilityTier(int value) {
-    state = state.copyWith(v2VisibilityTier: value);
+  void setVisibilityTier(int value) {
+    state = state.copyWith(visibilityTier: value);
   }
 
-  void setV2EncounterFilter(String value) {
-    state = state.copyWith(v2EncounterFilter: value);
+  void setEncounterFilter(String value) {
+    state = state.copyWith(encounterFilter: value);
   }
 
-  void setV2RelationshipFilter(String value) {
-    state = state.copyWith(v2RelationshipFilter: value);
+  void setRelationshipFilter(String value) {
+    state = state.copyWith(relationshipFilter: value);
   }
 
-  void setV2EncounterTransparency(bool value) {
-    state = state.copyWith(v2EncounterTransparency: value);
+  void setEncounterTransparency(bool value) {
+    state = state.copyWith(encounterTransparency: value);
   }
 
   // Go Live
@@ -299,13 +299,13 @@ class ProtoStateAccess extends InheritedWidget {
   bool get yoyoShowOnline => yoyo.showOnline;
   bool get yoyoShowDistance => yoyo.showDistance;
   String get yoyoConnectFilter => yoyo.connectFilter;
-  bool get yoyoV2SessionActive => yoyo.v2SessionActive;
-  int get yoyoV2SessionDuration => yoyo.v2SessionDuration;
-  int get yoyoV2DataRetentionHours => yoyo.v2DataRetentionHours;
-  int get yoyoV2VisibilityTier => yoyo.v2VisibilityTier;
-  String get yoyoV2EncounterFilter => yoyo.v2EncounterFilter;
-  String get yoyoV2RelationshipFilter => yoyo.v2RelationshipFilter;
-  bool get yoyoV2EncounterTransparency => yoyo.v2EncounterTransparency;
+  bool get yoyoSessionActive => yoyo.sessionActive;
+  int get yoyoSessionDuration => yoyo.sessionDuration;
+  int get yoyoDataRetentionHours => yoyo.dataRetentionHours;
+  int get yoyoVisibilityTier => yoyo.visibilityTier;
+  String get yoyoEncounterFilter => yoyo.encounterFilter;
+  String get yoyoRelationshipFilter => yoyo.relationshipFilter;
+  bool get yoyoEncounterTransparency => yoyo.encounterTransparency;
   bool get yoyoLiveActive => yoyo.liveActive;
   int get yoyoLiveDuration => yoyo.liveDuration;
   bool get isRadarFullscreen => yoyo.isRadarFullscreen;
@@ -321,13 +321,13 @@ class ProtoStateAccess extends InheritedWidget {
   void onYoyoShowOnlineChanged(bool v) => yoyoNotifier.setShowOnline(v);
   void onYoyoShowDistanceChanged(bool v) => yoyoNotifier.setShowDistance(v);
   void onYoyoConnectFilterChanged(String v) => yoyoNotifier.setConnectFilter(v);
-  void onYoyoV2SessionToggle() => yoyoNotifier.toggleV2Session();
-  void onYoyoV2SessionDurationChanged(int v) => yoyoNotifier.setV2SessionDuration(v);
-  void onYoyoV2DataRetentionChanged(int v) => yoyoNotifier.setV2DataRetentionHours(v);
-  void onYoyoV2VisibilityTierChanged(int v) => yoyoNotifier.setV2VisibilityTier(v);
-  void onYoyoV2EncounterFilterChanged(String v) => yoyoNotifier.setV2EncounterFilter(v);
-  void onYoyoV2RelationshipFilterChanged(String v) => yoyoNotifier.setV2RelationshipFilter(v);
-  void onYoyoV2EncounterTransparencyChanged(bool v) => yoyoNotifier.setV2EncounterTransparency(v);
+  void onYoyoSessionToggle() => yoyoNotifier.toggleSession();
+  void onYoyoSessionDurationChanged(int v) => yoyoNotifier.setSessionDuration(v);
+  void onYoyoDataRetentionChanged(int v) => yoyoNotifier.setDataRetentionHours(v);
+  void onYoyoVisibilityTierChanged(int v) => yoyoNotifier.setVisibilityTier(v);
+  void onYoyoEncounterFilterChanged(String v) => yoyoNotifier.setEncounterFilter(v);
+  void onYoyoRelationshipFilterChanged(String v) => yoyoNotifier.setRelationshipFilter(v);
+  void onYoyoEncounterTransparencyChanged(bool v) => yoyoNotifier.setEncounterTransparency(v);
   void onYoyoLiveToggle() => yoyoNotifier.toggleLive();
   void onYoyoLiveDurationChanged(int v) => yoyoNotifier.setLiveDuration(v);
   void onRadarFullscreenToggle() => yoyoNotifier.toggleRadarFullscreen();

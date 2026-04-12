@@ -68,14 +68,14 @@ class _YoyoConnectScreenState extends State<YoyoConnectScreen> {
             ),
           ),
           Expanded(
-            child: _buildV2ConnectList(context, theme, state),
+            child: _buildConnectList(context, theme, state),
           ),
         ],
       );
   }
 
-  Widget _buildV2ConnectList(BuildContext context, ProtoTheme theme, PrototypeStateProvider state) {
-    final connections = ProtoDemoData.v2Connections;
+  Widget _buildConnectList(BuildContext context, ProtoTheme theme, PrototypeStateProvider state) {
+    final connections = ProtoDemoData.connections;
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: connections.length,

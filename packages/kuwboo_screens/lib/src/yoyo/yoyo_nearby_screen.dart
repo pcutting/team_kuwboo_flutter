@@ -149,14 +149,14 @@ class _YoyoNearbyScreenState extends State<YoyoNearbyScreen> {
     // This screen just returns its body. The shell reads the
     // `isRadarFullscreen` flag to hide the top bar + bottom nav and passes
     // overlayTopBar for the transparent-over-radar layout.
-    return const _YoyoV2NearbyView();
+    return const _YoyoNearbyView();
   }
 }
 
 // ─── V2 Nearby View ─────────────────────────────────────────────────
 
-class _YoyoV2NearbyView extends StatelessWidget {
-  const _YoyoV2NearbyView({super.key});
+class _YoyoNearbyView extends StatelessWidget {
+  const _YoyoNearbyView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -168,8 +168,8 @@ class _YoyoV2NearbyView extends StatelessWidget {
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: state.isYoyoAreaView
-                ? _V2AreaView(key: const ValueKey('v2-area'))
-                : _V2ListView(key: const ValueKey('v2-list')),
+                ? _AreaView(key: const ValueKey('v2-area'))
+                : _ListView(key: const ValueKey('v2-list')),
           ),
         ),
       ],
@@ -179,14 +179,14 @@ class _YoyoV2NearbyView extends StatelessWidget {
 
 // ─── V2 Session Header ──────────────────────────────────────────────
 
-class _V2SessionHeader extends StatefulWidget {
-  const _V2SessionHeader();
+class _SessionHeader extends StatefulWidget {
+  const _SessionHeader();
 
   @override
-  State<_V2SessionHeader> createState() => _V2SessionHeaderState();
+  State<_SessionHeader> createState() => _SessionHeaderState();
 }
 
-class _V2SessionHeaderState extends State<_V2SessionHeader> {
+class _SessionHeaderState extends State<_SessionHeader> {
   Timer? _timer;
   int _secondsRemaining = 0;
 
@@ -194,8 +194,8 @@ class _V2SessionHeaderState extends State<_V2SessionHeader> {
   static const _durationLabels = ['15m', '30m', '1h', '2h'];
 
   void _startSession(PrototypeStateProvider state) {
-    state.onYoyoV2SessionToggle();
-    _secondsRemaining = _durations[state.yoyoV2SessionDuration];
+    state.onYoyoSessionToggle();
+    _secondsRemaining = _durations[state.yoyoSessionDuration];
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_secondsRemaining > 0) {
@@ -209,7 +209,7 @@ class _V2SessionHeaderState extends State<_V2SessionHeader> {
   void _endSession(PrototypeStateProvider state) {
     _timer?.cancel();
     _timer = null;
-    if (state.yoyoV2SessionActive) state.onYoyoV2SessionToggle();
+    if (state.yoyoSessionActive) state.onYoyoSessionToggle();
     setState(() => _secondsRemaining = 0);
   }
 
@@ -232,7 +232,7 @@ class _V2SessionHeaderState extends State<_V2SessionHeader> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: state.yoyoV2SessionActive
+      child: state.yoyoSessionActive
           ? Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
@@ -284,17 +284,17 @@ class _V2SessionHeaderState extends State<_V2SessionHeader> {
                     for (int i = 0; i < _durationLabels.length; i++) ...[
                       if (i > 0) const SizedBox(width: 6),
                       ProtoPressButton(
-                        onTap: () => state.onYoyoV2SessionDurationChanged(i),
+                        onTap: () => state.onYoyoSessionDurationChanged(i),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: state.yoyoV2SessionDuration == i
+                            color: state.yoyoSessionDuration == i
                                 ? theme.primary.withValues(alpha: 0.15)
                                 : theme.surface,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: state.yoyoV2SessionDuration == i
+                              color: state.yoyoSessionDuration == i
                                   ? theme.primary
                                   : theme.textTertiary.withValues(alpha: 0.2),
                             ),
@@ -304,7 +304,7 @@ class _V2SessionHeaderState extends State<_V2SessionHeader> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: state.yoyoV2SessionDuration == i ? theme.primary : theme.textSecondary,
+                              color: state.yoyoSessionDuration == i ? theme.primary : theme.textSecondary,
                             ),
                           ),
                         ),
@@ -315,7 +315,7 @@ class _V2SessionHeaderState extends State<_V2SessionHeader> {
                       child: ProtoPressButton(
                         onTap: () {
                           _startSession(state);
-                          ProtoToast.show(context, Icons.sensors_rounded, 'Session started — ${_durationLabels[state.yoyoV2SessionDuration]}');
+                          ProtoToast.show(context, Icons.sensors_rounded, 'Session started — ${_durationLabels[state.yoyoSessionDuration]}');
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 10),
@@ -341,14 +341,14 @@ class _V2SessionHeaderState extends State<_V2SessionHeader> {
 
 // ─── V2 List View ───────────────────────────────────────────────────
 
-class _V2ListView extends StatelessWidget {
-  const _V2ListView({super.key});
+class _ListView extends StatelessWidget {
+  const _ListView({super.key});
 
   @override
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
-    final encounters = _filteredV2Encounters(state);
+    final encounters = _filteredEncounters(state);
 
     return Stack(
       children: [
@@ -378,14 +378,14 @@ class _V2ListView extends StatelessWidget {
               for (final label in ['all', 'passby', 'nearby']) ...[
                 if (label != 'all') const SizedBox(width: 6),
                 ProtoPressButton(
-                  onTap: () => state.onYoyoV2EncounterFilterChanged(label),
+                  onTap: () => state.onYoyoEncounterFilterChanged(label),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: state.yoyoV2EncounterFilter == label ? theme.primary : theme.surface,
+                      color: state.yoyoEncounterFilter == label ? theme.primary : theme.surface,
                       borderRadius: BorderRadius.circular(16),
-                      border: state.yoyoV2EncounterFilter == label
+                      border: state.yoyoEncounterFilter == label
                           ? null
                           : Border.all(color: theme.textTertiary.withValues(alpha: 0.2)),
                     ),
@@ -393,15 +393,15 @@ class _V2ListView extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (label == 'passby') ...[
-                          Icon(Icons.flash_on_rounded, size: 12, color: state.yoyoV2EncounterFilter == label ? Colors.white : theme.textSecondary),
+                          Icon(Icons.flash_on_rounded, size: 12, color: state.yoyoEncounterFilter == label ? Colors.white : theme.textSecondary),
                           const SizedBox(width: 4),
                         ] else if (label == 'nearby') ...[
-                          Icon(Icons.pin_drop_rounded, size: 12, color: state.yoyoV2EncounterFilter == label ? Colors.white : theme.textSecondary),
+                          Icon(Icons.pin_drop_rounded, size: 12, color: state.yoyoEncounterFilter == label ? Colors.white : theme.textSecondary),
                           const SizedBox(width: 4),
                         ],
                         Text(
                           label == 'all' ? 'All' : label == 'passby' ? 'Pass-by' : 'Nearby',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: state.yoyoV2EncounterFilter == label ? Colors.white : theme.textSecondary),
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: state.yoyoEncounterFilter == label ? Colors.white : theme.textSecondary),
                         ),
                       ],
                     ),
@@ -414,8 +414,8 @@ class _V2ListView extends StatelessWidget {
 
         for (final enc in encounters)
           enc.consentStatus == ConsentStatus.shared
-              ? _V2RevealedCard(encounter: enc)
-              : _V2TeaserCard(encounter: enc),
+              ? _RevealedCard(encounter: enc)
+              : _TeaserCard(encounter: enc),
       ],
     ),
       ],
@@ -424,15 +424,15 @@ class _V2ListView extends StatelessWidget {
 }
 
 /// Filter V2 encounters based on state filters.
-List<DemoV2Encounter> _filteredV2Encounters(PrototypeStateProvider state) {
+List<DemoEncounter> _filteredEncounters(PrototypeStateProvider state) {
   final range = state.yoyoRange; // km
 
-  return ProtoDemoData.v2Encounters.where((enc) {
-    if (state.yoyoV2EncounterFilter == 'passby' && enc.encounterType != EncounterType.passby) return false;
-    if (state.yoyoV2EncounterFilter == 'nearby' && enc.encounterType != EncounterType.nearby) return false;
-    if (state.yoyoV2RelationshipFilter == 'friends' && enc.relationship != RelationshipType.friend) return false;
-    if (state.yoyoV2RelationshipFilter == 'family' && enc.relationship != RelationshipType.family) return false;
-    if (state.yoyoV2RelationshipFilter == 'strangers' && enc.relationship != RelationshipType.stranger) return false;
+  return ProtoDemoData.encounters.where((enc) {
+    if (state.yoyoEncounterFilter == 'passby' && enc.encounterType != EncounterType.passby) return false;
+    if (state.yoyoEncounterFilter == 'nearby' && enc.encounterType != EncounterType.nearby) return false;
+    if (state.yoyoRelationshipFilter == 'friends' && enc.relationship != RelationshipType.friend) return false;
+    if (state.yoyoRelationshipFilter == 'family' && enc.relationship != RelationshipType.family) return false;
+    if (state.yoyoRelationshipFilter == 'strangers' && enc.relationship != RelationshipType.stranger) return false;
     // Simulate range filtering: veryNear always visible, nearby needs >= 2km, passing needs >= 10km
     if (enc.distanceCategory == DistanceCategory.nearby && range < 2) return false;
     if (enc.distanceCategory == DistanceCategory.passing && range < 10) return false;
@@ -451,9 +451,9 @@ double _markerScale(double rangeKm) {
 
 // ─── V2 Teaser Card (pre-consent) ───────────────────────────────────
 
-class _V2TeaserCard extends StatelessWidget {
-  final DemoV2Encounter encounter;
-  const _V2TeaserCard({required this.encounter});
+class _TeaserCard extends StatelessWidget {
+  final DemoEncounter encounter;
+  const _TeaserCard({required this.encounter});
 
   @override
   Widget build(BuildContext context) {
@@ -580,9 +580,9 @@ String _distanceCategoryLabel(DistanceCategory cat) {
 
 // ─── V2 Revealed Card (post-consent) ────────────────────────────────
 
-class _V2RevealedCard extends StatelessWidget {
-  final DemoV2Encounter encounter;
-  const _V2RevealedCard({required this.encounter});
+class _RevealedCard extends StatelessWidget {
+  final DemoEncounter encounter;
+  const _RevealedCard({required this.encounter});
 
   @override
   Widget build(BuildContext context) {
@@ -691,17 +691,17 @@ class _V2RevealedCard extends StatelessWidget {
 
 // ─── V2 Consent Handshake Sheet ─────────────────────────────────────
 
-void _showConsentSheet(BuildContext context, DemoV2Encounter encounter) {
+void _showConsentSheet(BuildContext context, DemoEncounter encounter) {
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,
-    builder: (ctx) => _V2ConsentHandshakeSheet(encounter: encounter),
+    builder: (ctx) => _ConsentHandshakeSheet(encounter: encounter),
   );
 }
 
-class _V2ConsentHandshakeSheet extends StatelessWidget {
-  final DemoV2Encounter encounter;
-  const _V2ConsentHandshakeSheet({required this.encounter});
+class _ConsentHandshakeSheet extends StatelessWidget {
+  final DemoEncounter encounter;
+  const _ConsentHandshakeSheet({required this.encounter});
 
   @override
   Widget build(BuildContext context) {
@@ -859,8 +859,8 @@ class _V2ConsentHandshakeSheet extends StatelessWidget {
 
 // ─── V2 Area View ───────────────────────────────────────────────────
 
-class _V2AreaView extends StatelessWidget {
-  const _V2AreaView({super.key});
+class _AreaView extends StatelessWidget {
+  const _AreaView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -873,12 +873,12 @@ class _V2AreaView extends StatelessWidget {
 
     // Hidden mode: radar fills area, floating "Hidden" pill + count, controls at bottom
     if (!state.yoyoLiveActive) {
-      final hiddenCount = _filteredV2Encounters(state).length;
+      final hiddenCount = _filteredEncounters(state).length;
       return Stack(
         children: [
           // Radar fills entire area
           Positioned.fill(
-            child: _HiddenV2RadarArea(theme: theme),
+            child: _HiddenRadarArea(theme: theme),
           ),
           // Floating "Hidden" pill + count badge (top, below nav)
           Positioned(
@@ -903,7 +903,7 @@ class _V2AreaView extends StatelessWidget {
               children: [
                 _BottomControlStrip(theme: theme, state: state),
                 const SizedBox(height: 6),
-                _V2ActionBar(theme: theme),
+                _ActionBar(theme: theme),
                 const SizedBox(height: 10),
               ],
             ),
@@ -913,12 +913,12 @@ class _V2AreaView extends StatelessWidget {
     }
 
     // Live mode: radar-first, wave button + count badge top, controls at bottom
-    final encounterCount = _filteredV2Encounters(state).length;
+    final encounterCount = _filteredEncounters(state).length;
     return Stack(
       children: [
         // Radar fills the entire area (behind everything)
         Positioned.fill(
-          child: _V2RadarArea(theme: theme),
+          child: _RadarArea(theme: theme),
         ),
         // Layered UI on top
         Column(
@@ -938,7 +938,7 @@ class _V2AreaView extends StatelessWidget {
             ),
             const Spacer(),
             // Encounter card row (transparent background)
-            _V2EncounterCardRow(theme: theme, transparent: true),
+            _EncounterCardRow(theme: theme, transparent: true),
             // Slider + filter + settings — just above bottom nav
             _BottomControlStrip(theme: theme, state: state),
             const SizedBox(height: 10),
@@ -1155,7 +1155,7 @@ class _WaveButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
-    final encounterCount = _filteredV2Encounters(state).length;
+    final encounterCount = _filteredEncounters(state).length;
 
     return ProtoPressButton(
       onTap: () {
@@ -1274,7 +1274,7 @@ class _FullscreenRadarViewState extends State<_FullscreenRadarView> {
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
     final theme = widget.theme;
-    final encounterCount = _filteredV2Encounters(state).length;
+    final encounterCount = _filteredEncounters(state).length;
 
     return GestureDetector(
       onTap: _resetFadeTimer,
@@ -1287,8 +1287,8 @@ class _FullscreenRadarViewState extends State<_FullscreenRadarView> {
             child: GestureDetector(
               onDoubleTap: state.onRadarFullscreenToggle,
               child: state.yoyoLiveActive
-                  ? _V2RadarArea(theme: theme)
-                  : _HiddenV2RadarArea(theme: theme),
+                  ? _RadarArea(theme: theme)
+                  : _HiddenRadarArea(theme: theme),
             ),
           ),
 
@@ -1505,102 +1505,16 @@ class _BottomEdgeSwipeZone extends StatelessWidget {
   }
 }
 
-// ─── V2 Radar Control Bar ───────────────────────────────────────────
+// ─── Radar Area ─────────────────────────────────────────────────────
 
-class _V2RadarControlBar extends StatelessWidget {
+class _RadarArea extends StatelessWidget {
   final ProtoTheme theme;
-  final PrototypeStateProvider state;
-  const _V2RadarControlBar({required this.theme, required this.state});
-
-  @override
-  Widget build(BuildContext context) {
-    final sliderValue = _kmToLogSlider(state.yoyoRange);
-
-    return Padding(
-      padding: const EdgeInsets.only(left: 8, right: 8, top: 0, bottom: 0),
-      child: Row(
-        children: [
-          // Inline live button
-          _InlineLiveButton(theme: theme),
-          const SizedBox(width: 6),
-          // Radar icon + range label
-          Icon(Icons.radar_rounded, size: 14, color: theme.primary),
-          const SizedBox(width: 3),
-          Text(
-            _formatRange(state.yoyoRange),
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: theme.text,
-            ),
-          ),
-          const SizedBox(width: 4),
-          // Logarithmic range slider
-          Expanded(
-            child: SliderTheme(
-              data: SliderThemeData(
-                trackHeight: 3,
-                activeTrackColor: theme.primary,
-                inactiveTrackColor: theme.textTertiary.withValues(alpha: 0.15),
-                thumbShape: _StopButtonThumbShape(),
-                thumbColor: theme.primary,
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-                overlayColor: theme.primary.withValues(alpha: 0.12),
-              ),
-              child: Slider(
-                value: sliderValue,
-                onChanged: (t) {
-                  state.onYoyoRangeChanged(_logSliderToKm(t));
-                },
-              ),
-            ),
-          ),
-          const SizedBox(width: 4),
-          // Filter button
-          ProtoPressButton(
-            onTap: () => state.push(ProtoRoutes.yoyoFilters),
-            child: Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: theme.surface,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: theme.textTertiary.withValues(alpha: 0.2)),
-              ),
-              child: Icon(theme.icons.tune, size: 14, color: theme.textSecondary),
-            ),
-          ),
-          const SizedBox(width: 6),
-          // Settings gear
-          ProtoPressButton(
-            onTap: () => state.push(ProtoRoutes.yoyoSettings),
-            child: Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: theme.surface,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: theme.textTertiary.withValues(alpha: 0.2)),
-              ),
-              child: Icon(theme.icons.settings, size: 14, color: theme.textSecondary),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── V2 Radar Area ──────────────────────────────────────────────────
-
-class _V2RadarArea extends StatelessWidget {
-  final ProtoTheme theme;
-  const _V2RadarArea({required this.theme});
+  const _RadarArea({required this.theme});
 
   @override
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
-    final encounters = _filteredV2Encounters(state);
+    final encounters = _filteredEncounters(state);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1610,7 +1524,7 @@ class _V2RadarArea extends StatelessWidget {
         final cy = h * 0.46;
         final maxRadius = min(w, h) * 0.45;
 
-        final positions = _generateV2Positions(encounters, cx, cy, maxRadius);
+        final positions = _generatePositions(encounters, cx, cy, maxRadius);
 
         return Stack(
           children: [
@@ -1638,7 +1552,7 @@ class _V2RadarArea extends StatelessWidget {
                 child: Stack(
                   children: [
                     // Range rings with dynamic distance labels
-                    ..._buildV2RangeRings(cx, cy, maxRadius, theme, state.yoyoRange),
+                    ..._buildRangeRings(cx, cy, maxRadius, theme, state.yoyoRange),
 
                     // "You" marker
                     Positioned(
@@ -1687,7 +1601,7 @@ class _V2RadarArea extends StatelessWidget {
                                 _showConsentSheet(context, encounters[i]);
                               }
                             },
-                            child: _V2AreaMarker(encounter: encounters[i], theme: theme),
+                            child: _AreaMarker(encounter: encounters[i], theme: theme),
                           ),
                         ),
                       ),
@@ -1696,15 +1610,15 @@ class _V2RadarArea extends StatelessWidget {
               ),
             ),
 
-            // Count badge moved to _V2AreaView (top, near wave button)
+            // Count badge moved to _AreaView (top, near wave button)
           ],
         );
       },
     );
   }
 
-  static List<Offset> _generateV2Positions(
-    List<DemoV2Encounter> encounters, double cx, double cy, double maxRadius,
+  static List<Offset> _generatePositions(
+    List<DemoEncounter> encounters, double cx, double cy, double maxRadius,
   ) {
     final rng = Random(42);
     return List.generate(encounters.length, (i) {
@@ -1724,7 +1638,7 @@ class _V2RadarArea extends StatelessWidget {
     });
   }
 
-  static List<Widget> _buildV2RangeRings(
+  static List<Widget> _buildRangeRings(
     double cx, double cy, double maxRadius, ProtoTheme theme, double range,
   ) {
     final List<int> labels;
@@ -1781,14 +1695,14 @@ class _V2RadarArea extends StatelessWidget {
 
 // ─── Hidden V2 Radar Area (anonymous markers with friend badges) ────
 
-class _HiddenV2RadarArea extends StatelessWidget {
+class _HiddenRadarArea extends StatelessWidget {
   final ProtoTheme theme;
-  const _HiddenV2RadarArea({required this.theme});
+  const _HiddenRadarArea({required this.theme});
 
   @override
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
-    final encounters = _filteredV2Encounters(state);
+    final encounters = _filteredEncounters(state);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1798,7 +1712,7 @@ class _HiddenV2RadarArea extends StatelessWidget {
         final cy = h * 0.46;
         final maxRadius = min(w, h) * 0.45;
 
-        final positions = _V2RadarArea._generateV2Positions(encounters, cx, cy, maxRadius);
+        final positions = _RadarArea._generatePositions(encounters, cx, cy, maxRadius);
 
         return Stack(
           children: [
@@ -1826,7 +1740,7 @@ class _HiddenV2RadarArea extends StatelessWidget {
                 child: Stack(
                   children: [
                     // Range rings
-                    ..._V2RadarArea._buildV2RangeRings(cx, cy, maxRadius, theme, state.yoyoRange),
+                    ..._RadarArea._buildRangeRings(cx, cy, maxRadius, theme, state.yoyoRange),
 
                     // "You" marker with hidden badge
                     Positioned(
@@ -1900,7 +1814,7 @@ class _HiddenV2RadarArea extends StatelessWidget {
                         top: positions[i].dy - 35 * _markerScale(state.yoyoRange),
                         child: Transform.scale(
                           scale: _markerScale(state.yoyoRange),
-                          child: _AnonymousV2Marker(
+                          child: _AnonymousMarker(
                             size: 30.0 + (i % 3) * 10.0,
                             theme: theme,
                             isFriend: encounters[i].relationship == RelationshipType.friend
@@ -1914,7 +1828,7 @@ class _HiddenV2RadarArea extends StatelessWidget {
               ),
             ),
 
-            // Count badge moved to _V2AreaView (top, near hidden pill)
+            // Count badge moved to _AreaView (top, near hidden pill)
           ],
         );
       },
@@ -1924,12 +1838,12 @@ class _HiddenV2RadarArea extends StatelessWidget {
 
 // ─── Anonymous V2 Marker (friend-aware) ─────────────────────────────
 
-class _AnonymousV2Marker extends StatelessWidget {
+class _AnonymousMarker extends StatelessWidget {
   final double size;
   final ProtoTheme theme;
   final bool isFriend;
 
-  const _AnonymousV2Marker({
+  const _AnonymousMarker({
     required this.size,
     required this.theme,
     required this.isFriend,
@@ -1977,10 +1891,10 @@ class _AnonymousV2Marker extends StatelessWidget {
 
 // ─── V2 Area Marker ─────────────────────────────────────────────────
 
-class _V2AreaMarker extends StatelessWidget {
-  final DemoV2Encounter encounter;
+class _AreaMarker extends StatelessWidget {
+  final DemoEncounter encounter;
   final ProtoTheme theme;
-  const _V2AreaMarker({required this.encounter, required this.theme});
+  const _AreaMarker({required this.encounter, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -2066,10 +1980,10 @@ class _V2AreaMarker extends StatelessWidget {
 
 // ─── V2 Encounter Card Carousel ─────────────────────────────────────
 
-class _V2EncounterCardRow extends StatelessWidget {
+class _EncounterCardRow extends StatelessWidget {
   final ProtoTheme theme;
   final bool transparent;
-  const _V2EncounterCardRow({required this.theme, this.transparent = false});
+  const _EncounterCardRow({required this.theme, this.transparent = false});
 
   /// Sort priority: partner > friend/family > stranger
   static int _relationshipPriority(RelationshipType r) {
@@ -2084,9 +1998,9 @@ class _V2EncounterCardRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
-    final encounters = _filteredV2Encounters(state);
+    final encounters = _filteredEncounters(state);
     // Sort: love interests first, then friends/family, then strangers
-    final sorted = List<DemoV2Encounter>.from(encounters)
+    final sorted = List<DemoEncounter>.from(encounters)
       ..sort((a, b) => _relationshipPriority(a.relationship).compareTo(_relationshipPriority(b.relationship)));
 
     return SizedBox(
@@ -2157,9 +2071,9 @@ class _V2EncounterCardRow extends StatelessWidget {
 
 // ─── V2 Action Bar ──────────────────────────────────────────────────
 
-class _V2ActionBar extends StatelessWidget {
+class _ActionBar extends StatelessWidget {
   final ProtoTheme theme;
-  const _V2ActionBar({required this.theme});
+  const _ActionBar({required this.theme});
 
   static const _durationLabels = ['Always', '15m', '30m', '1h', '2h', '4h', '8h', '12h', '24h'];
 
@@ -2175,7 +2089,7 @@ class _V2ActionBar extends StatelessWidget {
 
   /// Live mode — "Wave All Nearby" gradient button.
   Widget _buildLiveBar(BuildContext context, PrototypeStateProvider state) {
-    final encounterCount = _filteredV2Encounters(state).length;
+    final encounterCount = _filteredEncounters(state).length;
 
     return Padding(
       padding: const EdgeInsets.only(left: 12, right: 80),
@@ -2503,9 +2417,9 @@ class _YoyoAreaView extends StatelessWidget {
     return Column(
       children: [
         // Control bar with inline live status replacing the old eye icon
-        _RadarControlBar(theme: theme, state: state),
+        _LegacyRadarControlBar(theme: theme, state: state),
         // Radar area (anonymous circles when hidden, real markers when live)
-        Expanded(child: _RadarArea(theme: theme)),
+        Expanded(child: _LegacyRadarArea(theme: theme)),
         // Card carousel (anonymous when hidden)
         isLive ? _NearbyUserCardRow(theme: theme) : _AnonymousCardRow(theme: theme),
         // Bottom: Go Live panel when hidden, wave bar when live
@@ -2517,10 +2431,10 @@ class _YoyoAreaView extends StatelessWidget {
 }
 
 /// Compact control bar above the radar: visibility toggle + range slider + filter + settings.
-class _RadarControlBar extends StatelessWidget {
+class _LegacyRadarControlBar extends StatelessWidget {
   final ProtoTheme theme;
   final PrototypeStateProvider state;
-  const _RadarControlBar({required this.theme, required this.state});
+  const _LegacyRadarControlBar({required this.theme, required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -2782,9 +2696,9 @@ class _LegendRow extends StatelessWidget {
   }
 }
 
-class _RadarArea extends StatelessWidget {
+class _LegacyRadarArea extends StatelessWidget {
   final ProtoTheme theme;
-  const _RadarArea({required this.theme});
+  const _LegacyRadarArea({required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -2915,7 +2829,7 @@ class _RadarArea extends StatelessWidget {
                                   userCount: userCount,
                                 ),
                               )
-                            : _AnonymousMarker(
+                            : _LegacyAnonymousMarker(
                                 size: 30.0 + (i % 3) * 10.0,
                                 theme: theme,
                               ),
@@ -3671,11 +3585,11 @@ class _InlineLiveButtonState extends State<_InlineLiveButton> {
 
 // ─── Anonymous Marker (hidden mode — replaces user avatars) ───────────
 
-class _AnonymousMarker extends StatelessWidget {
+class _LegacyAnonymousMarker extends StatelessWidget {
   final double size;
   final ProtoTheme theme;
 
-  const _AnonymousMarker({required this.size, required this.theme});
+  const _LegacyAnonymousMarker({required this.size, required this.theme});
 
   @override
   Widget build(BuildContext context) {
