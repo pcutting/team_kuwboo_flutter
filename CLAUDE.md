@@ -21,12 +21,23 @@ Kuwboo multi-platform app monorepo. Flutter for mobile (iOS + Android), NestJS f
 
 ### Deployment architecture (read this before suggesting SSR/Functions/middleware)
 
-All web hosting is **static**. No SSR, no Next.js, no Vercel Functions, no middleware, no edge compute in this repo today.
+All web hosting is **static on Vercel**. No SSR, no Next.js, no Vercel Functions, no middleware, no edge compute in this repo today.
 - `apps/web` — prebuilt Flutter web bundle; root `vercel.json` has empty `buildCommand` and serves `apps/web/build/web`.
 - `apps/admin` — Vite SPA; Vercel builds from source with the project's root dir set to `apps/admin`.
 - `apps/api` — NestJS on EC2 (PM2 + Nginx). Not on Vercel.
 
 If the current task involves server rendering, API routes, or middleware, **stop and confirm with the user** — that's a deliberate architectural change, not an extension of what's here.
+
+#### Vercel project reference
+
+| Project | ID | Prod URL |
+|---|---|---|
+| `team_kuwboo_flutter` | `prj_MDdvTr6oesYSHnX0ftH1KFXOSNiB` | https://teamkuwbooflutter.vercel.app |
+| `team_kuwboo_admin` | `prj_VsJKIEkqT1F2WojX4bzGprfY1lQb` | https://teamkuwbooadmin.vercel.app |
+
+Scope: `cuttingphilipgmailcoms-projects` · Org ID: `team_TW4qL9Ys2A7v8aNY4EH3Jic0` · Auth: `cuttingphilip@gmail.com` Google SSO.
+
+Both apps are CLI-linked (`.vercel/project.json` gitignored). Run `vercel env pull`, `vercel logs <url>`, etc. from inside `apps/web/` or `apps/admin/`. Deploys happen automatically via the Vercel ↔ GitHub App integration — do not run `vercel deploy` manually unless instructed.
 
 ## Critical conventions
 
