@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'prototype/prototype_app.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'prototype/app.dart';
 import 'widgets/phone_frame.dart';
 
 void main() {
-  runApp(const KuwbooPrototypeWeb());
+  runApp(const ProviderScope(child: KuwbooPrototypeWeb()));
 }
 
 /// Web entry point for the Kuwboo prototype.
