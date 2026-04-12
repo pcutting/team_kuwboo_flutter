@@ -112,9 +112,10 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
   };
 
   static const _height = 56.0;
-  static const _fabSize = 50.0;
-  static const _notchMargin = 4.0;
-  static const _fabRightOffset = 16.0;
+  static const _fabSize = 42.0;
+  static const _notchMargin = 2.0;
+  static const _fabRightOffset = 15.0;
+  static const _fabOverhang = 0.0;
 
   @override
   void initState() {
@@ -157,8 +158,8 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
       _serviceIcons(theme)[widget.activeModule] ?? Icons.apps_rounded;
 
   /// Height of the nav bar area including FAB overhang, used by ProtoScaffold
-  /// for body bottom padding.
-  static double get totalHeight => _height + (_fabSize / 2) + _notchMargin;
+  /// for body bottom padding. Safe-area (home indicator) is added by consumers.
+  static double get totalHeight => _height + _fabOverhang + _notchMargin;
 
   @override
   Widget build(BuildContext context) {
@@ -196,9 +197,9 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
           child: _buildBar(theme, bottomInset),
         ),
 
-        // FAB sitting in the right-side notch
+        // FAB sitting in the right-side notch (inline with bar)
         Positioned(
-          bottom: bottomInset + _height - _fabSize / 2,
+          bottom: bottomInset + _height - _fabSize + _fabOverhang,
           right: _fabRightOffset,
           child: _buildFab(theme),
         ),
@@ -215,16 +216,28 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
       child: CustomPaint(
         painter: _RightNotchedBarPainter(
           backgroundColor: theme.surface,
-          notchRadius: _fabSize / 2 + _notchMargin,
+          notchMargin: _notchMargin,
           fabRightOffset: _fabRightOffset,
           fabSize: _fabSize,
+          fabOverhang: _fabOverhang,
+          barHeight: _height,
           borderColor: borderColor,
         ),
         child: Padding(
           // Right padding to make room for the FAB notch,
           // bottom padding for home indicator on modern iPhones
-          padding: EdgeInsets.only(right: _fabSize + 28, bottom: bottomInset),
-          child: Row(
+          padding: EdgeInsets.only(right: _fabSize + 20, bottom: bottomInset),
+          child: Stack(
+            children: [
+              // Sliding pill indicator — tweens behind the active tab.
+              Positioned.fill(
+                child: _TabIndicatorPill(
+                  tabCount: tabs.length,
+                  activeIndex: widget.activeTab,
+                  color: theme.primary.withValues(alpha: 0.16),
+                ),
+              ),
+              Row(
             children: List.generate(tabs.length, (i) {
               final tab = tabs[i];
               final isActive = i == widget.activeTab;
@@ -299,6 +312,8 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
               );
             }),
           ),
+            ],
+          ),
         ),
       ),
     );
@@ -334,7 +349,7 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
           ),
           child: Icon(
             _isExpanded ? theme.icons.close : _fabIcon(theme),
-            size: 24,
+            size: 20,
             color: Colors.white,
           ),
         ),
@@ -375,7 +390,7 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
       final isCurrent = service == widget.activeModule;
       // Stack items from bottom to top: index 0 is highest
       final bottomOffset =
-          bottomInset + _height + (_fabSize / 2) + _notchMargin +
+          bottomInset + _height + _fabOverhang + _notchMargin +
           8 + (services.length - 1 - i) * 52.0;
 
       widgets.add(
@@ -478,25 +493,44 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
 }
 
 /// Paints the bottom bar background with a semicircular notch on the right side
-/// for the docked FAB.
+/// for the docked FAB. Uses Flutter's built-in CircularNotchedRectangle for
+/// mathematically correct notch geometry, then fills the safe-area (home
+/// indicator) region with a flat bottom strip.
 class _RightNotchedBarPainter extends CustomPainter {
   final Color backgroundColor;
-  final double notchRadius;
+  final double notchMargin;
   final double fabRightOffset;
   final double fabSize;
+  final double fabOverhang;
+  final double barHeight;
   final Color? borderColor;
 
   _RightNotchedBarPainter({
     required this.backgroundColor,
-    required this.notchRadius,
+    required this.notchMargin,
     required this.fabRightOffset,
     required this.fabSize,
+    required this.barHeight,
+    this.fabOverhang = 0.0,
     this.borderColor,
   });
 
+  /// FAB's bounding rect inside the painter's coordinate space, positioned
+  /// near the top of the visual bar (ignores safe-area padding at the bottom).
+  /// Shifted up 2px to tighten the notch — matches the empirical value we
+  /// landed on in the web prototype.
+  Rect _guestRect(Size size) {
+    final fabLeft = size.width - fabRightOffset - fabSize;
+    final fabTop = -fabOverhang + (barHeight - fabSize) / 2 - 2;
+    return Rect.fromLTWH(fabLeft, fabTop, fabSize, fabSize);
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
-    final path = _buildNotchedPath(size);
+    final host = Offset.zero & size;
+    final guest = _guestRect(size).inflate(notchMargin);
+    final path = const CircularNotchedRectangle().getOuterPath(host, guest);
+
     canvas.drawPath(path, Paint()..color = backgroundColor);
 
     if (borderColor != null) {
@@ -504,55 +538,59 @@ class _RightNotchedBarPainter extends CustomPainter {
         ..color = borderColor!
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1;
-      canvas.drawPath(_buildTopEdgePath(size), borderPaint);
+      canvas.drawPath(path, borderPaint);
     }
-  }
-
-  Path _buildNotchedPath(Size size) {
-    final path = Path();
-    final cx = size.width - fabRightOffset - fabSize / 2;
-    final r = notchRadius;
-
-    path.moveTo(0, 0);
-    path.lineTo(cx - r - 8, 0);
-    path.quadraticBezierTo(cx - r, 0, cx - r, r * 0.12);
-    path.arcToPoint(
-      Offset(cx + r, r * 0.12),
-      radius: Radius.circular(r * 0.85),
-      clockwise: false,
-    );
-    path.quadraticBezierTo(cx + r, 0, cx + r + 8, 0);
-    path.lineTo(size.width, 0);
-    path.lineTo(size.width, size.height);
-    path.lineTo(0, size.height);
-    path.close();
-
-    return path;
-  }
-
-  Path _buildTopEdgePath(Size size) {
-    final path = Path();
-    final cx = size.width - fabRightOffset - fabSize / 2;
-    final r = notchRadius;
-
-    path.moveTo(0, 0);
-    path.lineTo(cx - r - 8, 0);
-    path.quadraticBezierTo(cx - r, 0, cx - r, r * 0.12);
-    path.arcToPoint(
-      Offset(cx + r, r * 0.12),
-      radius: Radius.circular(r * 0.85),
-      clockwise: false,
-    );
-    path.quadraticBezierTo(cx + r, 0, cx + r + 8, 0);
-    path.lineTo(size.width, 0);
-
-    return path;
   }
 
   @override
   bool shouldRepaint(covariant _RightNotchedBarPainter oldDelegate) =>
       backgroundColor != oldDelegate.backgroundColor ||
-      notchRadius != oldDelegate.notchRadius ||
+      notchMargin != oldDelegate.notchMargin ||
       borderColor != oldDelegate.borderColor ||
-      fabRightOffset != oldDelegate.fabRightOffset;
+      fabRightOffset != oldDelegate.fabRightOffset ||
+      fabSize != oldDelegate.fabSize ||
+      fabOverhang != oldDelegate.fabOverhang ||
+      barHeight != oldDelegate.barHeight;
+}
+
+/// Sliding pill indicator that tweens behind the active tab when the
+/// selection changes. Draws a rounded rectangle filling one tab slot
+/// and animates horizontally between slots.
+class _TabIndicatorPill extends StatelessWidget {
+  final int tabCount;
+  final int activeIndex;
+  final Color color;
+
+  const _TabIndicatorPill({
+    required this.tabCount,
+    required this.activeIndex,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Map activeIndex [0..tabCount-1] to Alignment.x in [-1..1].
+    final double x = tabCount > 1
+        ? (activeIndex / (tabCount - 1)) * 2 - 1
+        : 0.0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      child: AnimatedAlign(
+        alignment: Alignment(x, 0),
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+        child: FractionallySizedBox(
+          widthFactor: 1 / tabCount,
+          heightFactor: 1,
+          child: Container(
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
