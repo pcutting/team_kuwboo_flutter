@@ -27,11 +27,11 @@ const config: Options<PostgreSqlDriver> = {
     disableForeignKeys: false,
   },
 
-  // RDS requires SSL in production
-  driverOptions:
-    process.env.NODE_ENV === 'production'
-      ? { connection: { ssl: { rejectUnauthorized: false } } }
-      : undefined,
+  // RDS always requires SSL — gate on whether host looks like RDS rather than NODE_ENV
+  // (so dev/staging environments pointing at RDS still negotiate SSL correctly).
+  driverOptions: /\.rds\.amazonaws\.com$/.test(process.env.DB_HOST || '')
+    ? { connection: { ssl: { rejectUnauthorized: false } } }
+    : undefined,
 
   pool: {
     min: 2,
