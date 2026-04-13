@@ -47,6 +47,14 @@ Both apps are CLI-linked (`.vercel/project.json` gitignored). Run `vercel env pu
 ### No AI attribution in commits or code
 **Never include** "Claude", "AI", "Generated", or "Co-Authored-By: Claude" in commits, code, comments, or PR descriptions. Use professional, human-authored voice. A pre-commit hook rejects commits containing AI references.
 
+### Flutter CI is stricter than local `flutter analyze`
+**Before pushing any Flutter change, run in `apps/mobile/`:**
+```bash
+dart fix --apply
+flutter analyze --fatal-infos
+```
+The `Flutter analyze + iOS simulator build` CI job rejects **info-level** lints (`unnecessary_underscores`, `use_null_aware_elements`, `prefer_const_constructors`, `dangling_library_doc_comments`, `deprecated_member_use`). Local `flutter analyze` reports them but exits 0, so "No issues found" is misleading. `dart fix --apply` auto-resolves virtually all of them. Burned on PR #54 (one lint) and PR #66 (16 lints → PR #67 cleanup).
+
 ### Reproducibility
 - `pubspec.lock` and `Podfile.lock` are **tracked** (re-included from the broad `*.lock` gitignore pattern via negation rules)
 - Flutter version is **pinned to 3.41.4** in `.github/workflows/ios-testflight.yml` — this must satisfy the workspace Dart SDK constraint `^3.11.1`. Bumping Flutter requires checking Dart SDK compatibility first.

@@ -85,4 +85,16 @@ cd apps/admin && npm run dev   # http://localhost:5173
 
 # Trigger TestFlight build
 gh workflow run ios-testflight.yml --ref main -f environment=prod --repo pcutting/team_kuwboo
+
+# Trigger Play Store internal build
+gh workflow run android-play.yml --ref main -f environment=internal --repo pcutting/team_kuwboo
+```
+
+## Before pushing Flutter changes
+
+CI runs `flutter analyze` with info-level lints treated as errors. **Local `flutter analyze` exits 0 even with info lints present**, so it's misleading. Always run in `apps/mobile/`:
+
+```bash
+dart fix --apply          # auto-fixes ~all info lints
+flutter analyze --fatal-infos   # verify clean the way CI does
 ```
