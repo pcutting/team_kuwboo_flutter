@@ -587,6 +587,18 @@ npx mikro-orm migration:down
 npx mikro-orm migration:pending
 ```
 
+**Baseline (2026-04-13):** `Migration20260413_baseline_schema` snapshots the full entity graph as it existed on RDS after months of `schema:update --run` drift. From this point forward, **never run `schema:update --run`** — every schema change must be a generated migration. The baseline is marked as already-executed on the live RDS (the tables already exist there); on a fresh DB it runs normally.
+
+To verify a fresh DB matches RDS:
+
+```bash
+# Spin up scratch postgis container, apply migrations, confirm zero drift
+docker run -d --name kuwboo-scratch -e POSTGRES_PASSWORD=x -e POSTGRES_DB=kuwboo -p 5434:5432 postgis/postgis:16-3.4
+DB_HOST=localhost DB_PORT=5434 DB_USER=postgres DB_PASSWORD=x DB_NAME=kuwboo npx mikro-orm migration:up
+DB_HOST=localhost DB_PORT=5434 DB_USER=postgres DB_PASSWORD=x DB_NAME=kuwboo npx mikro-orm schema:update --dump
+# Expected: only 3 cosmetic geography(Point,4326) re-casts (PostGIS introspection quirk, no-op)
+```
+
 ### 4.4 Connection Pooling
 
 | Setting | Value | Rationale |
