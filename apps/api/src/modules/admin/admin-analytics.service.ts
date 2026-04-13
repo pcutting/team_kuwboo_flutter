@@ -136,7 +136,7 @@ export class AdminAnalyticsService {
 
     const sessionsByPlatform: Record<string, number> = {};
     for (const row of rows) {
-      const platform = this.parseUserAgentPlatform(row.user_agent);
+      const platform = this.parseUserAgentPlatform(row.user_agent as string | undefined);
       sessionsByPlatform[platform] = (sessionsByPlatform[platform] ?? 0) + Number(row.count);
     }
 
