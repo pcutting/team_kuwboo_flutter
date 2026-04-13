@@ -21,7 +21,7 @@ class FeedApi {
       '/feed',
       queryParameters: {
         'tab': tab,
-        if (cursor != null) 'cursor': cursor,
+        'cursor': ?cursor,
         'limit': limit,
       },
     );
@@ -68,7 +68,7 @@ class FeedApi {
       '/feed/following',
       queryParameters: {
         'tab': tab,
-        if (cursor != null) 'cursor': cursor,
+        'cursor': ?cursor,
         'limit': limit,
       },
     );
@@ -87,11 +87,11 @@ class FeedApi {
     final res = await _dio.get<Map<String, dynamic>>(
       '/products',
       queryParameters: {
-        if (category != null) 'category': category,
-        if (minPrice != null) 'minPrice': minPrice,
-        if (maxPrice != null) 'maxPrice': maxPrice,
-        if (condition != null) 'condition': condition,
-        if (cursor != null) 'cursor': cursor,
+        'category': ?category,
+        'minPrice': ?minPrice,
+        'maxPrice': ?maxPrice,
+        'condition': ?condition,
+        'cursor': ?cursor,
         'limit': limit,
       },
     );
@@ -113,7 +113,7 @@ class FeedApi {
     final res = await _dio.get<Map<String, dynamic>>(
       '/products/deals',
       queryParameters: {
-        if (cursor != null) 'cursor': cursor,
+        'cursor': ?cursor,
         'limit': limit,
       },
     );
@@ -152,7 +152,7 @@ class FeedApi {
       queryParameters: {
         'lat': lat,
         'lng': lng,
-        if (radiusKm != null) 'radius': radiusKm,
+        'radius': ?radiusKm,
       },
     );
     return (res.data ?? const [])

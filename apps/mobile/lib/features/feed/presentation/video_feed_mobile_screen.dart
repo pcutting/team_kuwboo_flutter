@@ -41,7 +41,7 @@ class VideoFeedMobileScreen extends ConsumerWidget {
             child: ListView.separated(
               padding: const EdgeInsets.all(12),
               itemCount: state.items.length + (state.isLoadingMore ? 1 : 0),
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 if (index >= state.items.length) {
                   return const Padding(
@@ -77,7 +77,7 @@ class _VideoCard extends StatelessWidget {
                 ? Image.network(
                     thumb,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _ThumbPlaceholder(),
+                    errorBuilder: (_, _, _) => _ThumbPlaceholder(),
                   )
                 : _ThumbPlaceholder(),
           ),
