@@ -8,6 +8,10 @@ import 'package:kuwboo_chat/kuwboo_chat.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/onboarding_screen.dart';
 import '../features/auth/otp_screen.dart';
+import '../features/feed/presentation/shop_feed_mobile_screen.dart';
+import '../features/feed/presentation/social_feed_mobile_screen.dart';
+import '../features/feed/presentation/video_feed_mobile_screen.dart';
+import '../features/feed/presentation/yoyo_nearby_mobile_screen.dart';
 import '../providers/auth_provider.dart';
 
 // ─── Navigation Keys ─────────────────────────────────────────────────────
@@ -120,7 +124,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: ProtoRoutes.yoyoNearby,
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: YoyoNearbyScreen(),
+              child: YoyoNearbyMobileScreen(),
             ),
           ),
           GoRoute(
@@ -146,7 +150,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: ProtoRoutes.videoFeed,
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: VideoFeedScreen(),
+              child: VideoFeedMobileScreen(),
             ),
           ),
           GoRoute(
@@ -198,7 +202,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: ProtoRoutes.socialFeed,
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: SocialFeedScreen(),
+              child: SocialFeedMobileScreen(),
             ),
           ),
           GoRoute(
@@ -224,7 +228,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: ProtoRoutes.shopBrowse,
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: ShopBrowseScreen(),
+              child: ShopFeedMobileScreen(),
             ),
           ),
           GoRoute(
