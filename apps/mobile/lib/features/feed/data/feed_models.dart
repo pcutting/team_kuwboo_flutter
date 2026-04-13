@@ -7,6 +7,7 @@
 /// `type` discriminator. Concrete subtypes (Video, Post, Product) are
 /// serialized with their subclass fields alongside the common Content
 /// columns (id, creator, counts, timestamps).
+library;
 
 /// Slim creator info attached to every content item.
 class FeedCreator {

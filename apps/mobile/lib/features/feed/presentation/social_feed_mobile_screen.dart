@@ -36,7 +36,7 @@ class SocialFeedMobileScreen extends ConsumerWidget {
             child: ListView.separated(
               padding: const EdgeInsets.all(12),
               itemCount: state.items.length + (state.isLoadingMore ? 1 : 0),
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 if (index >= state.items.length) {
                   return const Padding(
@@ -104,7 +104,7 @@ class _PostCard extends StatelessWidget {
             const SizedBox(height: 10),
             Row(
               children: [
-                Icon(Icons.favorite_border,
+                const Icon(Icons.favorite_border,
                     size: 16, color: Colors.black54),
                 const SizedBox(width: 4),
                 Text('${item.likeCount}',
