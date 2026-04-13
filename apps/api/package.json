@@ -5,6 +5,7 @@
   "description": "Kuwboo backend API — NestJS + MikroORM + PostgreSQL",
   "scripts": {
     "build": "nest build",
+    "seed:demo": "node -r dotenv/config dist/scripts/seed-demo-data.js",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -44,6 +45,7 @@
     "bullmq": "^5.73.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "dotenv": "^17.4.2",
     "firebase-admin": "^13.7.0",
     "google-auth-library": "^10.6.2",
     "helmet": "^8.0.0",
