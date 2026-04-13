@@ -1,7 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { MikroORM } from '@mikro-orm/postgresql';
+import { MikroORM } from '@mikro-orm/core';
 import { BotProfile } from './entities/bot-profile.entity';
 import { BotEngineService } from './bot-engine.service';
 import { BotSchedulerService } from './bot-scheduler.service';
