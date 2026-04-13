@@ -99,10 +99,11 @@ import { BotsModule } from './modules/bots/bots.module';
         entities: ['dist/**/*.entity.js'],
         entitiesTs: ['src/**/*.entity.ts'],
         namingStrategy: UnderscoreNamingStrategy,
-        driverOptions:
-          config.get('NODE_ENV') === 'production'
-            ? { connection: { ssl: { rejectUnauthorized: false } } }
-            : undefined,
+        driverOptions: /\.rds\.amazonaws\.com$/.test(
+          config.get<string>('database.host') || '',
+        )
+          ? { connection: { ssl: { rejectUnauthorized: false } } }
+          : undefined,
         pool: { min: 2, max: 10 },
         extensions: [Migrator],
         migrations: {
