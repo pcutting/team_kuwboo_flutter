@@ -15,7 +15,6 @@ Top-level exports from `lib/kuwboo_auth.dart`:
 - `AuthOnboardingScreen`
 - `AuthTutorialScreen`
 - `AuthMethodScreen`
-- `AuthSignupScreen`
 - `AuthLoginScreen`
 - `AuthPhoneScreen`
 - `AuthOtpScreen`

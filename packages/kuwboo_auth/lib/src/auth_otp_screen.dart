@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
+
+const int _otpLength = 6;
 
 class AuthOtpScreen extends StatefulWidget {
   const AuthOtpScreen({super.key});
@@ -9,15 +12,33 @@ class AuthOtpScreen extends StatefulWidget {
 }
 
 class _AuthOtpScreenState extends State<AuthOtpScreen> {
-  final List<int?> _digits = [null, null, null, null];
-  int _activeIndex = 0;
+  final List<TextEditingController> _controllers = List.generate(
+    _otpLength,
+    (_) => TextEditingController(),
+  );
+  final List<FocusNode> _focusNodes = List.generate(
+    _otpLength,
+    (_) => FocusNode(),
+  );
   bool _canResend = false;
   int _countdown = 30;
+  bool _submitted = false;
 
   @override
   void initState() {
     super.initState();
     _startCountdown();
+  }
+
+  @override
+  void dispose() {
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final f in _focusNodes) {
+      f.dispose();
+    }
+    super.dispose();
   }
 
   void _startCountdown() {
@@ -32,20 +53,79 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
     });
   }
 
-  void _onDigitTap(int digit) {
-    if (_activeIndex >= 4) return;
-    setState(() {
-      _digits[_activeIndex] = digit;
-      _activeIndex++;
-    });
-    if (_activeIndex == 4) {
-      // Auto-advance after short delay
-      Future.delayed(const Duration(milliseconds: 400), () {
+  void _onChanged(int index, String value) {
+    // Handle paste: if value contains multiple digits, fan out across boxes.
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+    if (digits.length > 1) {
+      for (var i = 0; i < _otpLength; i++) {
+        if (i < digits.length) {
+          _controllers[i].text = digits[i];
+        } else {
+          _controllers[i].clear();
+        }
+      }
+      final nextFocus =
+          digits.length >= _otpLength ? _otpLength - 1 : digits.length;
+      FocusScope.of(context).requestFocus(_focusNodes[nextFocus]);
+      _maybeAutoSubmit();
+      return;
+    }
+
+    if (digits.isEmpty) {
+      // User cleared this box — leave focus here.
+      setState(() {});
+      return;
+    }
+
+    // Single digit entered.
+    _controllers[index].text = digits;
+    _controllers[index].selection = TextSelection.fromPosition(
+      TextPosition(offset: _controllers[index].text.length),
+    );
+
+    if (index < _otpLength - 1) {
+      FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
+    }
+    _maybeAutoSubmit();
+  }
+
+  KeyEventResult _onKey(int index, KeyEvent event) {
+    if (event is KeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.backspace &&
+        _controllers[index].text.isEmpty &&
+        index > 0) {
+      // Auto-back on delete when current box is empty.
+      _controllers[index - 1].clear();
+      FocusScope.of(context).requestFocus(_focusNodes[index - 1]);
+      setState(() {});
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  void _maybeAutoSubmit() {
+    final full = _controllers.map((c) => c.text).join();
+    if (full.length == _otpLength && !_submitted) {
+      _submitted = true;
+      Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
           PrototypeStateProvider.of(context).push(ProtoRoutes.authBirthday);
         }
       });
     }
+  }
+
+  void _resend() {
+    setState(() {
+      _canResend = false;
+      _countdown = 30;
+      _submitted = false;
+      for (final c in _controllers) {
+        c.clear();
+      }
+    });
+    FocusScope.of(context).requestFocus(_focusNodes[0]);
+    _startCountdown();
   }
 
   @override
@@ -55,157 +135,145 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
     return Material(
       type: MaterialType.transparency,
       child: Container(
-      color: theme.surface,
-      child: Column(
-        children: [
-          ProtoSubBar(title: 'Verification'),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                children: [
-                  const SizedBox(height: 40),
-                  Text(
-                    'Enter the code we sent to',
-                    style: theme.headline.copyWith(fontSize: 22),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '+44 7XXX XXX XX3',
-                    style: theme.body.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-
-                  // OTP digit boxes
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(4, (i) {
-                      final filled = _digits[i] != null;
-                      final active = i == _activeIndex;
-                      return Container(
-                        width: 56,
-                        height: 64,
-                        margin: const EdgeInsets.symmetric(horizontal: 8),
-                        decoration: BoxDecoration(
-                          color: theme.background,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: active
-                                ? theme.primary
-                                : filled
-                                    ? theme.primary.withValues(alpha: 0.3)
-                                    : theme.text.withValues(alpha: 0.08),
-                            width: active ? 2 : 1,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            filled ? '${_digits[i]}' : '',
-                            style: theme.headline.copyWith(fontSize: 28),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 28),
-
-                  // Resend
-                  if (!_canResend)
+        color: theme.surface,
+        child: Column(
+          children: [
+            ProtoSubBar(title: 'Verification'),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 40),
                     Text(
-                      'Resend code in 0:${_countdown.toString().padLeft(2, '0')}',
-                      style: theme.caption.copyWith(color: theme.textTertiary),
-                    )
-                  else
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _canResend = false;
-                          _countdown = 30;
-                          _activeIndex = 0;
-                          _digits.fillRange(0, 4, null);
-                        });
-                        _startCountdown();
-                      },
-                      child: Text(
-                        "Didn't get a code? Resend",
-                        style: theme.caption.copyWith(
-                          color: theme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      'Enter the code we sent to',
+                      style: theme.headline.copyWith(fontSize: 22),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '+44 7XXX XXX XX3',
+                      style: theme.body.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.primary,
                       ),
                     ),
+                    const SizedBox(height: 40),
 
-                  const Spacer(),
+                    // Six OTP digit boxes
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(_otpLength, (i) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                          child: _OtpBox(
+                            index: i,
+                            controller: _controllers[i],
+                            focusNode: _focusNodes[i],
+                            onChanged: (v) => _onChanged(i, v),
+                            onKey: (event) => _onKey(i, event),
+                            theme: theme,
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 28),
 
-                  // Mock numeric keypad
-                  _NumPad(onDigit: _onDigitTap),
-                  const SizedBox(height: 20),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-        ));
-  }
-}
+                    if (!_canResend)
+                      Text(
+                        'Resend code in 0:${_countdown.toString().padLeft(2, '0')}',
+                        style:
+                            theme.caption.copyWith(color: theme.textTertiary),
+                      )
+                    else
+                      GestureDetector(
+                        onTap: _resend,
+                        child: Text(
+                          "Didn't get a code? Resend",
+                          style: theme.caption.copyWith(
+                            color: theme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
 
-class _NumPad extends StatelessWidget {
-  final void Function(int digit) onDigit;
-  const _NumPad({required this.onDigit});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = ProtoTheme.of(context);
-
-    Widget key(String label, {VoidCallback? onTap}) {
-      return Expanded(
-        child: GestureDetector(
-          onTap: onTap,
-          child: Container(
-            height: 52,
-            margin: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: label.isNotEmpty ? theme.background : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w500,
-                  color: theme.text,
+                    const Spacer(),
+                    const SizedBox(height: 20),
+                  ],
                 ),
               ),
             ),
-          ),
-        ),
-      );
-    }
-
-    return Column(
-      children: [
-        for (var row in [
-          [1, 2, 3],
-          [4, 5, 6],
-          [7, 8, 9],
-        ])
-          Row(
-            children: row.map((d) => key('$d', onTap: () => onDigit(d))).toList(),
-          ),
-        Row(
-          children: [
-            key(''),
-            key('0', onTap: () => onDigit(0)),
-            key(''),
           ],
         ),
-      ],
+      ),
+    );
+  }
+}
+
+class _OtpBox extends StatelessWidget {
+  final int index;
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final ValueChanged<String> onChanged;
+  final KeyEventResult Function(KeyEvent) onKey;
+  final ProtoTheme theme;
+
+  const _OtpBox({
+    required this.index,
+    required this.controller,
+    required this.focusNode,
+    required this.onChanged,
+    required this.onKey,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final filled = controller.text.isNotEmpty;
+    final active = focusNode.hasFocus;
+    return SizedBox(
+      width: 48,
+      height: 64,
+      child: Semantics(
+        label: 'OTP digit ${index + 1} of $_otpLength',
+        textField: true,
+        child: Focus(
+          onKeyEvent: (_, event) => onKey(event),
+          child: TextField(
+            controller: controller,
+            focusNode: focusNode,
+            autofocus: index == 0,
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.number,
+            maxLength: 1,
+            style: theme.headline.copyWith(fontSize: 26),
+            cursorColor: theme.primary,
+            decoration: InputDecoration(
+              counterText: '',
+              filled: true,
+              fillColor: theme.background,
+              contentPadding: EdgeInsets.zero,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(
+                  color: filled
+                      ? theme.primary.withValues(alpha: 0.3)
+                      : theme.text.withValues(alpha: 0.08),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(
+                  color: active ? theme.primary : theme.text,
+                  width: 2,
+                ),
+              ),
+            ),
+            inputFormatters: const [],
+            onChanged: onChanged,
+          ),
+        ),
+      ),
     );
   }
 }

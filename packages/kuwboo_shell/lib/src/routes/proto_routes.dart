@@ -65,7 +65,6 @@ class ProtoRoutes {
 
   // ── Auth ───────────────────────────────────────────────────────────────
   static const authWelcome = '/auth/welcome';
-  static const authSignup = '/auth/signup';
   static const authOnboarding = '/auth/onboarding';
   static const authTutorial = '/auth/tutorial';
   static const authMethod = '/auth/method';

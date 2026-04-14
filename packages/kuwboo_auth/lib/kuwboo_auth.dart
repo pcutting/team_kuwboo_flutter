@@ -9,7 +9,6 @@ export 'src/auth_welcome_screen.dart';
 export 'src/auth_onboarding_screen.dart';
 export 'src/auth_tutorial_screen.dart';
 export 'src/auth_method_screen.dart';
-export 'src/auth_signup_screen.dart';
 export 'src/auth_login_screen.dart';
 export 'src/auth_phone_screen.dart';
 export 'src/auth_otp_screen.dart';

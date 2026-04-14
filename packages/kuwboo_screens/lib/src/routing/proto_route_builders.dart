@@ -280,11 +280,6 @@ List<RouteBase> buildProtoModalRoutes({
       builder: (c, s) => const AuthMethodScreen(),
     ),
     GoRoute(
-      path: ProtoRoutes.authSignup,
-      parentNavigatorKey: rootNavigatorKey,
-      builder: (c, s) => const AuthSignupScreen(),
-    ),
-    GoRoute(
       path: ProtoRoutes.authLogin,
       parentNavigatorKey: rootNavigatorKey,
       builder: (c, s) => const AuthLoginScreen(),
