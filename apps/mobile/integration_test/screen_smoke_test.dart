@@ -3,8 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:kuwboo_api_client/kuwboo_api_client.dart';
+
 import 'package:kuwboo_mobile/app/test_app.dart';
-import 'package:kuwboo_mobile/features/auth/data/token_storage.dart';
+import 'package:kuwboo_mobile/config/environment.dart';
 
 /// Smoke tests that verify each major screen renders without assertion errors.
 void main() {
@@ -12,7 +14,7 @@ void main() {
 
   /// Helper: launch app, authenticate, and wait for the home screen.
   Future<void> launchAndAuthenticate(WidgetTester tester) async {
-    await TokenStorage().clear();
+    await KuwbooApiClient(baseUrl: Environment.apiBaseUrl).clearTokens();
 
     await tester.pumpWidget(const ProviderScope(child: KuwbooTestApp()));
     await tester.pumpAndSettle(const Duration(seconds: 2));
@@ -32,7 +34,7 @@ void main() {
 
   group('Screen smoke tests', () {
     testWidgets('app launches and shows login screen', (tester) async {
-      await TokenStorage().clear();
+      await KuwbooApiClient(baseUrl: Environment.apiBaseUrl).clearTokens();
 
       await tester.pumpWidget(const ProviderScope(child: KuwbooTestApp()));
       await tester.pumpAndSettle(const Duration(seconds: 2));

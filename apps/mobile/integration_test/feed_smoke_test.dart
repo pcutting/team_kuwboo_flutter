@@ -2,9 +2,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:kuwboo_api_client/kuwboo_api_client.dart' as shared;
+import 'package:kuwboo_models/kuwboo_models.dart' show TokenPair;
+
 import 'package:kuwboo_mobile/app/test_app.dart';
-import 'package:kuwboo_mobile/features/auth/data/auth_models.dart';
-import 'package:kuwboo_mobile/features/auth/data/token_storage.dart';
+import 'package:kuwboo_mobile/config/environment.dart';
 import 'package:kuwboo_mobile/features/feed/application/feed_provider.dart';
 import 'package:kuwboo_mobile/features/feed/data/feed_api.dart';
 import 'package:kuwboo_mobile/features/feed/data/feed_models.dart';
@@ -23,16 +25,11 @@ void main() {
 
   testWidgets('boots authenticated when tokens exist in secure storage',
       (tester) async {
-    final storage = TokenStorage();
-    await storage.clear();
-    await storage.writeTokens(const AuthTokens(
+    final client = shared.KuwbooApiClient(baseUrl: Environment.apiBaseUrl);
+    await client.clearTokens();
+    await client.saveTokens(const TokenPair(
       accessToken: 'smoke-test-token',
       refreshToken: 'smoke-test-refresh',
-    ));
-    await storage.writeUser(const AuthUser(
-      id: 'smoke-test-user',
-      name: 'Smoke Tester',
-      phone: '+44 7700 900000',
     ));
 
     await tester.pumpWidget(
@@ -58,7 +55,7 @@ void main() {
     expect(find.text('Nearby'), findsWidgets,
         reason: 'should have landed on the yoyo nearby screen');
 
-    await storage.clear();
+    await client.clearTokens();
   });
 }
 
