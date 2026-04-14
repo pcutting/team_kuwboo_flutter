@@ -9,7 +9,13 @@ import {
   OptionalProps,
 } from '@mikro-orm/core';
 import { randomUUID } from 'crypto';
-import { Role, UserStatus, OnlineStatus } from '../../../common/enums';
+import {
+  Role,
+  UserStatus,
+  OnlineStatus,
+  OnboardingProgress,
+  AgeVerificationStatus,
+} from '../../../common/enums';
 import { PointType, Point } from '../../../database/types/point.type';
 import { UserPreferences } from './user-preferences.entity';
 
@@ -24,7 +30,12 @@ export class User {
     | 'isBot'
     | 'appleEmailIsPrivateRelay'
     | 'createdAt'
-    | 'updatedAt';
+    | 'updatedAt'
+    | 'birthdaySkipped'
+    | 'onboardingProgress'
+    | 'profileCompletenessPct'
+    | 'tutorialVersion'
+    | 'ageVerificationStatus';
 
   @PrimaryKey({ type: 'uuid' })
   id: string = randomUUID();
@@ -93,6 +104,42 @@ export class User {
   @Property({ type: 'boolean', default: false })
   @Index()
   isBot: boolean = false;
+
+  /**
+   * Identity extensions per IDENTITY_CONTRACT §3.2.
+   */
+  @Property({ type: 'varchar', length: 50, nullable: true, unique: true })
+  username?: string;
+
+  @Property({ type: 'text', nullable: true })
+  bio?: string;
+
+  @Property({ type: 'boolean', default: false })
+  birthdaySkipped: boolean = false;
+
+  @Enum({ items: () => OnboardingProgress, default: OnboardingProgress.WELCOME })
+  onboardingProgress: OnboardingProgress = OnboardingProgress.WELCOME;
+
+  @Property({ type: 'int', default: 0 })
+  profileCompletenessPct: number = 0;
+
+  @Property({ type: 'int', default: 0 })
+  tutorialVersion: number = 0;
+
+  @Property({ type: 'timestamptz', nullable: true })
+  tutorialCompletedAt?: Date;
+
+  @Property({ type: 'timestamptz', nullable: true })
+  lastReminderAt?: Date;
+
+  @Property({ type: 'timestamptz', nullable: true })
+  lastLoginAt?: Date;
+
+  @Enum({
+    items: () => AgeVerificationStatus,
+    default: AgeVerificationStatus.SELF_DECLARED,
+  })
+  ageVerificationStatus: AgeVerificationStatus = AgeVerificationStatus.SELF_DECLARED;
 
   @OneToOne(() => UserPreferences, (prefs) => prefs.user, {
     nullable: true,
