@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phone_form_field/phone_form_field.dart';
 
 import '../../providers/auth_provider.dart';
 
 /// Phone number input screen. Sends an OTP to the entered number.
+///
+/// Uses `phone_form_field` so the dial code auto-defaults to the device's
+/// locale country and the user can tap the flag to pick any other country
+/// instead of typing raw E.164.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -13,9 +18,31 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _phoneController = TextEditingController();
+  late final PhoneController _phoneController;
   bool _isSending = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _phoneController = PhoneController(
+      initialValue: PhoneNumber(isoCode: _initialIsoCode(), nsn: ''),
+    );
+  }
+
+  /// Best-guess country from the device's locale. Falls back to US if the
+  /// locale has no country component (common on fresh emulators) or if the
+  /// code isn't one libphonenumber recognizes.
+  static IsoCode _initialIsoCode() {
+    final country = WidgetsBinding
+            .instance.platformDispatcher.locale.countryCode
+            ?.toUpperCase() ??
+        'US';
+    for (final iso in IsoCode.values) {
+      if (iso.name == country) return iso;
+    }
+    return IsoCode.US;
+  }
 
   @override
   void dispose() {
@@ -24,15 +51,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _sendOtp() async {
-    final phone = _phoneController.text.trim();
-    if (phone.isEmpty) {
+    final number = _phoneController.value;
+    if (number.nsn.isEmpty) {
       setState(() => _error = 'Enter your phone number');
       return;
     }
-    if (!phone.startsWith('+')) {
-      setState(() => _error = 'Phone must be in E.164 format (+country)');
+    if (!number.isValid()) {
+      setState(() => _error = 'That phone number looks invalid');
       return;
     }
+
+    final e164 = number.international; // e.g. "+447700900000"
 
     setState(() {
       _isSending = true;
@@ -40,9 +69,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
-      await ref.read(authProvider.notifier).requestOtp(phone);
+      await ref.read(authProvider.notifier).requestOtp(e164);
       if (!mounted) return;
-      context.go('/otp', extra: phone);
+      context.go('/otp', extra: e164);
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = e.toString());
@@ -71,27 +100,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 24),
               Text(
                 'Welcome to Kuwboo',
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: theme.textTheme.headlineMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 'Enter your phone number to get started',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                style: theme.textTheme.bodyLarge
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
-              TextField(
+              PhoneFormField(
                 controller: _phoneController,
-                keyboardType: TextInputType.phone,
+                autofillHints: const [AutofillHints.telephoneNumber],
+                countryButtonStyle: const CountryButtonStyle(
+                  showFlag: true,
+                  showDialCode: true,
+                  showDropdownIcon: true,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Phone number',
-                  hintText: '+44 7700 900000',
-                  prefixIcon: const Icon(Icons.phone_outlined),
                   border: const OutlineInputBorder(),
                   errorText: _error,
                 ),
