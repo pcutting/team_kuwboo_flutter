@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
-import { listUsers } from '../api/client';
+import { listUsers, searchUsers } from '../api/client';
 
 interface UserRecord {
   id: string;
@@ -22,9 +22,26 @@ export function UsersPage() {
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<'all' | 'humans' | 'bots'>('all');
   const [error, setError] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!accessToken) return;
+
+    if (searchQuery) {
+      searchUsers(accessToken, {
+        query: searchQuery,
+        page,
+        limit: 20,
+      })
+        .then((res) => {
+          setUsers(res.data.items as unknown as UserRecord[]);
+          setTotal(res.data.total);
+          setError('');
+        })
+        .catch((err) => setError(err.message));
+      return;
+    }
 
     const params: Record<string, string> = { page: String(page), limit: '20' };
     if (filter === 'humans') params.isBot = 'false';
@@ -34,9 +51,10 @@ export function UsersPage() {
       .then((res) => {
         setUsers(res.data.items as unknown as UserRecord[]);
         setTotal(res.data.total);
+        setError('');
       })
       .catch((err) => setError(err.message));
-  }, [accessToken, page, filter]);
+  }, [accessToken, page, filter, searchQuery]);
 
   const totalPages = Math.ceil(total / 20);
 
@@ -68,6 +86,42 @@ export function UsersPage() {
           ))}
         </div>
       </div>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setPage(1);
+          setSearchQuery(searchInput.trim());
+        }}
+        className="mt-4 flex items-center gap-2"
+      >
+        <input
+          type="search"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search by email, phone, or username..."
+          className="flex-1 px-3 py-2 text-sm border border-stone-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+        />
+        <button
+          type="submit"
+          className="px-3 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700"
+        >
+          Search
+        </button>
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => {
+              setSearchInput('');
+              setSearchQuery('');
+              setPage(1);
+            }}
+            className="px-3 py-2 text-sm font-medium text-stone-600 border border-stone-200 rounded-lg hover:bg-stone-50"
+          >
+            Clear
+          </button>
+        )}
+      </form>
 
       {error && (
         <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">

@@ -26,6 +26,10 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
     throw new Error(error.message || `Request failed: ${res.status}`);
   }
 
+  if (res.status === 204) {
+    return undefined as T;
+  }
+
   return res.json();
 }
 
@@ -398,4 +402,103 @@ export function getBotActivity(
   return request<{
     data: { items: Array<Record<string, unknown>>; total: number };
   }>(`/admin/bots/${id}/activity${query}`, { token });
+}
+
+// Interests (admin CRUD)
+
+export interface AdminInterest {
+  id: string;
+  slug: string;
+  label: string;
+  category?: string | null;
+  display_order: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export function listInterests(token: string) {
+  return request<{ interests: AdminInterest[] }>('/admin/interests', { token });
+}
+
+export function createInterest(
+  token: string,
+  body: {
+    slug: string;
+    label: string;
+    category?: string;
+    display_order?: number;
+  },
+) {
+  return request<AdminInterest>('/admin/interests', {
+    method: 'POST',
+    body,
+    token,
+  });
+}
+
+export function updateInterest(
+  token: string,
+  id: string,
+  body: {
+    label?: string;
+    category?: string;
+    display_order?: number;
+    is_active?: boolean;
+  },
+) {
+  return request<AdminInterest>(`/admin/interests/${id}`, {
+    method: 'PATCH',
+    body,
+    token,
+  });
+}
+
+export function deleteInterest(token: string, id: string) {
+  return request<void>(`/admin/interests/${id}`, {
+    method: 'DELETE',
+    token,
+  });
+}
+
+export function reorderInterests(token: string, orderedIds: string[]) {
+  return request<{ interests: AdminInterest[] }>('/admin/interests/reorder', {
+    method: 'POST',
+    body: { ordered_ids: orderedIds },
+    token,
+  });
+}
+
+// Credentials (admin scope — backend endpoint TODO)
+// NOTE: The backend currently exposes /credentials only for the authenticated
+// user (see apps/api/src/modules/credentials/credentials.controller.ts). Admin
+// list/revoke endpoints scoped to an arbitrary user do not yet exist. The
+// calls below target a proposed /admin/users/:id/credentials surface; they
+// will 404 until the backend ships those endpoints.
+
+export interface AdminCredential {
+  id: string;
+  type: string;
+  identifier: string;
+  verified_at?: string | null;
+  is_primary: boolean;
+  created_at?: string;
+}
+
+export function listUserCredentials(token: string, userId: string) {
+  return request<{ credentials: AdminCredential[] }>(
+    `/admin/users/${userId}/credentials`,
+    { token },
+  );
+}
+
+export function revokeUserCredential(
+  token: string,
+  userId: string,
+  credentialId: string,
+) {
+  return request<void>(
+    `/admin/users/${userId}/credentials/${credentialId}`,
+    { method: 'DELETE', token },
+  );
 }

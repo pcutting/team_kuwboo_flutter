@@ -15,6 +15,7 @@ import { AuditLogPage } from './pages/AuditLogPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SessionsPage } from './pages/SessionsPage';
 import { SystemHealthPage } from './pages/SystemHealthPage';
+import { InterestsPage } from './pages/InterestsPage';
 import { AdminLayout } from './components/AdminLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -48,6 +49,7 @@ export function App() {
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="sessions" element={<SessionsPage />} />
         <Route path="system" element={<SystemHealthPage />} />
+        <Route path="interests" element={<InterestsPage />} />
       </Route>
     </Routes>
   );
