@@ -99,14 +99,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true);
     try {
       if (Environment.devAuthBypass && code == Environment.devBypassOtp) {
+        const fakeTokens = AuthTokens(
+          accessToken: 'dev-access',
+          refreshToken: 'dev-refresh',
+        );
         final fakeUser = AuthUser(
           id: 'dev-user',
           name: phone,
           phone: phone,
         );
+        // Persist so dev sessions survive cold launches the same way real
+        // sessions do — otherwise _init() finds nothing and bounces to /login.
+        await _storage.writeTokens(fakeTokens);
+        await _storage.writeUser(fakeUser);
         state = AuthState(
-          accessToken: 'dev-access',
-          refreshToken: 'dev-refresh',
+          accessToken: fakeTokens.accessToken,
+          refreshToken: fakeTokens.refreshToken,
           userId: fakeUser.id,
           user: fakeUser,
         );
