@@ -9,7 +9,9 @@ class AuthOnboardingScreen extends StatelessWidget {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
 
-    return Container(
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
       color: theme.surface,
       child: Column(
         children: [
@@ -88,6 +90,6 @@ class AuthOnboardingScreen extends StatelessWidget {
           const SizedBox(height: 20),
         ],
       ),
-    );
+        ));
   }
 }

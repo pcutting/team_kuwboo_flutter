@@ -67,7 +67,9 @@ class _AuthTutorialScreenState extends State<AuthTutorialScreen> {
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
 
-    return Container(
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
       color: theme.surface,
       child: SafeArea(
         child: Column(
@@ -188,7 +190,7 @@ class _AuthTutorialScreenState extends State<AuthTutorialScreen> {
           ],
         ),
       ),
-    );
+        ));
   }
 }
 

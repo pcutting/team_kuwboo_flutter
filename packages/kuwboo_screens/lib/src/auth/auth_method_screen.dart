@@ -9,7 +9,9 @@ class AuthMethodScreen extends StatelessWidget {
     final theme = ProtoTheme.of(context);
     final state = PrototypeStateProvider.of(context);
 
-    return Container(
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
       color: theme.surface,
       child: Column(
         children: [
@@ -89,7 +91,7 @@ class AuthMethodScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
+        ));
   }
 }
 

@@ -8,7 +8,9 @@ class AuthWelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
 
-    return Container(
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -83,6 +85,6 @@ class AuthWelcomeScreen extends StatelessWidget {
           const Spacer(),
         ],
       ),
-    );
+        ));
   }
 }

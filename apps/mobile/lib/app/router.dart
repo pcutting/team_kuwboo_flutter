@@ -57,10 +57,10 @@ class _ProtoShellWrapper extends StatelessWidget {
 
   static int _tabFor(String loc) {
     // YoYo: 0=nearby 1=connect 2=wave 3=chat
-    if (loc == ProtoRoutes.yoyoNearby) return 0;
-    if (loc == ProtoRoutes.yoyoConnect) return 1;
-    if (loc == ProtoRoutes.yoyoWave) return 2;
-    if (loc == ProtoRoutes.yoyoChat) return 3;
+    for (final routes in ProtoRoutes.tabRoutes.values) {
+      final idx = routes.indexOf(loc);
+      if (idx >= 0) return idx;
+    }
     return 0;
   }
 }

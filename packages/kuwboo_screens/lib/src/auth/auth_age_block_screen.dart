@@ -9,7 +9,9 @@ class AuthAgeBlockScreen extends StatelessWidget {
     final theme = ProtoTheme.of(context);
     final state = PrototypeStateProvider.of(context);
 
-    return Container(
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
       color: theme.surface,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -77,6 +79,6 @@ class AuthAgeBlockScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
+        ));
   }
 }

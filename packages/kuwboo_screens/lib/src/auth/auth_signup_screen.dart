@@ -8,7 +8,9 @@ class AuthSignupScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
 
-    return Container(
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
       color: ProtoTheme.of(context).surface,
       child: Column(
         children: [
@@ -46,7 +48,7 @@ class AuthSignupScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
+        ));
   }
 }
 

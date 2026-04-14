@@ -880,6 +880,7 @@ class _AreaView extends StatelessWidget {
             left: 12,
             right: 12,
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _InlineLiveButton(theme: theme),
                 const SizedBox(width: 8),
