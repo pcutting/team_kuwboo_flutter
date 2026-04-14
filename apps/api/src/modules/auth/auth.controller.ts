@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Req,
+  HttpCode,
+  HttpStatus,
+  ForbiddenException,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
@@ -71,6 +79,24 @@ export class AuthController {
     }
 
     return this.authService.refreshTokens(decoded.sub, dto.refreshToken, {
+      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip,
+    });
+  }
+
+  /**
+   * Dev-only login. Skips OTP, find-or-creates a user by phone, returns real
+   * JWTs. Gated by `DEV_LOGIN_ENABLED=1` env flag — 403 otherwise. Mobile
+   * client uses this when built with `--dart-define=KUWBOO_DEV_AUTH=1`.
+   */
+  @Public()
+  @Post('dev-login')
+  @HttpCode(HttpStatus.OK)
+  async devLogin(@Body() dto: SendOtpDto, @Req() req: Request) {
+    if (process.env.DEV_LOGIN_ENABLED !== '1') {
+      throw new ForbiddenException('Dev login is disabled');
+    }
+    return this.authService.devLogin(dto.phone, {
       userAgent: req.headers['user-agent'],
       ipAddress: req.ip,
     });
