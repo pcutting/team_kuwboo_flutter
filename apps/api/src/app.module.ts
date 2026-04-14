@@ -43,6 +43,7 @@ import { YoyoModule } from './modules/yoyo/yoyo.module';
 import { BotsModule } from './modules/bots/bots.module';
 import { CredentialsModule } from './modules/credentials/credentials.module';
 import { TrustModule } from './modules/trust/trust.module';
+import { InterestsModule } from './modules/interests/interests.module';
 
 @Module({
   imports: [
@@ -158,6 +159,7 @@ import { TrustModule } from './modules/trust/trust.module';
     BotsModule,
     CredentialsModule,
     TrustModule,
+    InterestsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
