@@ -567,4 +567,276 @@ as String,
 
 }
 
+
+/// @nodoc
+mixin _$PendingSsoChallenge {
+
+ String get code;@JsonKey(name: 'challenge_id') String get challengeId; String get email;@JsonKey(name: 'require_verify_email') bool get requireVerifyEmail;
+/// Create a copy of PendingSsoChallenge
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PendingSsoChallengeCopyWith<PendingSsoChallenge> get copyWith => _$PendingSsoChallengeCopyWithImpl<PendingSsoChallenge>(this as PendingSsoChallenge, _$identity);
+
+  /// Serializes this PendingSsoChallenge to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PendingSsoChallenge&&(identical(other.code, code) || other.code == code)&&(identical(other.challengeId, challengeId) || other.challengeId == challengeId)&&(identical(other.email, email) || other.email == email)&&(identical(other.requireVerifyEmail, requireVerifyEmail) || other.requireVerifyEmail == requireVerifyEmail));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,code,challengeId,email,requireVerifyEmail);
+
+@override
+String toString() {
+  return 'PendingSsoChallenge(code: $code, challengeId: $challengeId, email: $email, requireVerifyEmail: $requireVerifyEmail)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PendingSsoChallengeCopyWith<$Res>  {
+  factory $PendingSsoChallengeCopyWith(PendingSsoChallenge value, $Res Function(PendingSsoChallenge) _then) = _$PendingSsoChallengeCopyWithImpl;
+@useResult
+$Res call({
+ String code,@JsonKey(name: 'challenge_id') String challengeId, String email,@JsonKey(name: 'require_verify_email') bool requireVerifyEmail
+});
+
+
+
+
+}
+/// @nodoc
+class _$PendingSsoChallengeCopyWithImpl<$Res>
+    implements $PendingSsoChallengeCopyWith<$Res> {
+  _$PendingSsoChallengeCopyWithImpl(this._self, this._then);
+
+  final PendingSsoChallenge _self;
+  final $Res Function(PendingSsoChallenge) _then;
+
+/// Create a copy of PendingSsoChallenge
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? challengeId = null,Object? email = null,Object? requireVerifyEmail = null,}) {
+  return _then(_self.copyWith(
+code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String,challengeId: null == challengeId ? _self.challengeId : challengeId // ignore: cast_nullable_to_non_nullable
+as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
+as String,requireVerifyEmail: null == requireVerifyEmail ? _self.requireVerifyEmail : requireVerifyEmail // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [PendingSsoChallenge].
+extension PendingSsoChallengePatterns on PendingSsoChallenge {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _PendingSsoChallenge value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _PendingSsoChallenge() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _PendingSsoChallenge value)  $default,){
+final _that = this;
+switch (_that) {
+case _PendingSsoChallenge():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _PendingSsoChallenge value)?  $default,){
+final _that = this;
+switch (_that) {
+case _PendingSsoChallenge() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code, @JsonKey(name: 'challenge_id')  String challengeId,  String email, @JsonKey(name: 'require_verify_email')  bool requireVerifyEmail)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _PendingSsoChallenge() when $default != null:
+return $default(_that.code,_that.challengeId,_that.email,_that.requireVerifyEmail);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code, @JsonKey(name: 'challenge_id')  String challengeId,  String email, @JsonKey(name: 'require_verify_email')  bool requireVerifyEmail)  $default,) {final _that = this;
+switch (_that) {
+case _PendingSsoChallenge():
+return $default(_that.code,_that.challengeId,_that.email,_that.requireVerifyEmail);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code, @JsonKey(name: 'challenge_id')  String challengeId,  String email, @JsonKey(name: 'require_verify_email')  bool requireVerifyEmail)?  $default,) {final _that = this;
+switch (_that) {
+case _PendingSsoChallenge() when $default != null:
+return $default(_that.code,_that.challengeId,_that.email,_that.requireVerifyEmail);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _PendingSsoChallenge implements PendingSsoChallenge {
+  const _PendingSsoChallenge({required this.code, @JsonKey(name: 'challenge_id') required this.challengeId, required this.email, @JsonKey(name: 'require_verify_email') this.requireVerifyEmail = true});
+  factory _PendingSsoChallenge.fromJson(Map<String, dynamic> json) => _$PendingSsoChallengeFromJson(json);
+
+@override final  String code;
+@override@JsonKey(name: 'challenge_id') final  String challengeId;
+@override final  String email;
+@override@JsonKey(name: 'require_verify_email') final  bool requireVerifyEmail;
+
+/// Create a copy of PendingSsoChallenge
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$PendingSsoChallengeCopyWith<_PendingSsoChallenge> get copyWith => __$PendingSsoChallengeCopyWithImpl<_PendingSsoChallenge>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$PendingSsoChallengeToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PendingSsoChallenge&&(identical(other.code, code) || other.code == code)&&(identical(other.challengeId, challengeId) || other.challengeId == challengeId)&&(identical(other.email, email) || other.email == email)&&(identical(other.requireVerifyEmail, requireVerifyEmail) || other.requireVerifyEmail == requireVerifyEmail));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,code,challengeId,email,requireVerifyEmail);
+
+@override
+String toString() {
+  return 'PendingSsoChallenge(code: $code, challengeId: $challengeId, email: $email, requireVerifyEmail: $requireVerifyEmail)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$PendingSsoChallengeCopyWith<$Res> implements $PendingSsoChallengeCopyWith<$Res> {
+  factory _$PendingSsoChallengeCopyWith(_PendingSsoChallenge value, $Res Function(_PendingSsoChallenge) _then) = __$PendingSsoChallengeCopyWithImpl;
+@override @useResult
+$Res call({
+ String code,@JsonKey(name: 'challenge_id') String challengeId, String email,@JsonKey(name: 'require_verify_email') bool requireVerifyEmail
+});
+
+
+
+
+}
+/// @nodoc
+class __$PendingSsoChallengeCopyWithImpl<$Res>
+    implements _$PendingSsoChallengeCopyWith<$Res> {
+  __$PendingSsoChallengeCopyWithImpl(this._self, this._then);
+
+  final _PendingSsoChallenge _self;
+  final $Res Function(_PendingSsoChallenge) _then;
+
+/// Create a copy of PendingSsoChallenge
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? challengeId = null,Object? email = null,Object? requireVerifyEmail = null,}) {
+  return _then(_PendingSsoChallenge(
+code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String,challengeId: null == challengeId ? _self.challengeId : challengeId // ignore: cast_nullable_to_non_nullable
+as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
+as String,requireVerifyEmail: null == requireVerifyEmail ? _self.requireVerifyEmail : requireVerifyEmail // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
 // dart format on

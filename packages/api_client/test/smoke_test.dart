@@ -3,10 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kuwboo_api_client/kuwboo_api_client.dart';
 
 void main() {
-  test('KuwbooApiClient + AuthApi construct', () {
+  test('KuwbooApiClient + identity APIs construct', () {
     final client = KuwbooApiClient(baseUrl: 'https://example.test', dio: Dio());
     expect(client, isNotNull);
     expect(client.dio.options.baseUrl, 'https://example.test');
     expect(AuthApi(client), isNotNull);
+    expect(UsersApi(client), isNotNull);
+    expect(CredentialsApi(client), isNotNull);
+    expect(InterestsApi(client), isNotNull);
   });
 }

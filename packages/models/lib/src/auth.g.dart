@@ -32,3 +32,20 @@ Map<String, dynamic> _$TokenPairToJson(_TokenPair instance) =>
       'accessToken': instance.accessToken,
       'refreshToken': instance.refreshToken,
     };
+
+_PendingSsoChallenge _$PendingSsoChallengeFromJson(Map<String, dynamic> json) =>
+    _PendingSsoChallenge(
+      code: json['code'] as String,
+      challengeId: json['challenge_id'] as String,
+      email: json['email'] as String,
+      requireVerifyEmail: json['require_verify_email'] as bool? ?? true,
+    );
+
+Map<String, dynamic> _$PendingSsoChallengeToJson(
+  _PendingSsoChallenge instance,
+) => <String, dynamic>{
+  'code': instance.code,
+  'challenge_id': instance.challengeId,
+  'email': instance.email,
+  'require_verify_email': instance.requireVerifyEmail,
+};
