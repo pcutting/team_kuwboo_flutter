@@ -255,3 +255,33 @@ Rules:
 - New tables `interests` + `user_interests` with seed migration + admin CRUD (Q10)
 
 These extend section 7's "Recommended target contract" — Phase C2 will sequence them.
+
+---
+
+## 10. Critique adjustments to section 9
+
+Pushed back during product review; working defaults below.
+
+| # | Original answer | Adjustment |
+|---|---|---|
+| 2 | Add email signup | **Deferred to v1.1.** Adding an email channel pulls in transactional-email infra (SES/SendGrid, DKIM/SPF, bounce + abuse handling, deliverability ops) and forces a phone↔email account-merge policy. Phone-only for v1; revisit when product needs warrant the cost. |
+| 3 | Progressive PATCH | Keep progressive, but add **resume-from-step-N** logic: server tracks `onboarding_progress` (enum or last-completed step) so the app picks up where the user dropped off after a crash/uninstall. |
+| 4 | Capture App-Store age bracket via SSO | **Wrong assumption — Apple/Google SSO do not expose user age.** Apple's `realUserStatus` is bot-detection, not an age signal. **Working default:** require `authBirthday` for SSO users too, with a Skip button (sets `birthday_skipped=true`); the Trust/Recommend engine treats unknown-age conservatively. Drop the `signup_age_bracket` column from the plan. |
+| 5 | Persist tutorial completion | Also store `tutorial_version int` next to the boolean. New tutorial = bump version = existing users see it again. |
+| 6 | Country-code prefix on phone screen | Use `intl_phone_field` (or similar Pub package) — don't roll your own picker. |
+| 7 | Username uniqueness check | Client-side **debounce 300ms**; on submit, handle **409 Conflict** gracefully (race window is unavoidable without server-side reservation). Skip the reservation system. |
+| 8 | OTP resend reuses send endpoint | Rate-limit **per-phone AND per-IP**. Same response shape for first-send and resend (let the client label the UI). |
+
+### Updated backend deltas (final list for C2)
+
+Replaces the list at end of section 9.
+
+- ~~`POST /auth/email/send-otp` + `POST /auth/email/verify-otp`~~ — deferred to v1.1
+- `PATCH /users/me` — partial profile fields; idempotent per-field
+- `POST /users/me/tutorial-complete` — sets `tutorial_completed_at` + `tutorial_version`
+- `GET /users/username-available?handle=…` — returns `{available: bool}`; client debounces; submit handles 409
+- `POST /auth/phone/send-otp` — per-phone + per-IP rate limit; same response on first-send and resend
+- `users` columns: `tutorial_version int default 0`, `tutorial_completed_at timestamptz null`, `onboarding_progress enum`, `birthday_skipped bool default false`
+- ~~`users.signup_age_bracket`~~ — dropped (no source of truth)
+- New tables: `interests`, `user_interests` (schema in section 9)
+- Seed migration: ~30 default interests
