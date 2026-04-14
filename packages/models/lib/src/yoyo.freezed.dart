@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$NearbyUser {
 
- String get id; String get name; String? get avatarUrl; double get distanceKm; String? get onlineStatus;
+ String get id; String get name; String? get avatarUrl; int get distanceMeters; String? get onlineStatus;
 /// Create a copy of NearbyUser
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $NearbyUserCopyWith<NearbyUser> get copyWith => _$NearbyUserCopyWithImpl<NearbyU
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NearbyUser&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.distanceKm, distanceKm) || other.distanceKm == distanceKm)&&(identical(other.onlineStatus, onlineStatus) || other.onlineStatus == onlineStatus));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NearbyUser&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.distanceMeters, distanceMeters) || other.distanceMeters == distanceMeters)&&(identical(other.onlineStatus, onlineStatus) || other.onlineStatus == onlineStatus));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,avatarUrl,distanceKm,onlineStatus);
+int get hashCode => Object.hash(runtimeType,id,name,avatarUrl,distanceMeters,onlineStatus);
 
 @override
 String toString() {
-  return 'NearbyUser(id: $id, name: $name, avatarUrl: $avatarUrl, distanceKm: $distanceKm, onlineStatus: $onlineStatus)';
+  return 'NearbyUser(id: $id, name: $name, avatarUrl: $avatarUrl, distanceMeters: $distanceMeters, onlineStatus: $onlineStatus)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $NearbyUserCopyWith<$Res>  {
   factory $NearbyUserCopyWith(NearbyUser value, $Res Function(NearbyUser) _then) = _$NearbyUserCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String? avatarUrl, double distanceKm, String? onlineStatus
+ String id, String name, String? avatarUrl, int distanceMeters, String? onlineStatus
 });
 
 
@@ -65,13 +65,13 @@ class _$NearbyUserCopyWithImpl<$Res>
 
 /// Create a copy of NearbyUser
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? avatarUrl = freezed,Object? distanceKm = null,Object? onlineStatus = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? avatarUrl = freezed,Object? distanceMeters = null,Object? onlineStatus = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
-as String?,distanceKm: null == distanceKm ? _self.distanceKm : distanceKm // ignore: cast_nullable_to_non_nullable
-as double,onlineStatus: freezed == onlineStatus ? _self.onlineStatus : onlineStatus // ignore: cast_nullable_to_non_nullable
+as String?,distanceMeters: null == distanceMeters ? _self.distanceMeters : distanceMeters // ignore: cast_nullable_to_non_nullable
+as int,onlineStatus: freezed == onlineStatus ? _self.onlineStatus : onlineStatus // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -157,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? avatarUrl,  double distanceKm,  String? onlineStatus)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? avatarUrl,  int distanceMeters,  String? onlineStatus)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _NearbyUser() when $default != null:
-return $default(_that.id,_that.name,_that.avatarUrl,_that.distanceKm,_that.onlineStatus);case _:
+return $default(_that.id,_that.name,_that.avatarUrl,_that.distanceMeters,_that.onlineStatus);case _:
   return orElse();
 
 }
@@ -178,10 +178,10 @@ return $default(_that.id,_that.name,_that.avatarUrl,_that.distanceKm,_that.onlin
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? avatarUrl,  double distanceKm,  String? onlineStatus)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? avatarUrl,  int distanceMeters,  String? onlineStatus)  $default,) {final _that = this;
 switch (_that) {
 case _NearbyUser():
-return $default(_that.id,_that.name,_that.avatarUrl,_that.distanceKm,_that.onlineStatus);case _:
+return $default(_that.id,_that.name,_that.avatarUrl,_that.distanceMeters,_that.onlineStatus);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +198,10 @@ return $default(_that.id,_that.name,_that.avatarUrl,_that.distanceKm,_that.onlin
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? avatarUrl,  double distanceKm,  String? onlineStatus)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? avatarUrl,  int distanceMeters,  String? onlineStatus)?  $default,) {final _that = this;
 switch (_that) {
 case _NearbyUser() when $default != null:
-return $default(_that.id,_that.name,_that.avatarUrl,_that.distanceKm,_that.onlineStatus);case _:
+return $default(_that.id,_that.name,_that.avatarUrl,_that.distanceMeters,_that.onlineStatus);case _:
   return null;
 
 }
@@ -213,13 +213,13 @@ return $default(_that.id,_that.name,_that.avatarUrl,_that.distanceKm,_that.onlin
 @JsonSerializable()
 
 class _NearbyUser implements NearbyUser {
-  const _NearbyUser({required this.id, required this.name, this.avatarUrl, required this.distanceKm, this.onlineStatus});
+  const _NearbyUser({required this.id, required this.name, this.avatarUrl, this.distanceMeters = 0, this.onlineStatus});
   factory _NearbyUser.fromJson(Map<String, dynamic> json) => _$NearbyUserFromJson(json);
 
 @override final  String id;
 @override final  String name;
 @override final  String? avatarUrl;
-@override final  double distanceKm;
+@override@JsonKey() final  int distanceMeters;
 @override final  String? onlineStatus;
 
 /// Create a copy of NearbyUser
@@ -235,16 +235,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NearbyUser&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.distanceKm, distanceKm) || other.distanceKm == distanceKm)&&(identical(other.onlineStatus, onlineStatus) || other.onlineStatus == onlineStatus));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NearbyUser&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.distanceMeters, distanceMeters) || other.distanceMeters == distanceMeters)&&(identical(other.onlineStatus, onlineStatus) || other.onlineStatus == onlineStatus));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,avatarUrl,distanceKm,onlineStatus);
+int get hashCode => Object.hash(runtimeType,id,name,avatarUrl,distanceMeters,onlineStatus);
 
 @override
 String toString() {
-  return 'NearbyUser(id: $id, name: $name, avatarUrl: $avatarUrl, distanceKm: $distanceKm, onlineStatus: $onlineStatus)';
+  return 'NearbyUser(id: $id, name: $name, avatarUrl: $avatarUrl, distanceMeters: $distanceMeters, onlineStatus: $onlineStatus)';
 }
 
 
@@ -255,7 +255,7 @@ abstract mixin class _$NearbyUserCopyWith<$Res> implements $NearbyUserCopyWith<$
   factory _$NearbyUserCopyWith(_NearbyUser value, $Res Function(_NearbyUser) _then) = __$NearbyUserCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String? avatarUrl, double distanceKm, String? onlineStatus
+ String id, String name, String? avatarUrl, int distanceMeters, String? onlineStatus
 });
 
 
@@ -272,13 +272,13 @@ class __$NearbyUserCopyWithImpl<$Res>
 
 /// Create a copy of NearbyUser
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? avatarUrl = freezed,Object? distanceKm = null,Object? onlineStatus = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? avatarUrl = freezed,Object? distanceMeters = null,Object? onlineStatus = freezed,}) {
   return _then(_NearbyUser(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
-as String?,distanceKm: null == distanceKm ? _self.distanceKm : distanceKm // ignore: cast_nullable_to_non_nullable
-as double,onlineStatus: freezed == onlineStatus ? _self.onlineStatus : onlineStatus // ignore: cast_nullable_to_non_nullable
+as String?,distanceMeters: null == distanceMeters ? _self.distanceMeters : distanceMeters // ignore: cast_nullable_to_non_nullable
+as int,onlineStatus: freezed == onlineStatus ? _self.onlineStatus : onlineStatus // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

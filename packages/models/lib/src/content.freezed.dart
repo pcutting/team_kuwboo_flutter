@@ -13,9 +13,284 @@ part of 'content.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
+mixin _$FeedCreator {
+
+ String get id; String get name; String? get avatarUrl; bool get isBot;
+/// Create a copy of FeedCreator
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$FeedCreatorCopyWith<FeedCreator> get copyWith => _$FeedCreatorCopyWithImpl<FeedCreator>(this as FeedCreator, _$identity);
+
+  /// Serializes this FeedCreator to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FeedCreator&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.isBot, isBot) || other.isBot == isBot));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,name,avatarUrl,isBot);
+
+@override
+String toString() {
+  return 'FeedCreator(id: $id, name: $name, avatarUrl: $avatarUrl, isBot: $isBot)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $FeedCreatorCopyWith<$Res>  {
+  factory $FeedCreatorCopyWith(FeedCreator value, $Res Function(FeedCreator) _then) = _$FeedCreatorCopyWithImpl;
+@useResult
+$Res call({
+ String id, String name, String? avatarUrl, bool isBot
+});
+
+
+
+
+}
+/// @nodoc
+class _$FeedCreatorCopyWithImpl<$Res>
+    implements $FeedCreatorCopyWith<$Res> {
+  _$FeedCreatorCopyWithImpl(this._self, this._then);
+
+  final FeedCreator _self;
+  final $Res Function(FeedCreator) _then;
+
+/// Create a copy of FeedCreator
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? avatarUrl = freezed,Object? isBot = null,}) {
+  return _then(_self.copyWith(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
+as String?,isBot: null == isBot ? _self.isBot : isBot // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [FeedCreator].
+extension FeedCreatorPatterns on FeedCreator {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _FeedCreator value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _FeedCreator() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _FeedCreator value)  $default,){
+final _that = this;
+switch (_that) {
+case _FeedCreator():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _FeedCreator value)?  $default,){
+final _that = this;
+switch (_that) {
+case _FeedCreator() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? avatarUrl,  bool isBot)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _FeedCreator() when $default != null:
+return $default(_that.id,_that.name,_that.avatarUrl,_that.isBot);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? avatarUrl,  bool isBot)  $default,) {final _that = this;
+switch (_that) {
+case _FeedCreator():
+return $default(_that.id,_that.name,_that.avatarUrl,_that.isBot);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? avatarUrl,  bool isBot)?  $default,) {final _that = this;
+switch (_that) {
+case _FeedCreator() when $default != null:
+return $default(_that.id,_that.name,_that.avatarUrl,_that.isBot);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _FeedCreator implements FeedCreator {
+  const _FeedCreator({required this.id, this.name = '', this.avatarUrl, this.isBot = false});
+  factory _FeedCreator.fromJson(Map<String, dynamic> json) => _$FeedCreatorFromJson(json);
+
+@override final  String id;
+@override@JsonKey() final  String name;
+@override final  String? avatarUrl;
+@override@JsonKey() final  bool isBot;
+
+/// Create a copy of FeedCreator
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$FeedCreatorCopyWith<_FeedCreator> get copyWith => __$FeedCreatorCopyWithImpl<_FeedCreator>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$FeedCreatorToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FeedCreator&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.isBot, isBot) || other.isBot == isBot));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,name,avatarUrl,isBot);
+
+@override
+String toString() {
+  return 'FeedCreator(id: $id, name: $name, avatarUrl: $avatarUrl, isBot: $isBot)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$FeedCreatorCopyWith<$Res> implements $FeedCreatorCopyWith<$Res> {
+  factory _$FeedCreatorCopyWith(_FeedCreator value, $Res Function(_FeedCreator) _then) = __$FeedCreatorCopyWithImpl;
+@override @useResult
+$Res call({
+ String id, String name, String? avatarUrl, bool isBot
+});
+
+
+
+
+}
+/// @nodoc
+class __$FeedCreatorCopyWithImpl<$Res>
+    implements _$FeedCreatorCopyWith<$Res> {
+  __$FeedCreatorCopyWithImpl(this._self, this._then);
+
+  final _FeedCreator _self;
+  final $Res Function(_FeedCreator) _then;
+
+/// Create a copy of FeedCreator
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? avatarUrl = freezed,Object? isBot = null,}) {
+  return _then(_FeedCreator(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
+as String?,isBot: null == isBot ? _self.isBot : isBot // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$Content {
 
- String get id; ContentType get type; String get creatorId; Visibility get visibility; ContentTier get tier; ContentStatus get status; int get likeCount; int get commentCount; int get viewCount; int get shareCount; int get saveCount; DateTime get createdAt;
+ String get id; ContentType get type; String get creatorId; FeedCreator? get creator; Visibility get visibility; ContentTier get tier; ContentStatus get status; int get likeCount; int get commentCount; int get viewCount; int get shareCount; int get saveCount; DateTime get createdAt;// Video subtype
+ String? get videoUrl; String? get thumbnailUrl; int? get durationSeconds; String? get caption;// Post subtype
+ String? get text; PostSubType? get subType;// Product subtype (also surfaced as `Product` for the marketplace API)
+ String? get title; int? get priceCents; String get currency; String? get condition;
 /// Create a copy of Content
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +303,16 @@ $ContentCopyWith<Content> get copyWith => _$ContentCopyWithImpl<Content>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Content&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.creatorId, creatorId) || other.creatorId == creatorId)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.tier, tier) || other.tier == tier)&&(identical(other.status, status) || other.status == status)&&(identical(other.likeCount, likeCount) || other.likeCount == likeCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.viewCount, viewCount) || other.viewCount == viewCount)&&(identical(other.shareCount, shareCount) || other.shareCount == shareCount)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Content&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.creatorId, creatorId) || other.creatorId == creatorId)&&(identical(other.creator, creator) || other.creator == creator)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.tier, tier) || other.tier == tier)&&(identical(other.status, status) || other.status == status)&&(identical(other.likeCount, likeCount) || other.likeCount == likeCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.viewCount, viewCount) || other.viewCount == viewCount)&&(identical(other.shareCount, shareCount) || other.shareCount == shareCount)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.videoUrl, videoUrl) || other.videoUrl == videoUrl)&&(identical(other.thumbnailUrl, thumbnailUrl) || other.thumbnailUrl == thumbnailUrl)&&(identical(other.durationSeconds, durationSeconds) || other.durationSeconds == durationSeconds)&&(identical(other.caption, caption) || other.caption == caption)&&(identical(other.text, text) || other.text == text)&&(identical(other.subType, subType) || other.subType == subType)&&(identical(other.title, title) || other.title == title)&&(identical(other.priceCents, priceCents) || other.priceCents == priceCents)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.condition, condition) || other.condition == condition));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,type,creatorId,visibility,tier,status,likeCount,commentCount,viewCount,shareCount,saveCount,createdAt);
+int get hashCode => Object.hashAll([runtimeType,id,type,creatorId,creator,visibility,tier,status,likeCount,commentCount,viewCount,shareCount,saveCount,createdAt,videoUrl,thumbnailUrl,durationSeconds,caption,text,subType,title,priceCents,currency,condition]);
 
 @override
 String toString() {
-  return 'Content(id: $id, type: $type, creatorId: $creatorId, visibility: $visibility, tier: $tier, status: $status, likeCount: $likeCount, commentCount: $commentCount, viewCount: $viewCount, shareCount: $shareCount, saveCount: $saveCount, createdAt: $createdAt)';
+  return 'Content(id: $id, type: $type, creatorId: $creatorId, creator: $creator, visibility: $visibility, tier: $tier, status: $status, likeCount: $likeCount, commentCount: $commentCount, viewCount: $viewCount, shareCount: $shareCount, saveCount: $saveCount, createdAt: $createdAt, videoUrl: $videoUrl, thumbnailUrl: $thumbnailUrl, durationSeconds: $durationSeconds, caption: $caption, text: $text, subType: $subType, title: $title, priceCents: $priceCents, currency: $currency, condition: $condition)';
 }
 
 
@@ -48,11 +323,11 @@ abstract mixin class $ContentCopyWith<$Res>  {
   factory $ContentCopyWith(Content value, $Res Function(Content) _then) = _$ContentCopyWithImpl;
 @useResult
 $Res call({
- String id, ContentType type, String creatorId, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, DateTime createdAt
+ String id, ContentType type, String creatorId, FeedCreator? creator, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, DateTime createdAt, String? videoUrl, String? thumbnailUrl, int? durationSeconds, String? caption, String? text, PostSubType? subType, String? title, int? priceCents, String currency, String? condition
 });
 
 
-
+$FeedCreatorCopyWith<$Res>? get creator;
 
 }
 /// @nodoc
@@ -65,12 +340,13 @@ class _$ContentCopyWithImpl<$Res>
 
 /// Create a copy of Content
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? creatorId = null,Object? visibility = null,Object? tier = null,Object? status = null,Object? likeCount = null,Object? commentCount = null,Object? viewCount = null,Object? shareCount = null,Object? saveCount = null,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? creatorId = null,Object? creator = freezed,Object? visibility = null,Object? tier = null,Object? status = null,Object? likeCount = null,Object? commentCount = null,Object? viewCount = null,Object? shareCount = null,Object? saveCount = null,Object? createdAt = null,Object? videoUrl = freezed,Object? thumbnailUrl = freezed,Object? durationSeconds = freezed,Object? caption = freezed,Object? text = freezed,Object? subType = freezed,Object? title = freezed,Object? priceCents = freezed,Object? currency = null,Object? condition = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as ContentType,creatorId: null == creatorId ? _self.creatorId : creatorId // ignore: cast_nullable_to_non_nullable
-as String,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
+as String,creator: freezed == creator ? _self.creator : creator // ignore: cast_nullable_to_non_nullable
+as FeedCreator?,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
 as Visibility,tier: null == tier ? _self.tier : tier // ignore: cast_nullable_to_non_nullable
 as ContentTier,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as ContentStatus,likeCount: null == likeCount ? _self.likeCount : likeCount // ignore: cast_nullable_to_non_nullable
@@ -79,10 +355,32 @@ as int,viewCount: null == viewCount ? _self.viewCount : viewCount // ignore: cas
 as int,shareCount: null == shareCount ? _self.shareCount : shareCount // ignore: cast_nullable_to_non_nullable
 as int,saveCount: null == saveCount ? _self.saveCount : saveCount // ignore: cast_nullable_to_non_nullable
 as int,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,videoUrl: freezed == videoUrl ? _self.videoUrl : videoUrl // ignore: cast_nullable_to_non_nullable
+as String?,thumbnailUrl: freezed == thumbnailUrl ? _self.thumbnailUrl : thumbnailUrl // ignore: cast_nullable_to_non_nullable
+as String?,durationSeconds: freezed == durationSeconds ? _self.durationSeconds : durationSeconds // ignore: cast_nullable_to_non_nullable
+as int?,caption: freezed == caption ? _self.caption : caption // ignore: cast_nullable_to_non_nullable
+as String?,text: freezed == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
+as String?,subType: freezed == subType ? _self.subType : subType // ignore: cast_nullable_to_non_nullable
+as PostSubType?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,priceCents: freezed == priceCents ? _self.priceCents : priceCents // ignore: cast_nullable_to_non_nullable
+as int?,currency: null == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
+as String,condition: freezed == condition ? _self.condition : condition // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
+/// Create a copy of Content
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$FeedCreatorCopyWith<$Res>? get creator {
+    if (_self.creator == null) {
+    return null;
+  }
 
+  return $FeedCreatorCopyWith<$Res>(_self.creator!, (value) {
+    return _then(_self.copyWith(creator: value));
+  });
+}
 }
 
 
@@ -164,10 +462,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  ContentType type,  String creatorId,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  ContentType type,  String creatorId,  FeedCreator? creator,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime createdAt,  String? videoUrl,  String? thumbnailUrl,  int? durationSeconds,  String? caption,  String? text,  PostSubType? subType,  String? title,  int? priceCents,  String currency,  String? condition)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Content() when $default != null:
-return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.createdAt);case _:
+return $default(_that.id,_that.type,_that.creatorId,_that.creator,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.createdAt,_that.videoUrl,_that.thumbnailUrl,_that.durationSeconds,_that.caption,_that.text,_that.subType,_that.title,_that.priceCents,_that.currency,_that.condition);case _:
   return orElse();
 
 }
@@ -185,10 +483,10 @@ return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  ContentType type,  String creatorId,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  ContentType type,  String creatorId,  FeedCreator? creator,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime createdAt,  String? videoUrl,  String? thumbnailUrl,  int? durationSeconds,  String? caption,  String? text,  PostSubType? subType,  String? title,  int? priceCents,  String currency,  String? condition)  $default,) {final _that = this;
 switch (_that) {
 case _Content():
-return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.createdAt);case _:
+return $default(_that.id,_that.type,_that.creatorId,_that.creator,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.createdAt,_that.videoUrl,_that.thumbnailUrl,_that.durationSeconds,_that.caption,_that.text,_that.subType,_that.title,_that.priceCents,_that.currency,_that.condition);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +503,10 @@ return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  ContentType type,  String creatorId,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  ContentType type,  String creatorId,  FeedCreator? creator,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime createdAt,  String? videoUrl,  String? thumbnailUrl,  int? durationSeconds,  String? caption,  String? text,  PostSubType? subType,  String? title,  int? priceCents,  String currency,  String? condition)?  $default,) {final _that = this;
 switch (_that) {
 case _Content() when $default != null:
-return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.createdAt);case _:
+return $default(_that.id,_that.type,_that.creatorId,_that.creator,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.createdAt,_that.videoUrl,_that.thumbnailUrl,_that.durationSeconds,_that.caption,_that.text,_that.subType,_that.title,_that.priceCents,_that.currency,_that.condition);case _:
   return null;
 
 }
@@ -220,12 +518,13 @@ return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,
 @JsonSerializable()
 
 class _Content implements Content {
-  const _Content({required this.id, required this.type, required this.creatorId, this.visibility = Visibility.public_, this.tier = ContentTier.free, this.status = ContentStatus.active, this.likeCount = 0, this.commentCount = 0, this.viewCount = 0, this.shareCount = 0, this.saveCount = 0, required this.createdAt});
+  const _Content({required this.id, required this.type, required this.creatorId, this.creator, this.visibility = Visibility.public_, this.tier = ContentTier.free, this.status = ContentStatus.active, this.likeCount = 0, this.commentCount = 0, this.viewCount = 0, this.shareCount = 0, this.saveCount = 0, required this.createdAt, this.videoUrl, this.thumbnailUrl, this.durationSeconds, this.caption, this.text, this.subType, this.title, this.priceCents, this.currency = 'GBP', this.condition});
   factory _Content.fromJson(Map<String, dynamic> json) => _$ContentFromJson(json);
 
 @override final  String id;
 @override final  ContentType type;
 @override final  String creatorId;
+@override final  FeedCreator? creator;
 @override@JsonKey() final  Visibility visibility;
 @override@JsonKey() final  ContentTier tier;
 @override@JsonKey() final  ContentStatus status;
@@ -235,6 +534,19 @@ class _Content implements Content {
 @override@JsonKey() final  int shareCount;
 @override@JsonKey() final  int saveCount;
 @override final  DateTime createdAt;
+// Video subtype
+@override final  String? videoUrl;
+@override final  String? thumbnailUrl;
+@override final  int? durationSeconds;
+@override final  String? caption;
+// Post subtype
+@override final  String? text;
+@override final  PostSubType? subType;
+// Product subtype (also surfaced as `Product` for the marketplace API)
+@override final  String? title;
+@override final  int? priceCents;
+@override@JsonKey() final  String currency;
+@override final  String? condition;
 
 /// Create a copy of Content
 /// with the given fields replaced by the non-null parameter values.
@@ -249,16 +561,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Content&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.creatorId, creatorId) || other.creatorId == creatorId)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.tier, tier) || other.tier == tier)&&(identical(other.status, status) || other.status == status)&&(identical(other.likeCount, likeCount) || other.likeCount == likeCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.viewCount, viewCount) || other.viewCount == viewCount)&&(identical(other.shareCount, shareCount) || other.shareCount == shareCount)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Content&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.creatorId, creatorId) || other.creatorId == creatorId)&&(identical(other.creator, creator) || other.creator == creator)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.tier, tier) || other.tier == tier)&&(identical(other.status, status) || other.status == status)&&(identical(other.likeCount, likeCount) || other.likeCount == likeCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.viewCount, viewCount) || other.viewCount == viewCount)&&(identical(other.shareCount, shareCount) || other.shareCount == shareCount)&&(identical(other.saveCount, saveCount) || other.saveCount == saveCount)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.videoUrl, videoUrl) || other.videoUrl == videoUrl)&&(identical(other.thumbnailUrl, thumbnailUrl) || other.thumbnailUrl == thumbnailUrl)&&(identical(other.durationSeconds, durationSeconds) || other.durationSeconds == durationSeconds)&&(identical(other.caption, caption) || other.caption == caption)&&(identical(other.text, text) || other.text == text)&&(identical(other.subType, subType) || other.subType == subType)&&(identical(other.title, title) || other.title == title)&&(identical(other.priceCents, priceCents) || other.priceCents == priceCents)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.condition, condition) || other.condition == condition));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,type,creatorId,visibility,tier,status,likeCount,commentCount,viewCount,shareCount,saveCount,createdAt);
+int get hashCode => Object.hashAll([runtimeType,id,type,creatorId,creator,visibility,tier,status,likeCount,commentCount,viewCount,shareCount,saveCount,createdAt,videoUrl,thumbnailUrl,durationSeconds,caption,text,subType,title,priceCents,currency,condition]);
 
 @override
 String toString() {
-  return 'Content(id: $id, type: $type, creatorId: $creatorId, visibility: $visibility, tier: $tier, status: $status, likeCount: $likeCount, commentCount: $commentCount, viewCount: $viewCount, shareCount: $shareCount, saveCount: $saveCount, createdAt: $createdAt)';
+  return 'Content(id: $id, type: $type, creatorId: $creatorId, creator: $creator, visibility: $visibility, tier: $tier, status: $status, likeCount: $likeCount, commentCount: $commentCount, viewCount: $viewCount, shareCount: $shareCount, saveCount: $saveCount, createdAt: $createdAt, videoUrl: $videoUrl, thumbnailUrl: $thumbnailUrl, durationSeconds: $durationSeconds, caption: $caption, text: $text, subType: $subType, title: $title, priceCents: $priceCents, currency: $currency, condition: $condition)';
 }
 
 
@@ -269,11 +581,11 @@ abstract mixin class _$ContentCopyWith<$Res> implements $ContentCopyWith<$Res> {
   factory _$ContentCopyWith(_Content value, $Res Function(_Content) _then) = __$ContentCopyWithImpl;
 @override @useResult
 $Res call({
- String id, ContentType type, String creatorId, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, DateTime createdAt
+ String id, ContentType type, String creatorId, FeedCreator? creator, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, DateTime createdAt, String? videoUrl, String? thumbnailUrl, int? durationSeconds, String? caption, String? text, PostSubType? subType, String? title, int? priceCents, String currency, String? condition
 });
 
 
-
+@override $FeedCreatorCopyWith<$Res>? get creator;
 
 }
 /// @nodoc
@@ -286,12 +598,13 @@ class __$ContentCopyWithImpl<$Res>
 
 /// Create a copy of Content
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? type = null,Object? creatorId = null,Object? visibility = null,Object? tier = null,Object? status = null,Object? likeCount = null,Object? commentCount = null,Object? viewCount = null,Object? shareCount = null,Object? saveCount = null,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? type = null,Object? creatorId = null,Object? creator = freezed,Object? visibility = null,Object? tier = null,Object? status = null,Object? likeCount = null,Object? commentCount = null,Object? viewCount = null,Object? shareCount = null,Object? saveCount = null,Object? createdAt = null,Object? videoUrl = freezed,Object? thumbnailUrl = freezed,Object? durationSeconds = freezed,Object? caption = freezed,Object? text = freezed,Object? subType = freezed,Object? title = freezed,Object? priceCents = freezed,Object? currency = null,Object? condition = freezed,}) {
   return _then(_Content(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as ContentType,creatorId: null == creatorId ? _self.creatorId : creatorId // ignore: cast_nullable_to_non_nullable
-as String,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
+as String,creator: freezed == creator ? _self.creator : creator // ignore: cast_nullable_to_non_nullable
+as FeedCreator?,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
 as Visibility,tier: null == tier ? _self.tier : tier // ignore: cast_nullable_to_non_nullable
 as ContentTier,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as ContentStatus,likeCount: null == likeCount ? _self.likeCount : likeCount // ignore: cast_nullable_to_non_nullable
@@ -300,11 +613,33 @@ as int,viewCount: null == viewCount ? _self.viewCount : viewCount // ignore: cas
 as int,shareCount: null == shareCount ? _self.shareCount : shareCount // ignore: cast_nullable_to_non_nullable
 as int,saveCount: null == saveCount ? _self.saveCount : saveCount // ignore: cast_nullable_to_non_nullable
 as int,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,videoUrl: freezed == videoUrl ? _self.videoUrl : videoUrl // ignore: cast_nullable_to_non_nullable
+as String?,thumbnailUrl: freezed == thumbnailUrl ? _self.thumbnailUrl : thumbnailUrl // ignore: cast_nullable_to_non_nullable
+as String?,durationSeconds: freezed == durationSeconds ? _self.durationSeconds : durationSeconds // ignore: cast_nullable_to_non_nullable
+as int?,caption: freezed == caption ? _self.caption : caption // ignore: cast_nullable_to_non_nullable
+as String?,text: freezed == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
+as String?,subType: freezed == subType ? _self.subType : subType // ignore: cast_nullable_to_non_nullable
+as PostSubType?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,priceCents: freezed == priceCents ? _self.priceCents : priceCents // ignore: cast_nullable_to_non_nullable
+as int?,currency: null == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
+as String,condition: freezed == condition ? _self.condition : condition // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
+/// Create a copy of Content
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$FeedCreatorCopyWith<$Res>? get creator {
+    if (_self.creator == null) {
+    return null;
+  }
 
+  return $FeedCreatorCopyWith<$Res>(_self.creator!, (value) {
+    return _then(_self.copyWith(creator: value));
+  });
+}
 }
 
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 
 import '../application/feed_provider.dart';
-import '../data/feed_models.dart';
 import 'feed_common.dart';
 
 /// Mobile-side video feed wired to `GET /feed?tab=video`.
@@ -60,12 +60,13 @@ class VideoFeedMobileScreen extends ConsumerWidget {
 }
 
 class _VideoCard extends StatelessWidget {
-  final FeedItem item;
+  final Content item;
   const _VideoCard({required this.item});
 
   @override
   Widget build(BuildContext context) {
     final thumb = item.thumbnailUrl;
+    final creator = item.creator;
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -90,17 +91,17 @@ class _VideoCard extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 14,
-                      backgroundImage: item.creator.avatarUrl != null
-                          ? NetworkImage(item.creator.avatarUrl!)
+                      backgroundImage: creator?.avatarUrl != null
+                          ? NetworkImage(creator!.avatarUrl!)
                           : null,
-                      child: item.creator.avatarUrl == null
+                      child: creator?.avatarUrl == null
                           ? const Icon(Icons.person, size: 16)
                           : null,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        item.creator.name,
+                        creator?.name ?? '',
                         style: const TextStyle(fontWeight: FontWeight.w600),
                         overflow: TextOverflow.ellipsis,
                       ),

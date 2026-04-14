@@ -39,3 +39,18 @@ Map<String, dynamic> _$ProductToJson(_Product instance) => <String, dynamic>{
   'commentCount': instance.commentCount,
   'createdAt': instance.createdAt.toIso8601String(),
 };
+
+_ProductPage _$ProductPageFromJson(Map<String, dynamic> json) => _ProductPage(
+  items:
+      (json['items'] as List<dynamic>?)
+          ?.map((e) => Product.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <Product>[],
+  nextCursor: json['nextCursor'] as String?,
+);
+
+Map<String, dynamic> _$ProductPageToJson(_ProductPage instance) =>
+    <String, dynamic>{
+      'items': instance.items,
+      'nextCursor': instance.nextCursor,
+    };

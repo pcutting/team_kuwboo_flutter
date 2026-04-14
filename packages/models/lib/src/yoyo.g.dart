@@ -10,7 +10,7 @@ _NearbyUser _$NearbyUserFromJson(Map<String, dynamic> json) => _NearbyUser(
   id: json['id'] as String,
   name: json['name'] as String,
   avatarUrl: json['avatarUrl'] as String?,
-  distanceKm: (json['distanceKm'] as num).toDouble(),
+  distanceMeters: (json['distanceMeters'] as num?)?.toInt() ?? 0,
   onlineStatus: json['onlineStatus'] as String?,
 );
 
@@ -19,7 +19,7 @@ Map<String, dynamic> _$NearbyUserToJson(_NearbyUser instance) =>
       'id': instance.id,
       'name': instance.name,
       'avatarUrl': instance.avatarUrl,
-      'distanceKm': instance.distanceKm,
+      'distanceMeters': instance.distanceMeters,
       'onlineStatus': instance.onlineStatus,
     };
 

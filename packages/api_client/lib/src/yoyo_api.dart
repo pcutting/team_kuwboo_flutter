@@ -22,18 +22,19 @@ class YoyoApi {
     );
   }
 
-  /// Fetch users within proximity.
+  /// Fetch users within proximity. Backend accepts `lat` / `lng` / `radius`
+  /// (km).
   Future<List<NearbyUser>> getNearbyUsers({
-    required double latitude,
-    required double longitude,
+    required double lat,
+    required double lng,
     int? radiusKm,
   }) async {
     final response = await _client.dio.get(
       '/yoyo/nearby',
       queryParameters: {
-        'latitude': latitude,
-        'longitude': longitude,
-        if (radiusKm != null) 'radiusKm': radiusKm,
+        'lat': lat,
+        'lng': lng,
+        if (radiusKm != null) 'radius': radiusKm,
       },
     );
     return _client.unwrapList(response, NearbyUser.fromJson);
