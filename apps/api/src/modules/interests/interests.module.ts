@@ -9,7 +9,8 @@ import {
   InterestSignalsService,
   INTEREST_SIGNAL_QUEUE,
 } from './interest-signals.service';
-import { InterestSignalProcessor } from './interest-signal.processor';
+import { InterestSignalProcessor } from './workers/interest-signal.processor';
+import { InterestSignalDecayCron } from './workers/interest-signal-decay.cron';
 import { InterestsController } from './interests.controller';
 import { AdminInterestsController } from './admin-interests.controller';
 
@@ -19,7 +20,12 @@ import { AdminInterestsController } from './admin-interests.controller';
     BullModule.registerQueue({ name: INTEREST_SIGNAL_QUEUE }),
   ],
   controllers: [InterestsController, AdminInterestsController],
-  providers: [InterestsService, InterestSignalsService, InterestSignalProcessor],
+  providers: [
+    InterestsService,
+    InterestSignalsService,
+    InterestSignalProcessor,
+    InterestSignalDecayCron,
+  ],
   exports: [InterestsService, InterestSignalsService],
 })
 export class InterestsModule {}
