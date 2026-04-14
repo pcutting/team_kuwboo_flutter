@@ -6,12 +6,14 @@ import { InteractionEvent } from './entities/interaction-event.entity';
 import { Content } from '../content/entities/content.entity';
 import { InteractionStateType, InteractionEventType, ContentType } from '../../common/enums';
 import { InterestSignalsService } from '../interests/interest-signals.service';
+import { ContentInterestTagsService } from '../content/content-interest-tags.service';
 
 @Injectable()
 export class InteractionsService {
   constructor(
     private readonly em: EntityManager,
     private readonly interestSignals: InterestSignalsService,
+    private readonly contentInterestTags: ContentInterestTagsService,
   ) {}
 
   async toggleLike(userId: string, contentId: string): Promise<{ liked: boolean }> {
@@ -41,19 +43,17 @@ export class InteractionsService {
   }
 
   /**
-   * Maps a Content to its associated interest IDs and enqueues a bump job.
-   *
-   * TODO D3: add a `content_interests` join table (Content -> Interest)
-   * and replace this stub with a real lookup. Until then, behavioural
-   * signals are wired end-to-end but no interest IDs flow through — the
-   * enqueue call short-circuits when interestIds is empty.
+   * Maps a Content to its associated interest IDs (via
+   * ContentInterestTagsService — see D3b) and enqueues a bump job.
+   * No-ops for untagged content (expected for legacy content until
+   * the auto-classifier backfills tags).
    */
   private async emitInterestSignal(
     userId: string,
-    _contentId: string,
+    contentId: string,
     source: string,
   ): Promise<void> {
-    const interestIds: string[] = [];
+    const interestIds = await this.contentInterestTags.getInterestIdsForContent(contentId);
     if (interestIds.length === 0) return;
     await this.interestSignals.enqueueBump({ userId, interestIds, source });
   }

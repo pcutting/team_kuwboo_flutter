@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { InteractionsService } from './interactions.service';
 import { InterestSignalsService } from '../interests/interest-signals.service';
+import { ContentInterestTagsService } from '../content/content-interest-tags.service';
 import { InteractionStateType, ContentType } from '../../common/enums';
 import { Content } from '../content/entities/content.entity';
 import { InteractionState } from './entities/interaction-state.entity';
@@ -19,6 +20,7 @@ describe('InteractionsService — interest signal emission', () => {
     getReference: jest.Mock;
   };
   let interestSignals: { enqueueBump: jest.Mock };
+  let contentInterestTags: { getInterestIdsForContent: jest.Mock };
   let emitSpy: jest.SpyInstance;
 
   beforeEach(async () => {
@@ -34,12 +36,16 @@ describe('InteractionsService — interest signal emission', () => {
     };
 
     interestSignals = { enqueueBump: jest.fn().mockResolvedValue(undefined) };
+    contentInterestTags = {
+      getInterestIdsForContent: jest.fn().mockResolvedValue([]),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InteractionsService,
         { provide: EntityManager, useValue: em },
         { provide: InterestSignalsService, useValue: interestSignals },
+        { provide: ContentInterestTagsService, useValue: contentInterestTags },
       ],
     }).compile();
 
@@ -96,5 +102,33 @@ describe('InteractionsService — interest signal emission', () => {
     await service.logView('u1', 'c1');
 
     expect(emitSpy).not.toHaveBeenCalled();
+  });
+
+  it('enqueues a bump with real interest IDs when content is tagged', async () => {
+    em.findOne.mockResolvedValueOnce(null);
+    em.findOneOrFail.mockResolvedValueOnce({ id: 'c1' } as Content);
+    contentInterestTags.getInterestIdsForContent.mockResolvedValueOnce([
+      'i-cycling',
+      'i-outdoors',
+    ]);
+
+    await service.toggleLike('u1', 'c1');
+
+    expect(contentInterestTags.getInterestIdsForContent).toHaveBeenCalledWith('c1');
+    expect(interestSignals.enqueueBump).toHaveBeenCalledWith({
+      userId: 'u1',
+      interestIds: ['i-cycling', 'i-outdoors'],
+      source: 'content.liked',
+    });
+  });
+
+  it('does not enqueue when content has no interest tags', async () => {
+    em.findOne.mockResolvedValueOnce(null);
+    em.findOneOrFail.mockResolvedValueOnce({ id: 'c1' } as Content);
+    contentInterestTags.getInterestIdsForContent.mockResolvedValueOnce([]);
+
+    await service.toggleLike('u1', 'c1');
+
+    expect(interestSignals.enqueueBump).not.toHaveBeenCalled();
   });
 });
