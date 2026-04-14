@@ -132,6 +132,14 @@ export class User {
   @Property({ type: 'timestamptz', nullable: true })
   lastReminderAt?: Date;
 
+  /**
+   * Timestamp of the last profile-completeness nudge push sent. Used by
+   * `ProfileCompletenessNudgeCron` to enforce the 7-day reminder cadence
+   * per IDENTITY_CONTRACT §8.
+   */
+  @Property({ type: 'timestamptz', nullable: true })
+  lastProfileReminderAt?: Date;
+
   @Property({ type: 'timestamptz', nullable: true })
   lastLoginAt?: Date;
 
