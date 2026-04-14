@@ -5,9 +5,70 @@ import 'package:json_annotation/json_annotation.dart';
 enum Role {
   user('USER'),
   moderator('MODERATOR'),
-  admin('ADMIN');
+  admin('ADMIN'),
+  superAdmin('SUPER_ADMIN');
 
   const Role(this.value);
+  final String value;
+}
+
+/// Identity credential type (phone / email / SSO provider).
+@JsonEnum(valueField: 'value')
+enum CredentialType {
+  phone('phone'),
+  email('email'),
+  google('google'),
+  apple('apple');
+
+  const CredentialType(this.value);
+  final String value;
+}
+
+/// User onboarding progress marker. See IDENTITY_CONTRACT §3.2.
+@JsonEnum(valueField: 'value')
+enum OnboardingProgress {
+  welcome('welcome'),
+  method('method'),
+  phone('phone'),
+  otp('otp'),
+  birthday('birthday'),
+  profile('profile'),
+  interests('interests'),
+  tutorial('tutorial'),
+  complete('complete');
+
+  const OnboardingProgress(this.value);
+  final String value;
+}
+
+/// Age verification lifecycle state. See IDENTITY_CONTRACT §6.
+@JsonEnum(valueField: 'value')
+enum AgeVerificationStatus {
+  unverified('unverified'),
+  selfDeclared('self_declared'),
+  providerVerified('provider_verified'),
+  failed('failed');
+
+  const AgeVerificationStatus(this.value);
+  final String value;
+}
+
+/// Identity-subsystem trust signal values. Backend stores signal_type as
+/// free text, so unknown server-side values should not crash the client;
+/// consumers are expected to treat the raw string as authoritative.
+@JsonEnum(valueField: 'value')
+enum TrustSignalType {
+  phoneVerifiedMobile('phone_verified_mobile'),
+  phoneVerifiedVoip('phone_verified_voip'),
+  emailVerified('email_verified'),
+  ssoGoogleVerified('sso_google_verified'),
+  ssoAppleVerified('sso_apple_verified'),
+  refreshReuseDetected('refresh_reuse_detected'),
+  accountAge30d('account_age_30d'),
+  selfieVerified('selfie_verified'),
+  ageProviderVerified('age_provider_verified');
+
+  const TrustSignalType(this.value);
   final String value;
 }
 

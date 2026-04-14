@@ -82,14 +82,31 @@ class KuwbooApiClient {
 
         try {
           // Use a separate Dio instance to avoid interceptor recursion.
+          // Contract §4.7: expired access token in Authorization header,
+          // refresh token in body.
+          final expiredAccess = await getAccessToken();
+          if (expiredAccess == null) {
+            await clearTokens();
+            return handler.next(error);
+          }
           final refreshDio = Dio(BaseOptions(baseUrl: _dio.options.baseUrl));
           final response = await refreshDio.post(
             '/auth/refresh',
             data: {'refreshToken': refreshToken},
+            options: Options(
+              headers: {
+                'Authorization': 'Bearer $expiredAccess',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+            ),
           );
 
           final data = response.data['data'] as Map<String, dynamic>;
-          final newTokens = TokenPair.fromJson(data);
+          final newTokens = TokenPair(
+            accessToken: data['accessToken'] as String,
+            refreshToken: data['refreshToken'] as String,
+          );
           await saveTokens(newTokens);
 
           // Retry the original request with new token.
