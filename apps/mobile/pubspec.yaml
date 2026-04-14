@@ -11,8 +11,6 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
-  kuwboo_ui:
-    path: ../../packages/ui
   kuwboo_shell:
     path: ../../packages/kuwboo_shell
   kuwboo_screens:
