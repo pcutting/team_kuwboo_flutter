@@ -198,3 +198,60 @@ class UsersApi {
 ---
 
 **Next phase (C2):** PR that fixes `packages/api_client/lib/src/auth_api.dart` to match the backend, deletes `apps/mobile/.../auth_api.dart`, and re-wires mobile providers.
+
+---
+
+## 9. Resolutions (decisions)
+
+Captured from product owner review of section 6.
+
+| # | Question | Decision |
+|---|---|---|
+| 1 | OTP length (4 vs 6) | **6 digits** (industry standard). Update `authOtp` UI to 6 boxes. |
+| 2 | Email signup | **Add** `/auth/email/send-otp` + `/auth/email/verify-otp` (parity with phone flow). |
+| 3 | Profile-data save strategy | **Progressive `PATCH /users/me`** after each onboarding step (interests, dob, name, etc.). Profile fields are optional builders; access can be blocked downstream where a specific field is required. |
+| 4 | Age gate for SSO users | **No skip of birthday step** for SSO. Add a "Skip" affordance for users who want to get on quickly. **Also capture App-Store age range** when SSO providers expose it (Apple's `realUserStatus` / age-bracket signals; Google's analogous data). Persist as `user.signup_age_bracket`. |
+| 5 | Tutorial completion persisted server-side | **Yes.** Add `POST /users/me/tutorial-complete`; suppress tutorial on subsequent installs. |
+| 6 | `authSignup` legacy consolidated form | **Delete.** Use the separate `authPhone` + `authOtp` screens. **Add a country-code prefix selector** to `authPhone`. |
+| 7 | Username uniqueness check | **Yes.** Add `GET /users/username-available?handle=…`. |
+| 8 | OTP resend endpoint | **Reuse `POST /auth/phone/send-otp`** with rate-limiting + idempotency-window — best practice, single endpoint surface. |
+| 9 | `authLogin` is a pure mock | **Wire up in C3** to real OTP / SSO flow + token storage before app entry. |
+| 10 | Interest list source | **Seed + admin-editable in DB.** See data-model below. |
+
+### Interests data model (resolved from #10)
+
+User concern: list must be admin-editable without breaking historical user selections or the recommendation engine.
+
+```
+interests
+  id            uuid PK              -- immutable, referenced from user_interests
+  slug          text UNIQUE NOT NULL -- immutable, used in code/seed
+  label         text NOT NULL         -- admin-editable display name
+  category      text?                  -- optional grouping (Sports, Music, …)
+  display_order int DEFAULT 0
+  is_active     bool DEFAULT true     -- soft-delete only
+  created_at, updated_at
+
+user_interests  (join)
+  user_id     uuid FK -> users.id
+  interest_id uuid FK -> interests.id
+  selected_at timestamp
+  PK (user_id, interest_id)
+```
+
+Rules:
+- **No hard-deletes** of interests — `is_active=false` removes from onboarding chips but preserves user history and recommendation features.
+- **Renames are free** — `label` is editable; `id`/`slug` never change.
+- **Admin panel** does CRUD on `interests`, including reorder via `display_order`.
+- **Seed** ~30 entries covering Music, Sports, Food, Travel, Tech, Arts, Wellness, Gaming, Pets, Outdoors. List finalised in C2.
+
+### New backend work surfaced by these decisions
+
+- `POST /auth/email/send-otp` + `POST /auth/email/verify-otp` (Q2)
+- `PATCH /users/me` accepting partial profile fields: interests[], dob, name, displayName, username, avatarUrl (Q3)
+- `POST /users/me/tutorial-complete` (Q5)
+- `GET /users/username-available?handle=…` (Q7)
+- New column `users.signup_age_bracket` populated from SSO provider data when available (Q4)
+- New tables `interests` + `user_interests` with seed migration + admin CRUD (Q10)
+
+These extend section 7's "Recommended target contract" — Phase C2 will sequence them.
