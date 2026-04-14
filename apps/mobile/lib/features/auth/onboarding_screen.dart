@@ -1,12 +1,19 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 
 import '../../providers/api_provider.dart';
 import '../../providers/auth_provider.dart';
-import 'data/auth_models.dart';
 
 /// Initial profile setup after first-time verification.
+///
+/// This screen compresses the post-verify onboarding steps (birthday,
+/// profile name, tutorial) into a single mobile form. Tapping **Skip**
+/// mirrors the prototype's `onboardingSkippedProvider` by PATCHing
+/// `birthday_skipped: true` and advancing `onboarding_progress` to
+/// `tutorial`, so the next auth round-trip surfaces the user at the
+/// correct resume step.
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -17,6 +24,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _nameController = TextEditingController();
   bool _isSaving = false;
+  bool _isSkipping = false;
   String? _error;
 
   @override
@@ -33,8 +41,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
 
     final auth = ref.read(authProvider);
-    final userId = auth.userId;
-    if (userId == null) {
+    if (auth.userId == null) {
       setState(() => _error = 'Not signed in');
       return;
     }
@@ -45,17 +52,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     });
 
     try {
-      final dio = ref.read(dioProvider);
-      final res = await dio.patch<Map<String, dynamic>>(
-        '/users/$userId',
-        data: {'name': name},
-      );
-      final updated = res.data != null
-          ? AuthUser.fromJson(res.data!)
-          : (auth.user ?? AuthUser(id: userId, name: name))
-              .copyWith(name: name);
-      await ref.read(authProvider.notifier).updateUser(updated);
-      // Router redirect handles navigation once isNewUser clears.
+      final users = ref.read(usersApiProvider);
+      final updated = await users.patchMe({
+        'name': name,
+        'onboarding_progress': OnboardingProgress.complete.value,
+      });
+      ref.read(authProvider.notifier).updateUser(updated);
     } on DioException catch (e) {
       if (!mounted) return;
       final data = e.response?.data;
@@ -64,6 +66,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           : 'Could not save profile');
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _skip() async {
+    setState(() {
+      _isSkipping = true;
+      _error = null;
+    });
+    try {
+      final users = ref.read(usersApiProvider);
+      final updated = await users.patchMe({
+        'birthday_skipped': true,
+        'onboarding_progress': OnboardingProgress.tutorial.value,
+      });
+      ref.read(authProvider.notifier).updateUser(updated);
+    } on DioException catch (e) {
+      if (!mounted) return;
+      final data = e.response?.data;
+      setState(() => _error = (data is Map && data['message'] is String)
+          ? data['message'] as String
+          : 'Could not skip');
+    } finally {
+      if (mounted) setState(() => _isSkipping = false);
     }
   }
 
@@ -111,7 +136,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
               const SizedBox(height: 24),
               FilledButton(
-                onPressed: _isSaving ? null : _complete,
+                onPressed: _isSaving || _isSkipping ? null : _complete,
                 child: _isSaving
                     ? const SizedBox(
                         height: 20,
@@ -119,6 +144,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Text('Get Started'),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: _isSaving || _isSkipping ? null : _skip,
+                child: _isSkipping
+                    ? const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Skip for now'),
               ),
             ],
           ),

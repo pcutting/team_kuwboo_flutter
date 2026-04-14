@@ -1,27 +1,28 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kuwboo_api_client/kuwboo_api_client.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 
 import '../config/environment.dart';
-import '../features/auth/data/auth_api.dart';
-import '../features/auth/data/auth_models.dart';
-import '../features/auth/data/token_storage.dart';
 import 'api_provider.dart';
 
 // ─── Auth State ──────────────────────────────────────────────────────────
 
 /// Immutable authentication state.
+///
+/// Mirrors the authoritative token pair + canonical [User] from
+/// `kuwboo_models`. Tokens are authoritative in the shared client's secure
+/// storage; the copy held here is for synchronous reads by UI + router.
 class AuthState {
   final String? accessToken;
   final String? refreshToken;
-  final String? userId;
-  final AuthUser? user;
+  final User? user;
   final bool isLoading;
   final bool isNewUser;
 
   const AuthState({
     this.accessToken,
     this.refreshToken,
-    this.userId,
     this.user,
     this.isLoading = false,
     this.isNewUser = false,
@@ -29,28 +30,24 @@ class AuthState {
 
   bool get isAuthenticated => accessToken != null;
 
+  String? get userId => user?.id;
+
   AuthState copyWith({
     String? accessToken,
     String? refreshToken,
-    String? userId,
-    AuthUser? user,
+    User? user,
     bool? isLoading,
     bool? isNewUser,
   }) {
     return AuthState(
       accessToken: accessToken ?? this.accessToken,
       refreshToken: refreshToken ?? this.refreshToken,
-      userId: userId ?? this.userId,
       user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
       isNewUser: isNewUser ?? this.isNewUser,
     );
   }
 }
-
-// ─── Providers ───────────────────────────────────────────────────────────
-
-final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
 
 // ─── Auth Notifier ───────────────────────────────────────────────────────
 
@@ -61,21 +58,31 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   final Ref _ref;
 
-  TokenStorage get _storage => _ref.read(tokenStorageProvider);
-  AuthApi get _api => _ref.read(authApiProvider);
+  AuthApi get _authApi => _ref.read(authApiProvider);
+  UsersApi get _usersApi => _ref.read(usersApiProvider);
+  KuwbooApiClient get _client => _ref.read(apiClientProvider);
 
   Future<void> _init() async {
     try {
-      final tokens = await _storage.readTokens();
-      final user = await _storage.readUser();
-      if (tokens == null) {
+      final access = await _client.getAccessToken();
+      final refresh = await _client.getRefreshToken();
+      if (access == null || refresh == null) {
         state = const AuthState();
         return;
       }
+      // Best-effort hydrate of the user snapshot from the backend.
+      User? user;
+      try {
+        user = await _usersApi.me();
+      } catch (_) {
+        // 401 will trigger a logout on the next authenticated call; for
+        // init we degrade gracefully and let the redirect bounce to /login
+        // if tokens end up invalid.
+        user = null;
+      }
       state = AuthState(
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        userId: user?.id,
+        accessToken: access,
+        refreshToken: refresh,
         user: user,
       );
     } catch (_) {
@@ -88,7 +95,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> requestOtp(String phone) async {
     if (Environment.devAuthBypass) return;
     try {
-      await _api.sendOtp(phone);
+      await _authApi.sendPhoneOtp(phone: phone);
     } on DioException catch (e) {
       throw _translate(e, fallback: 'Could not send code');
     }
@@ -98,30 +105,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> verifyOtp(String phone, String code) async {
     state = state.copyWith(isLoading: true);
     try {
+      final AuthResponse response;
       if (Environment.devAuthBypass && code == Environment.devBypassOtp) {
-        // Hit the backend's POST /auth/dev-login (gated by DEV_LOGIN_ENABLED=1
-        // on the server) to get real JWTs. This makes dev mode behave exactly
-        // like a real session — feed/yoyo calls succeed, no fake-token 401s.
-        final response = await _api.devLogin(phone);
-        await _storage.writeTokens(response.tokens);
-        await _storage.writeUser(response.user);
-        state = AuthState(
-          accessToken: response.tokens.accessToken,
-          refreshToken: response.tokens.refreshToken,
-          userId: response.user.id,
-          user: response.user,
-          isNewUser: response.isNewUser,
-        );
-        return;
+        // Backend's POST /auth/dev-login (gated by DEV_LOGIN_ENABLED=1)
+        // returns real JWTs so feed/yoyo calls succeed end-to-end.
+        response = await _authApi.devLogin(phone: phone);
+      } else {
+        response = await _authApi.verifyPhoneOtp(phone: phone, code: code);
       }
-
-      final response = await _api.verifyOtp(phone, code);
-      await _storage.writeTokens(response.tokens);
-      await _storage.writeUser(response.user);
       state = AuthState(
-        accessToken: response.tokens.accessToken,
-        refreshToken: response.tokens.refreshToken,
-        userId: response.user.id,
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
         user: response.user,
         isNewUser: response.isNewUser,
       );
@@ -134,19 +128,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Apply tokens refreshed by the Dio interceptor.
-  Future<void> applyRefreshedTokens(AuthTokens tokens) async {
-    await _storage.writeTokens(tokens);
-    state = state.copyWith(
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-    );
-  }
-
   /// Update local user snapshot (e.g. after onboarding profile PATCH).
-  Future<void> updateUser(AuthUser user) async {
-    await _storage.writeUser(user);
-    state = state.copyWith(user: user, userId: user.id, isNewUser: false);
+  void updateUser(User user) {
+    state = state.copyWith(
+      user: user,
+      isNewUser: user.onboardingProgress != OnboardingProgress.complete,
+    );
   }
 
   /// Mark onboarding complete without modifying the user record.
@@ -154,35 +141,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (state.isNewUser) state = state.copyWith(isNewUser: false);
   }
 
-  /// Legacy direct-login helper retained for tests and any caller that
-  /// already holds a token pair.
-  Future<void> login({
-    required String accessToken,
-    required String refreshToken,
-    required String userId,
-    bool isNewUser = false,
-  }) async {
-    await _storage.writeTokens(
-      AuthTokens(accessToken: accessToken, refreshToken: refreshToken),
-    );
-    state = AuthState(
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-      userId: userId,
-      isNewUser: isNewUser,
-    );
-  }
-
   /// Revoke server session (best-effort) and clear local storage.
   Future<void> logout() async {
     try {
       if (state.accessToken != null && !Environment.devAuthBypass) {
-        await _api.logout();
+        await _authApi.logout();
       }
     } catch (_) {
       // Ignore — we are logging out anyway.
     }
-    await _storage.clear();
+    await _client.clearTokens();
     state = const AuthState();
   }
 

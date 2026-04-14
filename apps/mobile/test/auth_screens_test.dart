@@ -1,47 +1,18 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kuwboo_api_client/kuwboo_api_client.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 
-import 'package:kuwboo_mobile/features/auth/data/auth_api.dart';
-import 'package:kuwboo_mobile/features/auth/data/auth_models.dart';
-import 'package:kuwboo_mobile/features/auth/data/token_storage.dart';
 import 'package:kuwboo_mobile/features/auth/login_screen.dart';
 import 'package:kuwboo_mobile/features/auth/otp_screen.dart';
 import 'package:kuwboo_mobile/providers/api_provider.dart';
 import 'package:kuwboo_mobile/providers/auth_provider.dart';
 
 // ─── Fakes ──────────────────────────────────────────────────────────────
-
-class _FakeTokenStorage implements TokenStorage {
-  AuthTokens? _tokens;
-  AuthUser? _user;
-
-  @override
-  Future<void> clear() async {
-    _tokens = null;
-    _user = null;
-  }
-
-  @override
-  Future<String?> readAccessToken() async => _tokens?.accessToken;
-
-  @override
-  Future<String?> readRefreshToken() async => _tokens?.refreshToken;
-
-  @override
-  Future<AuthTokens?> readTokens() async => _tokens;
-
-  @override
-  Future<AuthUser?> readUser() async => _user;
-
-  @override
-  Future<void> writeTokens(AuthTokens tokens) async => _tokens = tokens;
-
-  @override
-  Future<void> writeUser(AuthUser user) async => _user = user;
-}
 
 class _FakeAuthApi implements AuthApi {
   _FakeAuthApi({this.verifyResult, this.sendOtpError, this.verifyOtpError});
@@ -55,14 +26,17 @@ class _FakeAuthApi implements AuthApi {
   String? lastCode;
 
   @override
-  Future<void> sendOtp(String phone) async {
+  Future<void> sendPhoneOtp({required String phone}) async {
     sendOtpCalls++;
     lastPhone = phone;
     if (sendOtpError != null) throw sendOtpError!;
   }
 
   @override
-  Future<AuthResponse> verifyOtp(String phone, String code) async {
+  Future<AuthResponse> verifyPhoneOtp({
+    required String phone,
+    required String code,
+  }) async {
     verifyOtpCalls++;
     lastPhone = phone;
     lastCode = code;
@@ -71,17 +45,14 @@ class _FakeAuthApi implements AuthApi {
   }
 
   @override
-  Future<AuthTokens> refresh({
-    required String expiredAccessToken,
-    required String refreshToken,
-  }) async =>
-      throw UnimplementedError();
+  noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError(invocation.memberName.toString());
+}
 
+class _FakeUsersApi implements UsersApi {
   @override
-  Future<void> logout() async {}
-
-  @override
-  Future<AuthResponse> devLogin(String phone) async => throw UnimplementedError();
+  noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError(invocation.memberName.toString());
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────
@@ -103,22 +74,71 @@ Widget _wrap(Widget screen, ProviderContainer container) {
   );
 }
 
-ProviderContainer _makeContainer(_FakeAuthApi api, _FakeTokenStorage storage) {
+ProviderContainer _makeContainer(_FakeAuthApi api) {
   return ProviderContainer(
     overrides: [
-      tokenStorageProvider.overrideWithValue(storage),
       authApiProvider.overrideWithValue(api),
+      usersApiProvider.overrideWithValue(_FakeUsersApi()),
     ],
   );
+}
+
+AuthResponse _mkAuth({bool isNewUser = false}) {
+  return AuthResponse(
+    accessToken: 'access',
+    refreshToken: 'refresh',
+    user: User(
+      id: 'u1',
+      name: 'Alice',
+      phone: '+441234567890',
+      onboardingProgress: isNewUser
+          ? OnboardingProgress.profile
+          : OnboardingProgress.complete,
+      createdAt: DateTime.utc(2026, 1, 1),
+    ),
+    isNewUser: isNewUser,
+  );
+}
+
+/// Stub the flutter_secure_storage method channel so [KuwbooApiClient]'s
+/// token reads/writes don't blow up in the Flutter test environment.
+void _stubSecureStorageChannel() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  final store = <String, String>{};
+  const channel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(channel, (call) async {
+    final args = (call.arguments as Map?) ?? const {};
+    final key = args['key'] as String?;
+    switch (call.method) {
+      case 'read':
+        return store[key];
+      case 'write':
+        store[key!] = args['value'] as String;
+        return null;
+      case 'delete':
+        store.remove(key);
+        return null;
+      case 'readAll':
+        return Map<String, String>.from(store);
+      case 'deleteAll':
+        store.clear();
+        return null;
+      case 'containsKey':
+        return store.containsKey(key);
+    }
+    return null;
+  });
 }
 
 // ─── Tests ──────────────────────────────────────────────────────────────
 
 void main() {
+  setUp(_stubSecureStorageChannel);
   group('LoginScreen', () {
     testWidgets('rejects empty phone', (tester) async {
       final api = _FakeAuthApi();
-      final container = _makeContainer(api, _FakeTokenStorage());
+      final container = _makeContainer(api);
       addTearDown(container.dispose);
 
       await tester.pumpWidget(_wrap(const LoginScreen(), container));
@@ -133,23 +153,20 @@ void main() {
 
     testWidgets('calls requestOtp with E.164 number on success', (tester) async {
       final api = _FakeAuthApi();
-      final container = _makeContainer(api, _FakeTokenStorage());
+      final container = _makeContainer(api);
       addTearDown(container.dispose);
 
       await tester.pumpWidget(_wrap(const LoginScreen(), container));
       await tester.pump();
 
-      // Type a valid UK mobile number. The default IsoCode depends on device
-      // locale; typing national digits and trusting the widget to parse them
-      // is more realistic than asserting on an exact E.164 string.
-      // A known-valid US number (Google HQ) — the default IsoCode in tests is
-      // US because the test runner reports no locale country code.
+      // A known-valid US number (Google HQ) — the default IsoCode in tests
+      // is US because the test runner reports no locale country code.
       await tester.enterText(find.byType(TextField), '6502530000');
       await tester.tap(find.text('Send OTP'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
-      expect(api.sendOtpCalls, 1, reason: 'sendOtp should have been invoked');
+      expect(api.sendOtpCalls, 1, reason: 'sendPhoneOtp should have been invoked');
       expect(api.lastPhone, startsWith('+'),
           reason: 'phone should be normalized to E.164');
     });
@@ -165,14 +182,12 @@ void main() {
           ),
         ),
       );
-      final container = _makeContainer(api, _FakeTokenStorage());
+      final container = _makeContainer(api);
       addTearDown(container.dispose);
 
       await tester.pumpWidget(_wrap(const LoginScreen(), container));
       await tester.pump();
 
-      // A known-valid US number (Google HQ) — the default IsoCode in tests is
-      // US because the test runner reports no locale country code.
       await tester.enterText(find.byType(TextField), '6502530000');
       await tester.tap(find.text('Send OTP'));
       await tester.pump();
@@ -184,18 +199,8 @@ void main() {
 
   group('OtpScreen', () {
     testWidgets('verifies and updates auth state', (tester) async {
-      final api = _FakeAuthApi(
-        verifyResult: const AuthResponse(
-          tokens: AuthTokens(
-            accessToken: 'access',
-            refreshToken: 'refresh',
-          ),
-          user: AuthUser(id: 'u1', name: 'Alice', phone: '+441234567890'),
-          isNewUser: false,
-        ),
-      );
-      final storage = _FakeTokenStorage();
-      final container = _makeContainer(api, storage);
+      final api = _FakeAuthApi(verifyResult: _mkAuth());
+      final container = _makeContainer(api);
       addTearDown(container.dispose);
 
       // Seed the notifier.
@@ -221,7 +226,6 @@ void main() {
       expect(state.isAuthenticated, isTrue);
       expect(state.accessToken, 'access');
       expect(state.user?.name, 'Alice');
-      expect(storage.readTokens(), completion(isNotNull));
     });
 
     testWidgets('shows error on invalid code', (tester) async {
@@ -235,7 +239,7 @@ void main() {
           ),
         ),
       );
-      final container = _makeContainer(api, _FakeTokenStorage());
+      final container = _makeContainer(api);
       addTearDown(container.dispose);
       await container.read(authProvider.notifier).checkAuth();
 

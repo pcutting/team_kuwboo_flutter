@@ -183,6 +183,25 @@ class AuthApi {
   }
 
   // ---------------------------------------------------------------------
+  // Dev-only login (gated by DEV_LOGIN_ENABLED=1 on the backend)
+  // ---------------------------------------------------------------------
+
+  /// Dev-only login that skips OTP. The backend find-or-creates a user by
+  /// [phone] and returns real JWTs. Returns 403 if `DEV_LOGIN_ENABLED` is
+  /// not set to `1` on the server. Never enable in production.
+  Future<AuthResponse> devLogin({required String phone}) async {
+    final response = await _client.dio.post(
+      '/auth/dev-login',
+      data: {'phone': phone},
+    );
+    final auth = _client.unwrap(response, AuthResponse.fromJson);
+    await _client.saveTokens(
+      TokenPair(accessToken: auth.accessToken, refreshToken: auth.refreshToken),
+    );
+    return auth;
+  }
+
+  // ---------------------------------------------------------------------
   // Refresh + logout
   // ---------------------------------------------------------------------
 
