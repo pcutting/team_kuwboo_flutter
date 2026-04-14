@@ -1,6 +1,6 @@
 /// Extended demo data for prototype screens beyond the existing demo_data.dart
 
-// ─── V2 YoYo enums ──────────────────────────────────────────────────
+// ─── YoYo enums ─────────────────────────────────────────────────────
 
 enum EncounterType { passby, nearby }
 enum ConsentStatus { pending, shared, declined, expired }
@@ -8,7 +8,7 @@ enum RelationshipType { stranger, friend, partner, family }
 enum DistanceCategory { veryNear, nearby, passing }
 enum VisibilityTier { public, friendsOnly, familyOnly, private }
 
-// ─── V2 YoYo models ─────────────────────────────────────────────────
+// ─── YoYo models ────────────────────────────────────────────────────
 
 class DemoEncounter {
   final String name;
@@ -204,7 +204,7 @@ class ProtoDemoData {
     DemoInterest(name: 'Nightlife'),
   ];
 
-  // ─── V2 YoYo demo data ────────────────────────────────────────────
+  // ─── YoYo demo data ───────────────────────────────────────────────
 
   static const encounters = [
     // 3 nearby (dwell)

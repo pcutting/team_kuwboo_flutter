@@ -147,7 +147,7 @@ class _YoyoNearbyScreenState extends State<YoyoNearbyScreen> {
   }
 }
 
-// ─── V2 Nearby View ─────────────────────────────────────────────────
+// ─── Nearby View ────────────────────────────────────────────────────
 
 class _YoyoNearbyView extends StatelessWidget {
   const _YoyoNearbyView({super.key});
@@ -162,8 +162,8 @@ class _YoyoNearbyView extends StatelessWidget {
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: state.isYoyoAreaView
-                ? _AreaView(key: const ValueKey('v2-area'))
-                : _ListView(key: const ValueKey('v2-list')),
+                ? _AreaView(key: const ValueKey('nearby-area'))
+                : _ListView(key: const ValueKey('nearby-list')),
           ),
         ),
       ],
@@ -171,7 +171,7 @@ class _YoyoNearbyView extends StatelessWidget {
   }
 }
 
-// ─── V2 Session Header ──────────────────────────────────────────────
+// ─── Session Header ─────────────────────────────────────────────────
 
 class _SessionHeader extends StatefulWidget {
   const _SessionHeader();
@@ -333,7 +333,7 @@ class _SessionHeaderState extends State<_SessionHeader> {
   }
 }
 
-// ─── V2 List View ───────────────────────────────────────────────────
+// ─── List View ──────────────────────────────────────────────────────
 
 class _ListView extends StatelessWidget {
   const _ListView({super.key});
@@ -417,7 +417,7 @@ class _ListView extends StatelessWidget {
   }
 }
 
-/// Filter V2 encounters based on state filters.
+/// Filter encounters based on state filters.
 List<DemoEncounter> _filteredEncounters(PrototypeStateProvider state) {
   final range = state.yoyoRange; // km
 
@@ -443,7 +443,7 @@ double _markerScale(double rangeKm) {
   return 0.6;
 }
 
-// ─── V2 Teaser Card (pre-consent) ───────────────────────────────────
+// ─── Teaser Card (pre-consent) ──────────────────────────────────────
 
 class _TeaserCard extends StatelessWidget {
   final DemoEncounter encounter;
@@ -572,7 +572,7 @@ String _distanceCategoryLabel(DistanceCategory cat) {
   }
 }
 
-// ─── V2 Revealed Card (post-consent) ────────────────────────────────
+// ─── Revealed Card (post-consent) ───────────────────────────────────
 
 class _RevealedCard extends StatelessWidget {
   final DemoEncounter encounter;
@@ -683,7 +683,7 @@ class _RevealedCard extends StatelessWidget {
   }
 }
 
-// ─── V2 Consent Handshake Sheet ─────────────────────────────────────
+// ─── Consent Handshake Sheet ────────────────────────────────────────
 
 void _showConsentSheet(BuildContext context, DemoEncounter encounter) {
   showModalBottomSheet(
@@ -851,7 +851,7 @@ class _ConsentHandshakeSheet extends StatelessWidget {
   }
 }
 
-// ─── V2 Area View ───────────────────────────────────────────────────
+// ─── Area View ──────────────────────────────────────────────────────
 
 class _AreaView extends StatelessWidget {
   const _AreaView({super.key});
@@ -1688,7 +1688,7 @@ class _RadarArea extends StatelessWidget {
   }
 }
 
-// ─── Hidden V2 Radar Area (anonymous markers with friend badges) ────
+// ─── Hidden Radar Area (anonymous markers with friend badges) ───────
 
 class _HiddenRadarArea extends StatelessWidget {
   final ProtoTheme theme;
@@ -1831,7 +1831,7 @@ class _HiddenRadarArea extends StatelessWidget {
   }
 }
 
-// ─── Anonymous V2 Marker (friend-aware) ─────────────────────────────
+// ─── Anonymous Marker (friend-aware) ────────────────────────────────
 
 class _AnonymousMarker extends StatelessWidget {
   final double size;
@@ -1884,7 +1884,7 @@ class _AnonymousMarker extends StatelessWidget {
   }
 }
 
-// ─── V2 Area Marker ─────────────────────────────────────────────────
+// ─── Area Marker ────────────────────────────────────────────────────
 
 class _AreaMarker extends StatelessWidget {
   final DemoEncounter encounter;
@@ -1973,7 +1973,7 @@ class _AreaMarker extends StatelessWidget {
   }
 }
 
-// ─── V2 Encounter Card Carousel ─────────────────────────────────────
+// ─── Encounter Card Carousel ────────────────────────────────────────
 
 class _EncounterCardRow extends StatelessWidget {
   final ProtoTheme theme;
@@ -2064,7 +2064,7 @@ class _EncounterCardRow extends StatelessWidget {
   }
 }
 
-// ─── V2 Action Bar ──────────────────────────────────────────────────
+// ─── Action Bar ─────────────────────────────────────────────────────
 
 class _ActionBar extends StatelessWidget {
   final ProtoTheme theme;

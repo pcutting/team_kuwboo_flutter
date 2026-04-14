@@ -340,7 +340,7 @@ class _ToggleRow extends StatelessWidget {
   }
 }
 
-// ─── V2 Settings cards ──────────────────────────────────────────────
+// ─── Settings cards ─────────────────────────────────────────────────
 
 class _SessionSchedulingCard extends StatefulWidget {
   final ProtoTheme theme;
