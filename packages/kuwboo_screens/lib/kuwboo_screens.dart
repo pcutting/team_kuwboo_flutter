@@ -52,6 +52,19 @@ export 'src/profile/profile_edit_screen.dart';
 export 'src/profile/profile_settings_screen.dart';
 export 'src/profile/profile_notifications_screen.dart';
 
+// Auth
+export 'src/auth/auth_welcome_screen.dart';
+export 'src/auth/auth_onboarding_screen.dart';
+export 'src/auth/auth_tutorial_screen.dart';
+export 'src/auth/auth_method_screen.dart';
+export 'src/auth/auth_signup_screen.dart';
+export 'src/auth/auth_login_screen.dart';
+export 'src/auth/auth_phone_screen.dart';
+export 'src/auth/auth_otp_screen.dart';
+export 'src/auth/auth_birthday_screen.dart';
+export 'src/auth/auth_profile_screen.dart';
+export 'src/auth/auth_age_block_screen.dart';
+
 // Sponsored
 export 'src/sponsored/sponsored_inline.dart';
 export 'src/sponsored/sponsored_hub.dart';
