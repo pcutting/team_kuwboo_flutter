@@ -12,3 +12,4 @@ workspace:
   - packages/kuwboo_shell
   - packages/kuwboo_screens
   - packages/kuwboo_chat
+  - packages/kuwboo_auth

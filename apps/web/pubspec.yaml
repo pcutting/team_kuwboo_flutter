@@ -17,6 +17,8 @@ dependencies:
     path: ../../packages/kuwboo_screens
   kuwboo_chat:
     path: ../../packages/kuwboo_chat
+  kuwboo_auth:
+    path: ../../packages/kuwboo_auth
   flutter_riverpod: ^2.6.0
   go_router: ^14.0.0
   google_fonts: ^8.0.0
