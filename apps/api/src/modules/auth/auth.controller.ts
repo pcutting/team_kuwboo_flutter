@@ -6,13 +6,18 @@ import {
   HttpCode,
   HttpStatus,
   ForbiddenException,
+  ConflictException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
-import { AuthService } from './auth.service';
+import { Throttle } from '@nestjs/throttler';
+import { AuthService, EmailOwnedChallenge } from './auth.service';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { SendEmailOtpDto, VerifyEmailOtpDto } from './dto/email-otp.dto';
 import { GoogleLoginDto, AppleLoginDto } from './dto/social-login.dto';
+import { GoogleConfirmDto, AppleConfirmDto } from './dto/sso-confirm.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -23,71 +28,117 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 15 * 60 * 1000 } })
   @Post('phone/send-otp')
   @HttpCode(HttpStatus.OK)
-  async sendOtp(@Body() dto: SendOtpDto) {
+  async sendPhoneOtp(@Body() dto: SendOtpDto) {
     await this.authService.sendPhoneOtp(dto.phone);
-    return { message: 'OTP sent' };
+    return { sent: true };
   }
 
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 15 * 60 * 1000 } })
   @Post('phone/verify-otp')
   @HttpCode(HttpStatus.OK)
-  async verifyOtp(@Body() dto: VerifyOtpDto, @Req() req: Request) {
-    return this.authService.verifyPhoneOtp(dto.phone, dto.code, {
-      userAgent: req.headers['user-agent'],
-      ipAddress: req.ip,
-    });
+  async verifyPhoneOtp(@Body() dto: VerifyOtpDto, @Req() req: Request) {
+    return this.authService.verifyPhoneOtp(dto.phone, dto.code, reqMeta(req));
   }
 
   @Public()
-  @Post('social/google')
+  @Throttle({ default: { limit: 5, ttl: 15 * 60 * 1000 } })
+  @Post('email/send-otp')
+  @HttpCode(HttpStatus.OK)
+  async sendEmailOtp(@Body() dto: SendEmailOtpDto) {
+    await this.authService.sendEmailOtp(dto.email);
+    return { sent: true };
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 15 * 60 * 1000 } })
+  @Post('email/verify-otp')
+  @HttpCode(HttpStatus.OK)
+  async verifyEmailOtp(@Body() dto: VerifyEmailOtpDto, @Req() req: Request) {
+    return this.authService.verifyEmailOtp(dto.email, dto.code, reqMeta(req));
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 30, ttl: 15 * 60 * 1000 } })
+  @Post('google')
   @HttpCode(HttpStatus.OK)
   async googleLogin(@Body() dto: GoogleLoginDto, @Req() req: Request) {
-    return this.authService.googleLogin(dto.idToken, {
-      userAgent: req.headers['user-agent'],
-      ipAddress: req.ip,
-    });
+    const result = await this.authService.googleLogin(dto.idToken, reqMeta(req));
+    return unwrapChallenge(result);
   }
 
   @Public()
-  @Post('social/apple')
+  @Throttle({ default: { limit: 10, ttl: 15 * 60 * 1000 } })
+  @Post('google/confirm')
+  @HttpCode(HttpStatus.OK)
+  async googleConfirm(@Body() dto: GoogleConfirmDto, @Req() req: Request) {
+    return this.authService.googleConfirm(
+      dto.idToken,
+      dto.emailOtp,
+      dto.challengeId,
+      reqMeta(req),
+    );
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 30, ttl: 15 * 60 * 1000 } })
+  @Post('apple')
   @HttpCode(HttpStatus.OK)
   async appleLogin(@Body() dto: AppleLoginDto, @Req() req: Request) {
-    return this.authService.appleLogin(dto.identityToken, dto.fullName, {
-      userAgent: req.headers['user-agent'],
-      ipAddress: req.ip,
-    });
+    const result = await this.authService.appleLogin(
+      dto.identityToken,
+      dto.authorizationCode,
+      dto.fullName,
+      reqMeta(req),
+    );
+    return unwrapChallenge(result);
   }
 
   @Public()
-  @Post('refresh')
+  @Throttle({ default: { limit: 10, ttl: 15 * 60 * 1000 } })
+  @Post('apple/confirm')
   @HttpCode(HttpStatus.OK)
-  async refresh(@Body() dto: RefreshTokenDto, @Req() req: Request) {
-    // Extract userId from the expired access token in the Authorization header
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
-      return { message: 'Authorization header required for refresh' };
-    }
-
-    const token = authHeader.slice(7);
-    // Decode without verification (token is expired)
-    const jwt = require('jsonwebtoken');
-    const decoded = jwt.decode(token) as { sub?: string };
-    if (!decoded?.sub) {
-      return { message: 'Invalid access token' };
-    }
-
-    return this.authService.refreshTokens(decoded.sub, dto.refreshToken, {
-      userAgent: req.headers['user-agent'],
-      ipAddress: req.ip,
-    });
+  async appleConfirm(@Body() dto: AppleConfirmDto, @Req() req: Request) {
+    return this.authService.appleConfirm(
+      dto.identityToken,
+      dto.emailOtp,
+      dto.challengeId,
+      reqMeta(req),
+    );
   }
 
   /**
-   * Dev-only login. Skips OTP, find-or-creates a user by phone, returns real
-   * JWTs. Gated by `DEV_LOGIN_ENABLED=1` env flag — 403 otherwise. Mobile
-   * client uses this when built with `--dart-define=KUWBOO_DEV_AUTH=1`.
+   * Refresh endpoint. Contract §4.7: access token in Authorization header
+   * (expired OK), refresh token in body. Reuse triggers family-wide
+   * revocation + trust signal.
+   */
+  @Public()
+  @Throttle({ default: { limit: 60, ttl: 15 * 60 * 1000 } })
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(@Body() dto: RefreshTokenDto, @Req() req: Request) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw new UnauthorizedException({
+        code: 'missing_access_token',
+        message: 'Authorization header with the expired access token is required.',
+      });
+    }
+    const userId = AuthService.extractUserIdFromExpiredAccess(authHeader.slice(7));
+    if (!userId) {
+      throw new UnauthorizedException({
+        code: 'invalid_access_token',
+        message: 'Access token is malformed.',
+      });
+    }
+    return this.authService.refreshTokens(userId, dto.refreshToken, reqMeta(req));
+  }
+
+  /**
+   * Dev-only login. Gated by `DEV_LOGIN_ENABLED=1`.
    */
   @Public()
   @Post('dev-login')
@@ -96,16 +147,42 @@ export class AuthController {
     if (process.env.DEV_LOGIN_ENABLED !== '1') {
       throw new ForbiddenException('Dev login is disabled');
     }
-    return this.authService.devLogin(dto.phone, {
-      userAgent: req.headers['user-agent'],
-      ipAddress: req.ip,
-    });
+    return this.authService.devLogin(dto.phone, reqMeta(req));
   }
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(@CurrentUser('id') userId: string) {
     await this.authService.logout(userId);
-    return { message: 'Logged out' };
+    return { ok: true };
   }
+}
+
+function reqMeta(req: Request): { userAgent?: string; ipAddress?: string } {
+  return {
+    userAgent: typeof req.headers['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
+    ipAddress: req.ip,
+  };
+}
+
+/**
+ * Turn an `email_owned` challenge (non-error business outcome) into a 409
+ * with the canonical contract code + challenge id. Normal auth responses
+ * pass through unchanged.
+ */
+function unwrapChallenge<T>(result: T): Exclude<T, EmailOwnedChallenge> {
+  if (
+    result &&
+    typeof result === 'object' &&
+    (result as unknown as { status?: string }).status === 'email_owned'
+  ) {
+    const c = result as unknown as EmailOwnedChallenge;
+    throw new ConflictException({
+      code: 'email_owned',
+      challenge_id: c.challengeId,
+      email: c.email,
+      require_verify_email: true,
+    });
+  }
+  return result as Exclude<T, EmailOwnedChallenge>;
 }

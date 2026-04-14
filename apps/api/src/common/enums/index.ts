@@ -20,3 +20,7 @@ export { ProductCondition } from './product-condition.enum';
 export { ThreadModuleKey } from './thread-module-key.enum';
 export { YoyoOverrideAction, WaveStatus } from './yoyo.enum';
 export { BotSimulationStatus } from './bot-simulation-status.enum';
+export { CredentialType } from './credential-type.enum';
+export { OnboardingProgress } from './onboarding-progress.enum';
+export { TrustSignalType } from './trust-signal-type.enum';
+export { AgeVerificationStatus } from './age-verification.enum';

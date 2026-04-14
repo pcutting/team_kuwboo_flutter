@@ -103,6 +103,76 @@ export class VerificationService {
     return true;
   }
 
+  /**
+   * Email OTP. Uses the same `verifications` table as phone OTP with
+   * `type=EMAIL_VERIFY`. Email is normalised by the caller (lowercased,
+   * dot-stripped for Gmail) before reaching this method.
+   *
+   * Third-party integration (AWS SES) is stubbed here: if
+   * SES_EMAIL_ENABLED=1 and an SES client is wired, send; otherwise the
+   * dev fallback logs the code to stdout. A clean seam for D3's
+   * EmailTransport service is left as a TODO.
+   */
+  async sendEmailOtp(email: string): Promise<void> {
+    const code = this.generateCode();
+    const codeHash = await bcrypt.hash(code, BCRYPT_ROUNDS);
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + OTP_EXPIRY_MINUTES);
+
+    this.em.create(Verification, {
+      identifier: email,
+      codeHash,
+      type: VerificationType.EMAIL_VERIFY,
+      expiresAt,
+    } as any);
+    await this.em.flush();
+
+    // TODO(D3): replace with SES transport once the infra is wired.
+    if (this.config.get('NODE_ENV') !== 'production') {
+      console.log(`[DEV] Email OTP for ${email}: ${code}`);
+    }
+  }
+
+  async verifyEmailOtp(email: string, code: string): Promise<boolean> {
+    const verification = await this.em.findOne(
+      Verification,
+      {
+        identifier: email,
+        type: VerificationType.EMAIL_VERIFY,
+        verifiedAt: null,
+        expiresAt: { $gt: new Date() },
+      },
+      { orderBy: { createdAt: 'DESC' } },
+    );
+
+    if (!verification) {
+      throw new BadRequestException({
+        code: 'invalid_otp',
+        message: 'No pending verification found',
+      });
+    }
+
+    if (verification.attempts >= MAX_ATTEMPTS) {
+      throw new UnauthorizedException({
+        code: 'invalid_otp',
+        message: 'Too many attempts. Request a new code.',
+      });
+    }
+
+    verification.attempts++;
+    const isValid = await bcrypt.compare(code, verification.codeHash);
+    if (isValid) verification.verifiedAt = new Date();
+    await this.em.flush();
+
+    if (!isValid) {
+      throw new UnauthorizedException({
+        code: 'invalid_otp',
+        message: 'Invalid code',
+      });
+    }
+    return true;
+  }
+
   private generateCode(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }

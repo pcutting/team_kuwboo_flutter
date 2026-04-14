@@ -8,6 +8,8 @@ import { AppleAuthModule } from './apple/apple.module';
 import { UsersModule } from '../users/users.module';
 import { SessionsModule } from '../sessions/sessions.module';
 import { VerificationModule } from '../verification/verification.module';
+import { CredentialsModule } from '../credentials/credentials.module';
+import { TrustModule } from '../trust/trust.module';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { VerificationModule } from '../verification/verification.module';
     UsersModule,
     SessionsModule,
     VerificationModule,
+    CredentialsModule,
+    TrustModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

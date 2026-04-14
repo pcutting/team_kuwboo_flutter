@@ -41,6 +41,8 @@ import { SponsoredModule } from './modules/sponsored/sponsored.module';
 import { PresenceModule } from './modules/presence/presence.module';
 import { YoyoModule } from './modules/yoyo/yoyo.module';
 import { BotsModule } from './modules/bots/bots.module';
+import { CredentialsModule } from './modules/credentials/credentials.module';
+import { TrustModule } from './modules/trust/trust.module';
 
 @Module({
   imports: [
@@ -154,6 +156,8 @@ import { BotsModule } from './modules/bots/bots.module';
     PresenceModule,
     YoyoModule,
     BotsModule,
+    CredentialsModule,
+    TrustModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
