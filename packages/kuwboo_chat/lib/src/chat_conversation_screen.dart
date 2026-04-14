@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
-// ── V2 Data Model ──────────────────────────────────────────────────────────
+// ── Data Model ─────────────────────────────────────────────────────────────
 
 enum _ItemType {
   message,
@@ -40,7 +40,7 @@ class _ChatItem {
   });
 }
 
-// ── V2 Conversation Data ────────────────────────────────────────────────────
+// ── Conversation Data ──────────────────────────────────────────────────────
 
 const _kPolaroidImage =
     'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=200&h=200&fit=crop';
@@ -304,7 +304,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
   }
 }
 
-// ── V2 Transaction List ─────────────────────────────────────────────────────
+// ── Transaction List ───────────────────────────────────────────────────────
 
 class _TransactionList extends StatelessWidget {
   final ProtoTheme theme;
@@ -377,7 +377,7 @@ class _TransactionList extends StatelessWidget {
   }
 }
 
-// ── Swipe-to-delete for _ChatItem (v2) ──────────────────────────────────────
+// ── Swipe-to-delete for _ChatItem ───────────────────────────────────────────
 
 Widget _swipeableChatItem(
   BuildContext context,
@@ -387,7 +387,7 @@ Widget _swipeableChatItem(
   Widget child,
 ) {
   return Dismissible(
-    key: ValueKey('v2-msg-$index'),
+    key: ValueKey('chat-msg-$index'),
     direction: item.isMine
         ? DismissDirection.endToStart
         : DismissDirection.startToEnd,

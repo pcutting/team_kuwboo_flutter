@@ -56,7 +56,7 @@ final shellStateProvider =
 
 // ─── YoYo State ─────────────────────────────────────────────────────────
 
-/// YoYo-specific state: radar, hidden mode, Go Live, V2 session, etc.
+/// YoYo-specific state: radar, hidden mode, Go Live, session, etc.
 class YoyoState {
   // Area view
   final bool isAreaView;
