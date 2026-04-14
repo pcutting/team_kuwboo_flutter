@@ -9,9 +9,15 @@ environment:
 resolution: workspace
 
 dependencies:
+  flutter:
+    sdk: flutter
   dio: ^5.7.0
   flutter_secure_storage: ^9.2.0
   kuwboo_models:
     path: ../models
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
 
 dependency_overrides: {}
