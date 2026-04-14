@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../config/environment.dart';
 import '../../providers/auth_provider.dart';
 
 /// Six-digit OTP verification screen.
@@ -147,6 +148,25 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                   counterText: '',
                 ),
               ),
+              if (Environment.devAuthBypass) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.tertiaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Dev mode — use ${Environment.devBypassOtp}',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onTertiaryContainer,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: _isVerifying ? null : _verify,
