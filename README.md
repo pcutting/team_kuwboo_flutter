@@ -55,12 +55,12 @@ If the CLI isn't installed: `npm i -g vercel` then `vercel login`.
 
 | Package | Purpose |
 |---|---|
-| `packages/ui` | Shared Flutter theme + widgets |
-| `packages/kuwboo_shell` | Shared app shell (nav, state providers) |
-| `packages/kuwboo_screens` | Shared screen implementations (yoyo, video, social, shop, dating) |
-| `packages/kuwboo_chat` | Shared chat UI |
+| `packages/kuwboo_shell` | Shared theme, scaffold, nav, state providers |
+| `packages/kuwboo_screens` | Shared feature screens (yoyo, video, dating, social, shop, profile, sponsored) + route builders |
+| `packages/kuwboo_chat` | Shared chat module |
+| `packages/kuwboo_auth` | Shared auth screens (welcome, OTP, signup, etc.) |
 | `packages/models` | Shared data models |
-| `packages/api_client` | Generated API client |
+| `packages/api_client` | Dio HTTP client + auth interceptor |
 
 Both `apps/mobile` and `apps/web` consume these packages via pub path dependencies — the web prototype and mobile app render the same UI code.
 
