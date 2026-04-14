@@ -4,12 +4,12 @@ on:
   pull_request:
     paths:
       - "apps/mobile/**"
-      - "packages/ui/**"
       - "packages/models/**"
       - "packages/api_client/**"
       - "packages/kuwboo_shell/**"
       - "packages/kuwboo_screens/**"
       - "packages/kuwboo_chat/**"
+      - "packages/kuwboo_auth/**"
       - ".github/workflows/ios-pr-validation.yml"
 
 concurrency:

@@ -12,9 +12,12 @@ Kuwboo multi-platform app monorepo. Flutter for mobile (iOS + Android), NestJS f
 | `apps/api/` | NestJS backend | EC2 (`35.177.230.139`, eu-west-2) |
 | `apps/admin/` | React 19 + Vite SPA (client-side only) | Vercel static — `team_kuwboo_admin` |
 | `apps/web/` | Flutter web prototype + design viewer | Vercel static — `team_kuwboo_flutter` (prebuilt `build/web`) |
-| `packages/ui/` | Shared Flutter theme + widgets | — |
+| `packages/kuwboo_shell/` | Shared theme, scaffold, nav, state providers | — |
+| `packages/kuwboo_screens/` | Shared feature screens (yoyo, video, dating, social, shop, profile, sponsored) | — |
+| `packages/kuwboo_chat/` | Shared chat module (inbox, conversation, card atom) | — |
+| `packages/kuwboo_auth/` | Shared auth screens (welcome, OTP, signup, etc.) | — |
 | `packages/models/` | Shared data models | — |
-| `packages/api_client/` | Generated API client | — |
+| `packages/api_client/` | Dio HTTP client + auth interceptor | — |
 | `docs/` | Project documentation — see `docs/README.md` for the index | — |
 | `keys/` | **Gitignored.** Local Apple signing material (`.p12`, `.mobileprovision`, `.key`, CSR, password). Never commit. | — |
 | `.github/workflows/` | CI — includes `ios-testflight.yml` and `ios-pr-validation.yml` | — |
