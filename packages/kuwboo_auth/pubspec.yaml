@@ -17,6 +17,8 @@ dependencies:
     path: ../models
   kuwboo_api_client:
     path: ../api_client
+  flutter_riverpod: ^2.6.0
+  intl_phone_field: ^3.2.0
 
 dev_dependencies:
   flutter_test:
