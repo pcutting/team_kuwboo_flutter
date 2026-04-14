@@ -19,6 +19,8 @@ dependencies:
     path: ../../packages/kuwboo_screens
   kuwboo_chat:
     path: ../../packages/kuwboo_chat
+  kuwboo_auth:
+    path: ../../packages/kuwboo_auth
   kuwboo_models:
     path: ../../packages/models
   kuwboo_api_client:
