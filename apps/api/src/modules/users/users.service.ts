@@ -147,6 +147,38 @@ export class UsersService {
     return Math.min(100, pct);
   }
 
+  /**
+   * Enumerates the human-readable field names missing for profile
+   * completeness — one entry per component of the scoring formula that
+   * currently contributes 0. Order mirrors the formula and provides a
+   * stable, priority-ordered list for nudge body templating.
+   *
+   * See IDENTITY_CONTRACT §8.
+   */
+  static computeMissingFields(
+    user: Pick<
+      User,
+      'dateOfBirth' | 'name' | 'username' | 'avatarUrl' | 'tutorialCompletedAt'
+    >,
+    credentials: Array<Pick<Credential, 'type'>>,
+    interestsCount: number = 0,
+  ): string[] {
+    const missing: string[] = [];
+    if (!user.dateOfBirth) missing.push('dob');
+    if (!user.name || user.name.trim().length === 0) missing.push('display_name');
+    if (!user.username) missing.push('username');
+    if (!user.avatarUrl) missing.push('avatar_url');
+    if (interestsCount < 3) missing.push('interests');
+    if (!credentials.some((c) => c.type === CredentialType.PHONE)) {
+      missing.push('primary_phone_verified');
+    }
+    if (!credentials.some((c) => c.type === CredentialType.EMAIL)) {
+      missing.push('primary_email_verified');
+    }
+    if (!user.tutorialCompletedAt) missing.push('tutorial_completed');
+    return missing;
+  }
+
   async usernameAvailable(handle: string): Promise<boolean> {
     if (!USERNAME_REGEX.test(handle)) return false;
     const existing = await this.em.findOne(User, { username: handle });
