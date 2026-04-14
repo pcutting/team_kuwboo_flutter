@@ -4,14 +4,23 @@ import { raw } from '@mikro-orm/core';
 import { InteractionState } from './entities/interaction-state.entity';
 import { InteractionEvent } from './entities/interaction-event.entity';
 import { Content } from '../content/entities/content.entity';
-import { InteractionStateType, InteractionEventType } from '../../common/enums';
+import { InteractionStateType, InteractionEventType, ContentType } from '../../common/enums';
+import { InterestSignalsService } from '../interests/interest-signals.service';
 
 @Injectable()
 export class InteractionsService {
-  constructor(private readonly em: EntityManager) {}
+  constructor(
+    private readonly em: EntityManager,
+    private readonly interestSignals: InterestSignalsService,
+  ) {}
 
   async toggleLike(userId: string, contentId: string): Promise<{ liked: boolean }> {
     const result = await this.toggleState(userId, contentId, InteractionStateType.LIKE, 'like_count');
+    if (result) {
+      // Fire-and-forget behavioural signal emission. Only when the user
+      // transitions to liked (not on unlike).
+      await this.emitInterestSignal(userId, contentId, 'content.liked');
+    }
     return { liked: result };
   }
 
@@ -23,6 +32,30 @@ export class InteractionsService {
   async logView(userId: string, contentId: string): Promise<void> {
     await this.logEvent(userId, contentId, InteractionEventType.VIEW);
     await this.em.nativeUpdate(Content, { id: contentId }, { viewCount: raw('view_count + 1') } as any);
+    // Treat a view on a VIDEO as the "video.watched" signal analogue until
+    // we have proper playback-duration tracking.
+    const content = await this.em.findOne(Content, { id: contentId });
+    if (content?.type === ContentType.VIDEO) {
+      await this.emitInterestSignal(userId, contentId, 'video.watched');
+    }
+  }
+
+  /**
+   * Maps a Content to its associated interest IDs and enqueues a bump job.
+   *
+   * TODO D3: add a `content_interests` join table (Content -> Interest)
+   * and replace this stub with a real lookup. Until then, behavioural
+   * signals are wired end-to-end but no interest IDs flow through — the
+   * enqueue call short-circuits when interestIds is empty.
+   */
+  private async emitInterestSignal(
+    userId: string,
+    _contentId: string,
+    source: string,
+  ): Promise<void> {
+    const interestIds: string[] = [];
+    if (interestIds.length === 0) return;
+    await this.interestSignals.enqueueBump({ userId, interestIds, source });
   }
 
   async logShare(userId: string, contentId: string, platform?: string): Promise<void> {

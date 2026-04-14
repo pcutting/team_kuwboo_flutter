@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bullmq';
+import { ScheduleModule } from '@nestjs/schedule';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { UnderscoreNamingStrategy } from '@mikro-orm/core';
@@ -126,6 +127,8 @@ import { InterestsModule } from './modules/interests/interests.module';
         limit: parseInt(process.env.THROTTLE_LIMIT || '120', 10),
       },
     ]),
+
+    ScheduleModule.forRoot(),
 
     BullModule.forRootAsync({
       inject: [ConfigService],
