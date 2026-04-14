@@ -8,6 +8,9 @@ import {
   forceLogout,
   getUserContent,
   getUserReports,
+  listUserCredentials,
+  revokeUserCredential,
+  AdminCredential,
 } from '../api/client';
 
 interface UserDetail {
@@ -44,7 +47,7 @@ interface ReportRecord {
   createdAt: string;
 }
 
-type ActiveTab = 'content' | 'reports';
+type ActiveTab = 'content' | 'reports' | 'credentials';
 
 export function UserDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -60,6 +63,9 @@ export function UserDetailPage() {
   const [reportItems, setReportItems] = useState<ReportRecord[]>([]);
   const [reportTotal, setReportTotal] = useState(0);
   const [reportPage, setReportPage] = useState(1);
+  const [credentials, setCredentials] = useState<AdminCredential[]>([]);
+  const [credentialsError, setCredentialsError] = useState('');
+  const [credentialsLoading, setCredentialsLoading] = useState(false);
 
   // Dialogs
   const [showSuspendDialog, setShowSuspendDialog] = useState(false);
@@ -80,8 +86,41 @@ export function UserDetailPage() {
     fetchUser();
   }, [fetchUser]);
 
+  const fetchCredentials = useCallback(() => {
+    if (!accessToken || !id) return;
+    setCredentialsLoading(true);
+    setCredentialsError('');
+    listUserCredentials(accessToken, id)
+      .then((res) => setCredentials(res.credentials))
+      .catch((err) =>
+        setCredentialsError(
+          err instanceof Error ? err.message : 'Failed to load credentials',
+        ),
+      )
+      .finally(() => setCredentialsLoading(false));
+  }, [accessToken, id]);
+
+  async function handleRevokeCredential(credentialId: string) {
+    if (!accessToken || !id) return;
+    if (!confirm('Revoke this credential? The user will lose this sign-in method.')) {
+      return;
+    }
+    try {
+      await revokeUserCredential(accessToken, id, credentialId);
+      fetchCredentials();
+    } catch (err) {
+      setCredentialsError(
+        err instanceof Error ? err.message : 'Failed to revoke credential',
+      );
+    }
+  }
+
   useEffect(() => {
     if (!accessToken || !id) return;
+    if (activeTab === 'credentials') {
+      fetchCredentials();
+      return;
+    }
     if (activeTab === 'content') {
       getUserContent(accessToken, id, {
         page: String(contentPage),
@@ -274,6 +313,7 @@ export function UserDetailPage() {
                 [
                   { value: 'content', label: 'Content' },
                   { value: 'reports', label: 'Reports' },
+                  { value: 'credentials', label: 'Credentials' },
                 ] as const
               ).map((tab) => (
                 <button
@@ -369,6 +409,103 @@ export function UserDetailPage() {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'credentials' && (
+              <div className="mt-4 bg-white rounded-xl border border-stone-200 overflow-hidden">
+                {credentialsError && (
+                  <div className="m-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                    <p className="font-medium">
+                      Could not load credentials
+                    </p>
+                    <p className="mt-1 text-xs">{credentialsError}</p>
+                    <p className="mt-2 text-xs text-amber-700">
+                      Backend endpoint TODO: <code className="font-mono">GET /admin/users/:id/credentials</code>{' '}
+                      and <code className="font-mono">DELETE /admin/users/:id/credentials/:credentialId</code>{' '}
+                      are not yet implemented. Filed separately.
+                    </p>
+                  </div>
+                )}
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-stone-100">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wider">
+                        Identifier
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wider">
+                        Verified
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wider">
+                        Primary
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-stone-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-50">
+                    {credentials.map((cred) => (
+                      <tr key={cred.id} className="hover:bg-stone-50/50">
+                        <td className="px-4 py-3">
+                          <CredentialTypeBadge type={cred.type} />
+                        </td>
+                        <td className="px-4 py-3 text-sm text-stone-900 font-mono">
+                          {cred.identifier}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-stone-500">
+                          {cred.verified_at
+                            ? new Date(cred.verified_at).toLocaleDateString()
+                            : '\u2014'}
+                        </td>
+                        <td className="px-4 py-3">
+                          {cred.is_primary ? (
+                            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                              Primary
+                            </span>
+                          ) : (
+                            <span className="text-xs text-stone-400">
+                              &mdash;
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => handleRevokeCredential(cred.id)}
+                            className="px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 rounded"
+                          >
+                            Revoke
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {!credentialsLoading &&
+                      credentials.length === 0 &&
+                      !credentialsError && (
+                        <tr>
+                          <td
+                            colSpan={5}
+                            className="px-4 py-12 text-center text-sm text-stone-400"
+                          >
+                            No credentials found
+                          </td>
+                        </tr>
+                      )}
+                    {credentialsLoading && (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="px-4 py-12 text-center text-sm text-stone-400"
+                        >
+                          Loading credentials...
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             )}
 
@@ -619,6 +756,24 @@ function ContentTypeBadge({ type }: { type: string }) {
       className={`text-xs font-medium px-2 py-0.5 rounded-full ${styles[type] || 'bg-stone-100 text-stone-600'}`}
     >
       {type}
+    </span>
+  );
+}
+
+function CredentialTypeBadge({ type }: { type: string }) {
+  const styles: Record<string, string> = {
+    PHONE: 'bg-blue-50 text-blue-700',
+    EMAIL: 'bg-purple-50 text-purple-700',
+    APPLE: 'bg-stone-900 text-white',
+    GOOGLE: 'bg-red-50 text-red-700',
+    USERNAME: 'bg-green-50 text-green-700',
+  };
+  const upper = type.toUpperCase();
+  return (
+    <span
+      className={`text-xs font-medium px-2 py-0.5 rounded-full ${styles[upper] || 'bg-stone-100 text-stone-600'}`}
+    >
+      {upper}
     </span>
   );
 }
