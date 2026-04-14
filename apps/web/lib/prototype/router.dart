@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kuwboo_auth/kuwboo_auth.dart';
-import 'package:kuwboo_shell/kuwboo_shell.dart';
 import 'package:kuwboo_screens/kuwboo_screens.dart';
-import 'package:kuwboo_chat/kuwboo_chat.dart';
+import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 // ─── Navigation Keys ─────────────────────────────────────────────────────
 
@@ -60,65 +58,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) => _ProtoShellWrapper(child: child),
-        routes: [
-          // YoYo
-          GoRoute(path: ProtoRoutes.yoyoNearby, pageBuilder: (c, s) => const NoTransitionPage(child: YoyoNearbyScreen())),
-          GoRoute(path: ProtoRoutes.yoyoConnect, pageBuilder: (c, s) => const NoTransitionPage(child: YoyoConnectScreen())),
-          GoRoute(path: ProtoRoutes.yoyoWave, pageBuilder: (c, s) => const NoTransitionPage(child: YoyoWaveScreen())),
-          GoRoute(path: ProtoRoutes.yoyoChat, pageBuilder: (c, s) => const NoTransitionPage(child: ChatInboxScreen(moduleKey: 'YoYo'))),
-          // Video
-          GoRoute(path: ProtoRoutes.videoFeed, pageBuilder: (c, s) => const NoTransitionPage(child: VideoFeedScreen())),
-          GoRoute(path: ProtoRoutes.videoFollowing, pageBuilder: (c, s) => const NoTransitionPage(child: VideoFeedScreen(isFollowingFeed: true))),
-          GoRoute(path: ProtoRoutes.videoDiscover, pageBuilder: (c, s) => const NoTransitionPage(child: VideoDiscoverScreen())),
-          GoRoute(path: ProtoRoutes.videoRecord, pageBuilder: (c, s) => const NoTransitionPage(child: VideoRecordingScreen())),
-          // Dating
-          GoRoute(path: ProtoRoutes.datingCards, pageBuilder: (c, s) => const NoTransitionPage(child: DatingCardStack())),
-          GoRoute(path: ProtoRoutes.datingMatches, pageBuilder: (c, s) => const NoTransitionPage(child: DatingMatchesList())),
-          GoRoute(path: ProtoRoutes.datingLikes, pageBuilder: (c, s) => const NoTransitionPage(child: DatingLikesScreen())),
-          GoRoute(path: ProtoRoutes.datingChat, pageBuilder: (c, s) => const NoTransitionPage(child: ChatInboxScreen(moduleKey: 'Dating'))),
-          // Social
-          GoRoute(path: ProtoRoutes.socialFeed, pageBuilder: (c, s) => const NoTransitionPage(child: SocialFeedScreen())),
-          GoRoute(path: ProtoRoutes.socialFriends, pageBuilder: (c, s) => const NoTransitionPage(child: SocialFriendsList())),
-          GoRoute(path: ProtoRoutes.socialEvents, pageBuilder: (c, s) => const NoTransitionPage(child: SocialEventsScreen())),
-          GoRoute(path: ProtoRoutes.socialCompose, pageBuilder: (c, s) => const NoTransitionPage(child: SocialComposerScreen())),
-          // Shop
-          GoRoute(path: ProtoRoutes.shopBrowse, pageBuilder: (c, s) => const NoTransitionPage(child: ShopBrowseScreen())),
-          GoRoute(path: ProtoRoutes.shopDeals, pageBuilder: (c, s) => const NoTransitionPage(child: ShopDealsScreen())),
-          GoRoute(path: ProtoRoutes.shopCreate, pageBuilder: (c, s) => const NoTransitionPage(child: ShopCreateListing())),
-          GoRoute(path: ProtoRoutes.chatInbox, pageBuilder: (c, s) => const NoTransitionPage(child: ChatInboxScreen())),
-        ],
+        routes: buildProtoShellRoutes(),
       ),
-      // Sub-screens (push on top of shell)
-      GoRoute(path: ProtoRoutes.yoyoSettings, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const YoyoSettingsScreen()),
-      GoRoute(path: ProtoRoutes.yoyoProfile, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const YoyoUserProfile()),
-      GoRoute(path: ProtoRoutes.yoyoFilters, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const YoyoFilterSheet()),
-      GoRoute(path: ProtoRoutes.videoComments, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const VideoCommentsSheet()),
-      GoRoute(path: ProtoRoutes.videoEdit, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const VideoEditScreen()),
-      GoRoute(path: ProtoRoutes.videoCreator, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const VideoCreatorProfile()),
-      GoRoute(path: ProtoRoutes.videoSound, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const VideoSoundScreen()),
-      GoRoute(path: ProtoRoutes.datingProfile, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const DatingExpandedProfile()),
-      GoRoute(path: ProtoRoutes.datingMatch, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const DatingMatchOverlay()),
-      GoRoute(path: ProtoRoutes.datingFilters, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const DatingFiltersSheet()),
-      GoRoute(path: ProtoRoutes.shopProduct, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const ShopProductDetail()),
-      GoRoute(path: ProtoRoutes.shopSeller, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const ShopSellerProfile()),
-      GoRoute(path: ProtoRoutes.shopAuction, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const ShopAuctionDetail()),
-      GoRoute(path: ProtoRoutes.chatConversation, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const ChatConversationScreen()),
-      GoRoute(path: ProtoRoutes.profileMy, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const ProfileMyScreen()),
-      GoRoute(path: ProtoRoutes.profileEdit, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const ProfileEditScreen()),
-      GoRoute(path: ProtoRoutes.profileSettings, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const ProfileSettingsScreen()),
-      GoRoute(path: ProtoRoutes.profileNotifications, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const ProfileNotificationsScreen()),
-      // Auth prototype screens (design review — pushed on top of shell)
-      GoRoute(path: ProtoRoutes.authWelcome, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthWelcomeScreen()),
-      GoRoute(path: ProtoRoutes.authOnboarding, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthOnboardingScreen()),
-      GoRoute(path: ProtoRoutes.authTutorial, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthTutorialScreen()),
-      GoRoute(path: ProtoRoutes.authMethod, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthMethodScreen()),
-      GoRoute(path: ProtoRoutes.authSignup, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthSignupScreen()),
-      GoRoute(path: ProtoRoutes.authLogin, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthLoginScreen()),
-      GoRoute(path: ProtoRoutes.authPhone, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthPhoneScreen()),
-      GoRoute(path: ProtoRoutes.authOtp, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthOtpScreen()),
-      GoRoute(path: ProtoRoutes.authBirthday, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthBirthdayScreen()),
-      GoRoute(path: ProtoRoutes.authProfile, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthProfileScreen()),
-      GoRoute(path: ProtoRoutes.authAgeBlock, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthAgeBlockScreen()),
+      ...buildProtoModalRoutes(rootNavigatorKey: rootNavigatorKey),
     ],
   );
 });
