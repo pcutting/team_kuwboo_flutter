@@ -7,7 +7,6 @@ environment:
 workspace:
   - apps/web
   - apps/mobile
-  - packages/ui
   - packages/models
   - packages/api_client
   - packages/kuwboo_shell
