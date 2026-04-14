@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
-import 'inner_circle_wave.dart';
 
 /// Broadcast wave — wave confirmation + recent waves list
 /// with quick/full wave types, session context, reach indicator.
@@ -35,10 +34,6 @@ class _YoyoWaveScreenState extends State<YoyoWaveScreen> {
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
-
-    if (state.yoyoMode == 1) {
-      return const InnerCircleWaveView();
-    }
 
     return ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16),

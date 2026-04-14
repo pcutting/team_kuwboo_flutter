@@ -19,6 +19,10 @@ Kuwboo multi-platform app monorepo. Flutter for mobile (iOS + Android), NestJS f
 | `keys/` | **Gitignored.** Local Apple signing material (`.p12`, `.mobileprovision`, `.key`, CSR, password). Never commit. | — |
 | `.github/workflows/` | CI — includes `ios-testflight.yml` and `ios-pr-validation.yml` | — |
 
+### Archived features
+
+- **Inner Circle** (family-tracking mode, pending $66K SOW, ~1yr horizon) — archived 2026-04-14. Full source + screenshots + restoration recipe in [`docs/team/internal/inner_circle_archive/`](docs/team/internal/inner_circle_archive/README.md). Do not reintroduce `YoyoState.mode`, `inner_circle_*` files, or `DemoFamilyMember` without reading that archive first — they were deliberately removed from `packages/`.
+
 ### Deployment architecture (read this before suggesting SSR/Functions/middleware)
 
 All web hosting is **static on Vercel**. No SSR, no Next.js, no Vercel Functions, no middleware, no edge compute in this repo today.

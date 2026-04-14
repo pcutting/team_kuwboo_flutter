@@ -88,9 +88,6 @@ class YoyoState {
   // Full-screen radar mode
   final bool isRadarFullscreen;
 
-  // Mode (0 = Social, 1 = Inner Circle)
-  final int mode;
-
   const YoyoState({
     this.isAreaView = true,
     this.range = 1.0,
@@ -110,7 +107,6 @@ class YoyoState {
     this.liveActive = false,
     this.liveDuration = 0,
     this.isRadarFullscreen = false,
-    this.mode = 0,
   });
 
   YoyoState copyWith({
@@ -132,7 +128,6 @@ class YoyoState {
     bool? liveActive,
     int? liveDuration,
     bool? isRadarFullscreen,
-    int? mode,
   }) {
     return YoyoState(
       isAreaView: isAreaView ?? this.isAreaView,
@@ -153,7 +148,6 @@ class YoyoState {
       liveActive: liveActive ?? this.liveActive,
       liveDuration: liveDuration ?? this.liveDuration,
       isRadarFullscreen: isRadarFullscreen ?? this.isRadarFullscreen,
-      mode: mode ?? this.mode,
     );
   }
 }
@@ -241,11 +235,6 @@ class YoyoStateNotifier extends StateNotifier<YoyoState> {
   void toggleRadarFullscreen() {
     state = state.copyWith(isRadarFullscreen: !state.isRadarFullscreen);
   }
-
-  // Mode
-  void setMode(int value) {
-    state = state.copyWith(mode: value);
-  }
 }
 
 final yoyoStateProvider =
@@ -309,7 +298,6 @@ class ProtoStateAccess extends InheritedWidget {
   bool get yoyoLiveActive => yoyo.liveActive;
   int get yoyoLiveDuration => yoyo.liveDuration;
   bool get isRadarFullscreen => yoyo.isRadarFullscreen;
-  int get yoyoMode => yoyo.mode;
 
   // ── Convenience setters matching old PrototypeStateProvider API ──
 
@@ -331,7 +319,6 @@ class ProtoStateAccess extends InheritedWidget {
   void onYoyoLiveToggle() => yoyoNotifier.toggleLive();
   void onYoyoLiveDurationChanged(int v) => yoyoNotifier.setLiveDuration(v);
   void onRadarFullscreenToggle() => yoyoNotifier.toggleRadarFullscreen();
-  void onYoyoModeChanged(int v) => yoyoNotifier.setMode(v);
   void onDarkModeChanged(bool v) => shellNotifier.setDarkMode(v);
   void onModuleChanged(ProtoModule m) => shellNotifier.switchModule(m);
 

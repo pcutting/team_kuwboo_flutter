@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
-import 'inner_circle_nearby.dart';
 
 // ─── Logarithmic range slider helpers ─────────────────────────────────
 // Maps 0.0–1.0 slider position to 200 m (0.2 km) → 40,000 km range
@@ -139,11 +138,6 @@ class _YoyoNearbyScreenState extends State<YoyoNearbyScreen> {
   @override
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
-
-    // Inner Circle mode shows the map-based family view
-    if (state.yoyoMode == 1) {
-      return const InnerCircleNearbyView();
-    }
 
     // The outer ProtoScaffold is provided by the app shell (router).
     // This screen just returns its body. The shell reads the

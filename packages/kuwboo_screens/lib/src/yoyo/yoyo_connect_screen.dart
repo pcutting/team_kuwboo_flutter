@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
-import 'inner_circle_connect.dart';
 
 /// Pending connections — list of sent/received connection requests
 /// with functional filter chips, accept/reject animations,
@@ -17,10 +16,6 @@ class _YoyoConnectScreenState extends State<YoyoConnectScreen> {
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
-
-    if (state.yoyoMode == 1) {
-      return const InnerCircleConnectView();
-    }
 
     return Column(
         crossAxisAlignment: CrossAxisAlignment.start,

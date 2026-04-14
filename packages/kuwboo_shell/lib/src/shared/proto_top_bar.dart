@@ -16,14 +16,14 @@ class ProtoTopBar extends StatelessWidget {
     this.transparent = false,
   });
 
-  String _title(int yoyoMode) {
+  String _title() {
     switch (activeModule) {
       case ProtoModule.video:
         return 'KUWBOO';
       case ProtoModule.dating:
         return 'DATING';
       case ProtoModule.yoyo:
-        return yoyoMode == 1 ? 'INNER CIRCLE' : 'YOYO';
+        return 'YOYO';
       case ProtoModule.social:
         return 'SOCIAL';
       case ProtoModule.shop:
@@ -31,14 +31,10 @@ class ProtoTopBar extends StatelessWidget {
     }
   }
 
-  static const _warmAmber = Color(0xFFD4A04A);
-  static const _warmGold = Color(0xFFE8C547);
-
   @override
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
-    final isInnerCircle = activeModule == ProtoModule.yoyo && state.yoyoMode == 1;
     final safeTop = MediaQuery.paddingOf(context).top;
 
     // In transparent/overlay mode, no background — radar flows behind everything.
@@ -46,7 +42,7 @@ class ProtoTopBar extends StatelessWidget {
     if (transparent) {
       return Padding(
         padding: EdgeInsets.only(top: safeTop + 6, left: 16, right: 16, bottom: 6),
-        child: _buildNavContent(state, theme, isInnerCircle, withShadows: true),
+        child: _buildNavContent(state, theme, withShadows: true),
       );
     }
 
@@ -54,33 +50,19 @@ class ProtoTopBar extends StatelessWidget {
       padding: EdgeInsets.only(top: safeTop, left: 16, right: 16, bottom: 8),
       decoration: BoxDecoration(
         color: theme.surface,
-        // Warm gradient overlay for Inner Circle mode
-        gradient: isInnerCircle
-            ? LinearGradient(
-                colors: [
-                  _warmAmber.withValues(alpha: 0.15),
-                  _warmGold.withValues(alpha: 0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-            : null,
         border: Border(
           bottom: BorderSide(
-            color: isInnerCircle
-                ? _warmAmber.withValues(alpha: 0.15)
-                : theme.text.withValues(alpha: 0.06),
+            color: theme.text.withValues(alpha: 0.06),
           ),
         ),
       ),
-      child: _buildNavContent(state, theme, isInnerCircle),
+      child: _buildNavContent(state, theme),
     );
   }
 
   Widget _buildNavContent(
     PrototypeStateProvider state,
-    ProtoTheme theme,
-    bool isInnerCircle, {
+    ProtoTheme theme, {
     bool withShadows = false,
   }) {
     // When transparent, give icons a subtle frosted backing so they pop over radar
@@ -105,7 +87,7 @@ class ProtoTopBar extends StatelessWidget {
     final titleStyle = theme.label.copyWith(
       fontSize: 14,
       letterSpacing: 2,
-      color: isInnerCircle ? _warmAmber : theme.text,
+      color: theme.text,
       shadows: withShadows
           ? [Shadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 4)]
           : null,
@@ -113,22 +95,19 @@ class ProtoTopBar extends StatelessWidget {
 
     return Row(
       children: [
-        // YoYo icon — toggles area/list when in YoYo Social, or shows people icon in Inner Circle
-        if (isInnerCircle)
-          _InnerCircleIcon(theme: theme)
-        else
-          _YoyoIconToggle(
-            activeModule: activeModule,
-            isYoyoAreaView: state.isYoyoAreaView,
-            onTap: () {
-              if (activeModule == ProtoModule.yoyo) {
-                state.onYoyoViewToggle();
-              } else {
-                state.switchModule(ProtoModule.yoyo);
-              }
-            },
-            theme: theme,
-          ),
+        // YoYo icon — toggles area/list when in YoYo, otherwise jumps to YoYo
+        _YoyoIconToggle(
+          activeModule: activeModule,
+          isYoyoAreaView: state.isYoyoAreaView,
+          onTap: () {
+            if (activeModule == ProtoModule.yoyo) {
+              state.onYoyoViewToggle();
+            } else {
+              state.switchModule(ProtoModule.yoyo);
+            }
+          },
+          theme: theme,
+        ),
 
         const Spacer(),
 
@@ -139,8 +118,8 @@ class ProtoTopBar extends StatelessWidget {
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: Text(
-                _title(state.yoyoMode),
-                key: ValueKey(_title(state.yoyoMode)),
+                _title(),
+                key: ValueKey(_title()),
                 style: titleStyle,
               ),
             ),
@@ -379,79 +358,6 @@ class _YoyoIconToggleState extends State<_YoyoIconToggle>
         ],
       ),
     ),
-    );
-  }
-}
-
-/// Small icon next to the title that toggles between Social and Inner Circle modes.
-class _YoyoModeToggleIcon extends StatelessWidget {
-  final bool isInnerCircle;
-  final VoidCallback onTap;
-
-  const _YoyoModeToggleIcon({
-    required this.isInnerCircle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: isInnerCircle ? 'Switch to YoYo Social mode' : 'Switch to Inner Circle mode',
-      button: true,
-      child: GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          color: isInnerCircle
-              ? ProtoTopBar._warmAmber.withValues(alpha: 0.2)
-              : Colors.white.withValues(alpha: 0.06),
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: isInnerCircle
-                ? ProtoTopBar._warmAmber.withValues(alpha: 0.4)
-                : Colors.white.withValues(alpha: 0.1),
-          ),
-        ),
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          child: Icon(
-            isInnerCircle ? Icons.explore_rounded : Icons.family_restroom_rounded,
-            key: ValueKey(isInnerCircle),
-            size: 14,
-            color: isInnerCircle
-                ? ProtoTopBar._warmAmber
-                : ProtoTheme.of(context).textSecondary,
-          ),
-        ),
-      ),
-    ),
-    );
-  }
-}
-
-/// Left icon shown in Inner Circle mode — people/shield icon.
-class _InnerCircleIcon extends StatelessWidget {
-  final ProtoTheme theme;
-
-  const _InnerCircleIcon({required this.theme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        color: ProtoTopBar._warmAmber.withValues(alpha: 0.15),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(
-        Icons.shield_rounded,
-        size: 20,
-        color: ProtoTopBar._warmAmber,
-      ),
     );
   }
 }
