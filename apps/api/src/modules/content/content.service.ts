@@ -14,6 +14,10 @@ import { ContentStatus, ContentType } from '../../common/enums';
 export class ContentService {
   constructor(private readonly em: EntityManager) {}
 
+  // TODO: creators can now tag interests via POST /content/:id/interest-tags
+  // (see ContentInterestTagsService — D3b). A follow-up can accept
+  // `interest_ids` directly in CreateVideoDto / CreatePostDto so tagging
+  // happens in a single request at upload time.
   async createVideo(user: User, dto: CreateVideoDto): Promise<Video> {
     const video = this.em.create(Video, {
       type: ContentType.VIDEO,
