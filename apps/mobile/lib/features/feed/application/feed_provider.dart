@@ -1,21 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kuwboo_api_client/kuwboo_api_client.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 
 import '../../../providers/api_provider.dart';
-import '../data/feed_api.dart';
-import '../data/feed_models.dart';
 
-/// Provides a live [FeedApi] backed by the authenticated Dio.
+/// Shared [FeedApi] backed by the authenticated [KuwbooApiClient].
 final feedApiProvider = Provider<FeedApi>(
-  (ref) => FeedApi(ref.watch(dioProvider)),
+  (ref) => FeedApi(ref.watch(apiClientProvider)),
 );
 
 // ─── Feed state ──────────────────────────────────────────────────────────
 
-/// Snapshot of a paginated feed screen. Exposed to the UI via the various
-/// async notifiers below so screens can render loading / error / data /
-/// load-more / refresh.
+/// Snapshot of a paginated content feed screen.
 class FeedListState {
-  final List<FeedItem> items;
+  final List<Content> items;
   final String? nextCursor;
   final bool hasMore;
   final bool isLoadingMore;
@@ -28,7 +26,7 @@ class FeedListState {
   });
 
   FeedListState copyWith({
-    List<FeedItem>? items,
+    List<Content>? items,
     String? nextCursor,
     bool? hasMore,
     bool? isLoadingMore,
@@ -37,6 +35,35 @@ class FeedListState {
     return FeedListState(
       items: items ?? this.items,
       nextCursor: clearCursor ? null : (nextCursor ?? this.nextCursor),
+      hasMore: hasMore ?? this.hasMore,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    );
+  }
+}
+
+/// Snapshot of a paginated product grid (marketplace).
+class ProductListState {
+  final List<Product> items;
+  final String? nextCursor;
+  final bool hasMore;
+  final bool isLoadingMore;
+
+  const ProductListState({
+    this.items = const [],
+    this.nextCursor,
+    this.hasMore = false,
+    this.isLoadingMore = false,
+  });
+
+  ProductListState copyWith({
+    List<Product>? items,
+    String? nextCursor,
+    bool? hasMore,
+    bool? isLoadingMore,
+  }) {
+    return ProductListState(
+      items: items ?? this.items,
+      nextCursor: nextCursor ?? this.nextCursor,
       hasMore: hasMore ?? this.hasMore,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
     );
@@ -59,7 +86,6 @@ abstract class _TabFeedNotifier extends AsyncNotifier<FeedListState> {
     );
   }
 
-  /// Pull-to-refresh — re-fetch first page and replace.
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
@@ -72,7 +98,6 @@ abstract class _TabFeedNotifier extends AsyncNotifier<FeedListState> {
     });
   }
 
-  /// Infinite scroll — append next page.
   Future<void> loadMore() async {
     final current = state.valueOrNull;
     if (current == null || !current.hasMore || current.isLoadingMore) return;
@@ -89,7 +114,6 @@ abstract class _TabFeedNotifier extends AsyncNotifier<FeedListState> {
         isLoadingMore: false,
       ));
     } catch (e, st) {
-      // Keep existing items, drop the loading flag, surface the error.
       state = AsyncValue.data(current.copyWith(isLoadingMore: false));
       state = AsyncValue.error(e, st);
     }
@@ -106,16 +130,15 @@ class SocialFeedNotifier extends _TabFeedNotifier {
   String get tab => 'social';
 }
 
-/// Shop feed: calls `/products` (not `/feed?tab=shop`) so we get Product
-/// fields (`title`, `priceCents`, `condition`, …) instead of the generic
-/// content shape.
-class ShopFeedNotifier extends AsyncNotifier<FeedListState> {
+/// Shop feed: calls `/products` so we get Product-typed rows with
+/// `title`, `priceCents`, `condition`.
+class ShopFeedNotifier extends AsyncNotifier<ProductListState> {
   FeedApi get _api => ref.read(feedApiProvider);
 
   @override
-  Future<FeedListState> build() async {
+  Future<ProductListState> build() async {
     final page = await _api.getProducts();
-    return FeedListState(
+    return ProductListState(
       items: page.items,
       nextCursor: page.nextCursor,
       hasMore: page.hasMore,
@@ -126,7 +149,7 @@ class ShopFeedNotifier extends AsyncNotifier<FeedListState> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       final page = await _api.getProducts();
-      return FeedListState(
+      return ProductListState(
         items: page.items,
         nextCursor: page.nextCursor,
         hasMore: page.hasMore,
@@ -143,7 +166,7 @@ class ShopFeedNotifier extends AsyncNotifier<FeedListState> {
     state = AsyncValue.data(current.copyWith(isLoadingMore: true));
     try {
       final page = await _api.getProducts(cursor: cursor);
-      state = AsyncValue.data(FeedListState(
+      state = AsyncValue.data(ProductListState(
         items: [...current.items, ...page.items],
         nextCursor: page.nextCursor,
         hasMore: page.hasMore,
@@ -200,7 +223,7 @@ final socialFeedProvider =
 );
 
 final shopFeedProvider =
-    AsyncNotifierProvider<ShopFeedNotifier, FeedListState>(
+    AsyncNotifierProvider<ShopFeedNotifier, ProductListState>(
   ShopFeedNotifier.new,
 );
 

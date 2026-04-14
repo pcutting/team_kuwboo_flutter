@@ -1,15 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:kuwboo_api_client/kuwboo_api_client.dart' as shared;
-import 'package:kuwboo_models/kuwboo_models.dart' show TokenPair;
+import 'package:kuwboo_api_client/kuwboo_api_client.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 
 import 'package:kuwboo_mobile/app/test_app.dart';
 import 'package:kuwboo_mobile/config/environment.dart';
 import 'package:kuwboo_mobile/features/feed/application/feed_provider.dart';
-import 'package:kuwboo_mobile/features/feed/data/feed_api.dart';
-import 'package:kuwboo_mobile/features/feed/data/feed_models.dart';
 
 /// E2E smoke for the boot-with-existing-session path on a real device.
 ///
@@ -25,7 +22,7 @@ void main() {
 
   testWidgets('boots authenticated when tokens exist in secure storage',
       (tester) async {
-    final client = shared.KuwbooApiClient(baseUrl: Environment.apiBaseUrl);
+    final client = KuwbooApiClient(baseUrl: Environment.apiBaseUrl);
     await client.clearTokens();
     await client.saveTokens(const TokenPair(
       accessToken: 'smoke-test-token',
@@ -60,33 +57,33 @@ void main() {
 }
 
 /// Minimal stub that short-circuits every feed call with an empty response.
-/// We only care that screens mount post-auth — content rendering is covered
-/// by the widget tests in `test/feed_screens_test.dart`.
 class _EmptyFeedApi implements FeedApi {
   @override
-  Future<FeedPage> getFeed({
-    required String tab,
+  Future<FeedResponse> getFeed({
+    String? tab,
     String? cursor,
     int limit = 20,
   }) async =>
-      const FeedPage(items: [], hasMore: false);
+      const FeedResponse(items: [], hasMore: false);
 
   @override
-  Future<FeedPage> getFollowing({
-    required String tab,
+  Future<FeedResponse> getFollowing({
+    String? tab,
     String? cursor,
     int limit = 20,
   }) async =>
-      const FeedPage(items: [], hasMore: false);
+      const FeedResponse(items: [], hasMore: false);
 
   @override
-  Future<List<FeedItem>> getDiscover({required String tab, int limit = 20}) async => const [];
+  Future<FeedResponse> getDiscover({String? tab, int limit = 20}) async =>
+      const FeedResponse(items: [], hasMore: false);
 
   @override
-  Future<List<FeedItem>> getTrending({required String tab, int limit = 20}) async => const [];
+  Future<FeedResponse> getTrending({String? tab, int limit = 20}) async =>
+      const FeedResponse(items: [], hasMore: false);
 
   @override
-  Future<FeedPage> getProducts({
+  Future<ProductPage> getProducts({
     String? category,
     int? minPrice,
     int? maxPrice,
@@ -94,17 +91,19 @@ class _EmptyFeedApi implements FeedApi {
     String? cursor,
     int limit = 20,
   }) async =>
-      const FeedPage(items: [], hasMore: false);
+      const ProductPage();
 
   @override
-  Future<FeedPage> getDeals({String? cursor, int limit = 20}) async =>
-      const FeedPage(items: [], hasMore: false);
+  Future<ProductPage> getProductDeals({String? cursor, int limit = 20}) async =>
+      const ProductPage();
 
   @override
-  Future<FeedItem> getProductDetail(String id) async => throw UnimplementedError();
+  Future<Product> getProductDetail(String id) async =>
+      throw UnimplementedError();
 
   @override
-  Future<FeedItem> getContentDetail(String id) async => throw UnimplementedError();
+  Future<Content> getContentDetail(String id) async =>
+      throw UnimplementedError();
 
   @override
   Future<List<NearbyUser>> getYoyoNearby({

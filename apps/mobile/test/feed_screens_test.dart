@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kuwboo_api_client/kuwboo_api_client.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 
 import 'package:kuwboo_mobile/features/feed/application/feed_provider.dart';
-import 'package:kuwboo_mobile/features/feed/data/feed_api.dart';
-import 'package:kuwboo_mobile/features/feed/data/feed_models.dart';
 import 'package:kuwboo_mobile/features/feed/presentation/shop_feed_mobile_screen.dart';
 import 'package:kuwboo_mobile/features/feed/presentation/social_feed_mobile_screen.dart';
 import 'package:kuwboo_mobile/features/feed/presentation/video_feed_mobile_screen.dart';
@@ -19,38 +19,40 @@ class _FakeFeedApi implements FeedApi {
     this.nearby = const [],
   });
 
-  FeedPage? feedPage;
-  FeedPage? products;
-  FeedPage? deals;
+  FeedResponse? feedPage;
+  ProductPage? products;
+  ProductPage? deals;
   List<NearbyUser> nearby;
   String? lastFeedTab;
 
   @override
-  Future<FeedPage> getFeed({
-    required String tab,
+  Future<FeedResponse> getFeed({
+    String? tab,
     String? cursor,
     int limit = 20,
   }) async {
     lastFeedTab = tab;
-    return feedPage ?? const FeedPage(items: [], hasMore: false);
+    return feedPage ?? const FeedResponse(items: [], hasMore: false);
   }
 
   @override
-  Future<List<FeedItem>> getDiscover({required String tab, int limit = 20}) async => [];
+  Future<FeedResponse> getDiscover({String? tab, int limit = 20}) async =>
+      const FeedResponse(items: [], hasMore: false);
 
   @override
-  Future<List<FeedItem>> getTrending({required String tab, int limit = 20}) async => [];
+  Future<FeedResponse> getTrending({String? tab, int limit = 20}) async =>
+      const FeedResponse(items: [], hasMore: false);
 
   @override
-  Future<FeedPage> getFollowing({
-    required String tab,
+  Future<FeedResponse> getFollowing({
+    String? tab,
     String? cursor,
     int limit = 20,
   }) async =>
-      const FeedPage(items: [], hasMore: false);
+      const FeedResponse(items: [], hasMore: false);
 
   @override
-  Future<FeedPage> getProducts({
+  Future<ProductPage> getProducts({
     String? category,
     int? minPrice,
     int? maxPrice,
@@ -58,17 +60,19 @@ class _FakeFeedApi implements FeedApi {
     String? cursor,
     int limit = 20,
   }) async =>
-      products ?? const FeedPage(items: [], hasMore: false);
+      products ?? const ProductPage();
 
   @override
-  Future<FeedPage> getDeals({String? cursor, int limit = 20}) async =>
-      deals ?? const FeedPage(items: [], hasMore: false);
+  Future<ProductPage> getProductDeals({String? cursor, int limit = 20}) async =>
+      deals ?? const ProductPage();
 
   @override
-  Future<FeedItem> getProductDetail(String id) async => throw UnimplementedError();
+  Future<Product> getProductDetail(String id) async =>
+      throw UnimplementedError();
 
   @override
-  Future<FeedItem> getContentDetail(String id) async => throw UnimplementedError();
+  Future<Content> getContentDetail(String id) async =>
+      throw UnimplementedError();
 
   @override
   Future<List<NearbyUser>> getYoyoNearby({
@@ -81,55 +85,48 @@ class _FakeFeedApi implements FeedApi {
 
 // ─── Helpers ────────────────────────────────────────────────────────────
 
-FeedItem _video({
+Content _video({
   String id = 'v1',
-  String creator = 'alice',
+  String creatorName = 'alice',
   String caption = 'hello world',
   int likes = 10,
 }) {
-  return FeedItem.fromJson({
-    'id': id,
-    'type': 'VIDEO',
-    'creator': {'id': 'u1', 'name': creator},
-    'caption': caption,
-    'likeCount': likes,
-    'commentCount': 2,
-    'shareCount': 0,
-    'viewCount': 100,
-    'createdAt': DateTime.now().toIso8601String(),
-    'thumbnailUrl': null,
-  });
+  return Content(
+    id: id,
+    type: ContentType.video,
+    creatorId: 'u1',
+    creator: FeedCreator(id: 'u1', name: creatorName),
+    caption: caption,
+    likeCount: likes,
+    commentCount: 2,
+    viewCount: 100,
+    createdAt: DateTime.now(),
+  );
 }
 
-FeedItem _post({String text = 'a social post'}) {
-  return FeedItem.fromJson({
-    'id': 'p1',
-    'type': 'POST',
-    'creator': {'id': 'u1', 'name': 'bob'},
-    'text': text,
-    'likeCount': 1,
-    'commentCount': 0,
-    'shareCount': 0,
-    'viewCount': 0,
-    'createdAt': DateTime.now().toIso8601String(),
-  });
+Content _post({String text = 'a social post'}) {
+  return Content(
+    id: 'p1',
+    type: ContentType.post,
+    creatorId: 'u1',
+    creator: const FeedCreator(id: 'u1', name: 'bob'),
+    text: text,
+    likeCount: 1,
+    createdAt: DateTime.now(),
+  );
 }
 
-FeedItem _product({String title = 'Vintage chair', int price = 4999}) {
-  return FeedItem.fromJson({
-    'id': 'pr1',
-    'type': 'PRODUCT',
-    'creator': {'id': 'u1', 'name': 'seller'},
-    'title': title,
-    'priceCents': price,
-    'currency': 'GBP',
-    'condition': 'USED',
-    'likeCount': 0,
-    'commentCount': 0,
-    'shareCount': 0,
-    'viewCount': 0,
-    'createdAt': DateTime.now().toIso8601String(),
-  });
+Product _product({String title = 'Vintage chair', int price = 4999}) {
+  return Product(
+    id: 'pr1',
+    creatorId: 'u1',
+    title: title,
+    description: 'A lovely chair',
+    priceCents: price,
+    currency: 'GBP',
+    condition: 'USED',
+    createdAt: DateTime.now(),
+  );
 }
 
 Widget _wrap(Widget screen, ProviderContainer container) {
@@ -144,8 +141,11 @@ Widget _wrap(Widget screen, ProviderContainer container) {
 void main() {
   testWidgets('VideoFeedMobileScreen renders API-backed videos', (tester) async {
     final api = _FakeFeedApi(
-      feedPage: FeedPage(
-        items: [_video(caption: 'first video'), _video(id: 'v2', caption: 'second')],
+      feedPage: FeedResponse(
+        items: [
+          _video(caption: 'first video'),
+          _video(id: 'v2', caption: 'second'),
+        ],
         hasMore: false,
       ),
     );
@@ -163,7 +163,10 @@ void main() {
 
   testWidgets('SocialFeedMobileScreen renders API-backed posts', (tester) async {
     final api = _FakeFeedApi(
-      feedPage: FeedPage(items: [_post(text: 'hello social')], hasMore: false),
+      feedPage: FeedResponse(
+        items: [_post(text: 'hello social')],
+        hasMore: false,
+      ),
     );
     final container = ProviderContainer(
       overrides: [feedApiProvider.overrideWithValue(api)],
@@ -179,7 +182,7 @@ void main() {
 
   testWidgets('ShopFeedMobileScreen renders products with prices', (tester) async {
     final api = _FakeFeedApi(
-      products: FeedPage(items: [_product(title: 'Chair A')], hasMore: false),
+      products: ProductPage(items: [_product(title: 'Chair A')]),
     );
     final container = ProviderContainer(
       overrides: [feedApiProvider.overrideWithValue(api)],
@@ -215,7 +218,9 @@ void main() {
   });
 
   testWidgets('shows empty state when API returns no items', (tester) async {
-    final api = _FakeFeedApi(feedPage: const FeedPage(items: [], hasMore: false));
+    final api = _FakeFeedApi(
+      feedPage: const FeedResponse(items: [], hasMore: false),
+    );
     final container = ProviderContainer(
       overrides: [feedApiProvider.overrideWithValue(api)],
     );

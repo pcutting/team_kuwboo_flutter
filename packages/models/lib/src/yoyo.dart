@@ -4,13 +4,17 @@ part 'yoyo.freezed.dart';
 part 'yoyo.g.dart';
 
 /// A user discovered within proximity range.
+///
+/// The backend returns `distanceMeters` as an integer (rounded from the
+/// PostGIS distance in metres). Consumers that want kilometres can divide
+/// by 1000 at the UI layer.
 @freezed
 abstract class NearbyUser with _$NearbyUser {
   const factory NearbyUser({
     required String id,
     required String name,
     String? avatarUrl,
-    required double distanceKm,
+    @Default(0) int distanceMeters,
     String? onlineStatus,
   }) = _NearbyUser;
 

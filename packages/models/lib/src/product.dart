@@ -25,3 +25,20 @@ abstract class Product with _$Product {
   factory Product.fromJson(Map<String, dynamic> json) =>
       _$ProductFromJson(json);
 }
+
+/// Cursor-paginated product list. Backend returns `{items, nextCursor}`
+/// with no `hasMore` — the presence of a cursor implies more.
+@freezed
+abstract class ProductPage with _$ProductPage {
+  const factory ProductPage({
+    @Default(<Product>[]) List<Product> items,
+    String? nextCursor,
+  }) = _ProductPage;
+
+  const ProductPage._();
+
+  factory ProductPage.fromJson(Map<String, dynamic> json) =>
+      _$ProductPageFromJson(json);
+
+  bool get hasMore => nextCursor != null;
+}

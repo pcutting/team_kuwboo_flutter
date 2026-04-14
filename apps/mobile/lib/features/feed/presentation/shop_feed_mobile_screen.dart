@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 
 import '../application/feed_provider.dart';
-import '../data/feed_models.dart';
 import 'feed_common.dart';
 
 /// Mobile-side marketplace grid wired to `GET /products`.
@@ -16,7 +16,7 @@ class ShopFeedMobileScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Shop')),
-      body: FeedAsyncBuilder<FeedListState>(
+      body: FeedAsyncBuilder<ProductListState>(
         snapshot: AsyncSnapshotLike(
           value: async.valueOrNull,
           error: async.hasError ? async.error : null,
@@ -59,7 +59,7 @@ class ShopFeedMobileScreen extends ConsumerWidget {
 }
 
 class _ProductCard extends StatelessWidget {
-  final FeedItem item;
+  final Product item;
   const _ProductCard({required this.item});
 
   @override
@@ -83,7 +83,7 @@ class _ProductCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.title ?? 'Untitled',
+                  item.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -96,12 +96,11 @@ class _ProductCard extends StatelessWidget {
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.w700),
                 ),
-                if (item.condition != null)
-                  Text(
-                    item.condition!.toLowerCase(),
-                    style: const TextStyle(
-                        color: Colors.black54, fontSize: 11),
-                  ),
+                Text(
+                  item.condition.toLowerCase(),
+                  style: const TextStyle(
+                      color: Colors.black54, fontSize: 11),
+                ),
               ],
             ),
           ),

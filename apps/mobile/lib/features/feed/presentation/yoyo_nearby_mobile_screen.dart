@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 
 import '../application/feed_provider.dart';
-import '../data/feed_models.dart';
 import 'feed_common.dart';
 
 /// Mobile-side YoYo nearby list wired to `GET /yoyo/nearby`.

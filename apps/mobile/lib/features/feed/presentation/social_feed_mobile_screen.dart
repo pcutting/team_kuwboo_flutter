@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 
 import '../application/feed_provider.dart';
-import '../data/feed_models.dart';
 import 'feed_common.dart';
 
 /// Mobile-side social feed wired to `GET /feed?tab=social`.
@@ -55,11 +55,13 @@ class SocialFeedMobileScreen extends ConsumerWidget {
 }
 
 class _PostCard extends StatelessWidget {
-  final FeedItem item;
+  final Content item;
   const _PostCard({required this.item});
 
   @override
   Widget build(BuildContext context) {
+    final creator = item.creator;
+    final body = item.text ?? item.caption;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -70,10 +72,10 @@ class _PostCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 18,
-                  backgroundImage: item.creator.avatarUrl != null
-                      ? NetworkImage(item.creator.avatarUrl!)
+                  backgroundImage: creator?.avatarUrl != null
+                      ? NetworkImage(creator!.avatarUrl!)
                       : null,
-                  child: item.creator.avatarUrl == null
+                  child: creator?.avatarUrl == null
                       ? const Icon(Icons.person)
                       : null,
                 ),
@@ -83,7 +85,7 @@ class _PostCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        item.creator.name,
+                        creator?.name ?? '',
                         style: const TextStyle(fontWeight: FontWeight.w600),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -97,9 +99,9 @@ class _PostCard extends StatelessWidget {
                 ),
               ],
             ),
-            if (item.caption != null) ...[
+            if (body != null) ...[
               const SizedBox(height: 12),
-              Text(item.caption!),
+              Text(body),
             ],
             const SizedBox(height: 10),
             Row(
