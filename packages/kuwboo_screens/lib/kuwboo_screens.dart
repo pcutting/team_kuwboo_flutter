@@ -12,11 +12,6 @@ export 'src/yoyo/yoyo_settings_screen.dart';
 export 'src/yoyo/yoyo_filter_sheet.dart';
 export 'src/yoyo/yoyo_user_profile.dart';
 export 'src/yoyo/yoyo_shared.dart';
-export 'src/yoyo/inner_circle_nearby.dart';
-export 'src/yoyo/inner_circle_connect.dart';
-export 'src/yoyo/inner_circle_wave.dart';
-export 'src/yoyo/inner_circle_chat.dart';
-export 'src/yoyo/inner_circle_shared.dart';
 
 // Video
 export 'src/video/video_feed_screen.dart';
