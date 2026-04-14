@@ -15,6 +15,8 @@ dependencies:
     path: ../kuwboo_shell
   kuwboo_chat:
     path: ../kuwboo_chat
+  kuwboo_auth:
+    path: ../kuwboo_auth
   kuwboo_models:
     path: ../models
   flutter_riverpod: ^2.6.0

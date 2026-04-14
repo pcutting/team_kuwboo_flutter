@@ -57,3 +57,6 @@ export 'src/sponsored/sponsored_inline.dart';
 export 'src/sponsored/sponsored_hub.dart';
 export 'src/sponsored/sponsored_create_campaign.dart';
 export 'src/sponsored/sponsored_campaign_detail.dart';
+
+// Routing helpers
+export 'src/routing/proto_route_builders.dart';
