@@ -99,24 +99,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true);
     try {
       if (Environment.devAuthBypass && code == Environment.devBypassOtp) {
-        const fakeTokens = AuthTokens(
-          accessToken: 'dev-access',
-          refreshToken: 'dev-refresh',
-        );
-        final fakeUser = AuthUser(
-          id: 'dev-user',
-          name: phone,
-          phone: phone,
-        );
-        // Persist so dev sessions survive cold launches the same way real
-        // sessions do — otherwise _init() finds nothing and bounces to /login.
-        await _storage.writeTokens(fakeTokens);
-        await _storage.writeUser(fakeUser);
+        // Hit the backend's POST /auth/dev-login (gated by DEV_LOGIN_ENABLED=1
+        // on the server) to get real JWTs. This makes dev mode behave exactly
+        // like a real session — feed/yoyo calls succeed, no fake-token 401s.
+        final response = await _api.devLogin(phone);
+        await _storage.writeTokens(response.tokens);
+        await _storage.writeUser(response.user);
         state = AuthState(
-          accessToken: fakeTokens.accessToken,
-          refreshToken: fakeTokens.refreshToken,
-          userId: fakeUser.id,
-          user: fakeUser,
+          accessToken: response.tokens.accessToken,
+          refreshToken: response.tokens.refreshToken,
+          userId: response.user.id,
+          user: response.user,
+          isNewUser: response.isNewUser,
         );
         return;
       }

@@ -79,6 +79,9 @@ class _FakeAuthApi implements AuthApi {
 
   @override
   Future<void> logout() async {}
+
+  @override
+  Future<AuthResponse> devLogin(String phone) async => throw UnimplementedError();
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────
