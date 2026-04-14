@@ -15,13 +15,35 @@ class AuthOnboardingScreen extends StatelessWidget {
       color: theme.surface,
       child: Column(
         children: [
-          // Simple header
+          // Simple header with Skip
           Padding(
             padding: const EdgeInsets.only(top: 56, left: 24, right: 24, bottom: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Pick your interests', style: theme.headline.copyWith(fontSize: 24)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text('Pick your interests', style: theme.headline.copyWith(fontSize: 24)),
+                    ),
+                    GestureDetector(
+                      onTap: () => state.push(ProtoRoutes.authTutorial),
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        child: Text(
+                          'Skip',
+                          style: theme.body.copyWith(
+                            color: theme.text.withValues(alpha: 0.6),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 6),
                 Text('Choose at least 3 to personalize your experience.', style: theme.body),
               ],
