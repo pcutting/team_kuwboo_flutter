@@ -173,6 +173,25 @@ export class AuthService {
     }
   }
 
+  /**
+   * Development-only login. Skips OTP entirely — find-or-creates a user by
+   * phone and issues real JWTs. Gated at the controller level by
+   * `DEV_LOGIN_ENABLED=1`. Never enable in production.
+   */
+  async devLogin(
+    phone: string,
+    meta?: { userAgent?: string; ipAddress?: string },
+  ): Promise<AuthResponse> {
+    let user = await this.usersService.findByPhone(phone);
+    let isNewUser = false;
+    if (!user) {
+      user = await this.usersService.create({ phone, name: phone });
+      isNewUser = true;
+    }
+    const tokens = await this.issueTokens(user, meta);
+    return { ...tokens, user, isNewUser };
+  }
+
   private async issueTokens(
     user: User,
     meta?: { userAgent?: string; ipAddress?: string },

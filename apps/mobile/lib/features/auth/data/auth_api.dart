@@ -29,6 +29,18 @@ class AuthApi {
     return AuthResponse.fromJson(res.data!);
   }
 
+  /// POST `/auth/dev-login`
+  ///
+  /// Backend skips OTP, find-or-creates a user by phone, returns real JWTs.
+  /// Only enabled when the server has `DEV_LOGIN_ENABLED=1` — otherwise 403.
+  Future<AuthResponse> devLogin(String phone) async {
+    final res = await _dio.post<Map<String, dynamic>>(
+      '/auth/dev-login',
+      data: {'phone': phone},
+    );
+    return AuthResponse.fromJson(res.data!);
+  }
+
   /// POST `/auth/refresh`
   ///
   /// Sends the expired access token in the `Authorization` header — the

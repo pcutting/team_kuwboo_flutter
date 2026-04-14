@@ -60,15 +60,6 @@ final dioProvider = Provider<Dio>((ref) {
           return;
         }
 
-        // In dev-auth-bypass the tokens are fakes ("dev-access" / "dev-refresh")
-        // that the backend always 401s. Don't run the refresh-then-logout
-        // cascade — that would kick the user back to /login on every API call
-        // and make dev mode unusable. Just surface the 401 as a normal error.
-        if (Environment.devAuthBypass) {
-          handler.next(error);
-          return;
-        }
-
         final notifier = ref.read(authProvider.notifier);
         final authState = ref.read(authProvider);
         final refreshToken = authState.refreshToken;
