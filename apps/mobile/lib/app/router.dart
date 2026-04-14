@@ -57,10 +57,10 @@ class _ProtoShellWrapper extends StatelessWidget {
 
   static int _tabFor(String loc) {
     // YoYo: 0=nearby 1=connect 2=wave 3=chat
-    if (loc == ProtoRoutes.yoyoNearby) return 0;
-    if (loc == ProtoRoutes.yoyoConnect) return 1;
-    if (loc == ProtoRoutes.yoyoWave) return 2;
-    if (loc == ProtoRoutes.yoyoChat) return 3;
+    for (final routes in ProtoRoutes.tabRoutes.values) {
+      final idx = routes.indexOf(loc);
+      if (idx >= 0) return idx;
+    }
     return 0;
   }
 }
@@ -343,6 +343,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const ProfileNotificationsScreen(),
       ),
+      // Auth prototype screens (design review via profile dev menu)
+      GoRoute(path: ProtoRoutes.authWelcome, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthWelcomeScreen()),
+      GoRoute(path: ProtoRoutes.authOnboarding, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthOnboardingScreen()),
+      GoRoute(path: ProtoRoutes.authTutorial, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthTutorialScreen()),
+      GoRoute(path: ProtoRoutes.authMethod, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthMethodScreen()),
+      GoRoute(path: ProtoRoutes.authSignup, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthSignupScreen()),
+      GoRoute(path: ProtoRoutes.authLogin, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthLoginScreen()),
+      GoRoute(path: ProtoRoutes.authPhone, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthPhoneScreen()),
+      GoRoute(path: ProtoRoutes.authOtp, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthOtpScreen()),
+      GoRoute(path: ProtoRoutes.authBirthday, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthBirthdayScreen()),
+      GoRoute(path: ProtoRoutes.authProfile, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthProfileScreen()),
+      GoRoute(path: ProtoRoutes.authAgeBlock, parentNavigatorKey: rootNavigatorKey, builder: (c, s) => const AuthAgeBlockScreen()),
     ],
   );
 });
