@@ -11,14 +11,32 @@ import 'auth_provider.dart';
 /// Creates a raw [Dio] pointed at the API base URL. Used both by the main
 /// [dioProvider] (via interceptors) and by the refresh flow (without
 /// interceptors, to avoid infinite recursion on 401).
-Dio _rawDio() => Dio(
-      BaseOptions(
-        baseUrl: Environment.apiBaseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 15),
-        headers: {'Content-Type': 'application/json'},
-      ),
-    );
+///
+/// Includes a single global response interceptor that unwraps the
+/// `{ data: T }` envelope the backend's TransformInterceptor wraps every
+/// response in — so `fromJson` parsers see the flat payload.
+Dio _rawDio() {
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: Environment.apiBaseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 15),
+      headers: {'Content-Type': 'application/json'},
+    ),
+  );
+  dio.interceptors.add(
+    InterceptorsWrapper(
+      onResponse: (response, handler) {
+        final body = response.data;
+        if (body is Map && body.containsKey('data') && body.length <= 2) {
+          response.data = body['data'];
+        }
+        handler.next(response);
+      },
+    ),
+  );
+  return dio;
+}
 
 /// Un-intercepted Dio used exclusively for the refresh roundtrip.
 final refreshDioProvider = Provider<Dio>((ref) => _rawDio());
