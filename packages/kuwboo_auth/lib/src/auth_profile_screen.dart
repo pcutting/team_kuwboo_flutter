@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import 'auth_callbacks.dart';
+
 class AuthProfileScreen extends StatelessWidget {
   const AuthProfileScreen({super.key});
 
@@ -124,7 +126,7 @@ class AuthProfileScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
             child: GestureDetector(
-              onTap: () => state.push(ProtoRoutes.authOnboarding),
+              onTap: () => _onContinue(context, state),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -141,6 +143,29 @@ class AuthProfileScreen extends StatelessWidget {
         ],
       ),
         ));
+  }
+
+  Future<void> _onContinue(
+    BuildContext context,
+    PrototypeStateProvider state,
+  ) async {
+    final callbacks = AuthCallbacksScope.maybeOf(context);
+    if (callbacks?.onSaveProfile != null) {
+      try {
+        // Prototype screen has placeholder fields only — mobile form will
+        // wire real displayName/username/avatarUrl. For now, invoke the
+        // callback with no fields so the host can at least record the step.
+        await callbacks!.onSaveProfile!();
+      } catch (e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not save profile: $e')),
+        );
+        return;
+      }
+    }
+    if (!context.mounted) return;
+    state.push(ProtoRoutes.authOnboarding);
   }
 }
 

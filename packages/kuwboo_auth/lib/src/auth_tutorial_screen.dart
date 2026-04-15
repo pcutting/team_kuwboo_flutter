@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import 'auth_callbacks.dart';
+
 /// 4-page swipeable interaction tutorial shown after interest picking.
 /// Teaches core gestures: tap, long-press, FAB switcher, and swiping.
 class AuthTutorialScreen extends StatefulWidget {
@@ -47,7 +49,23 @@ class _AuthTutorialScreenState extends State<AuthTutorialScreen> {
     super.dispose();
   }
 
-  void _enterApp() {
+  Future<void> _enterApp() async {
+    final callbacks = AuthCallbacksScope.maybeOf(context);
+    if (callbacks?.onCompleteTutorial != null) {
+      try {
+        await callbacks!.onCompleteTutorial!();
+      } catch (_) {
+        // Non-fatal — user can retry from settings.
+      }
+    }
+    if (callbacks?.onCompleteOnboarding != null) {
+      try {
+        await callbacks!.onCompleteOnboarding!();
+      } catch (_) {
+        // Non-fatal.
+      }
+    }
+    if (!mounted) return;
     PrototypeStateProvider.of(context).switchModule(ProtoModule.video);
   }
 

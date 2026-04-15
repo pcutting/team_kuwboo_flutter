@@ -292,7 +292,7 @@ List<RouteBase> buildProtoModalRoutes({
     GoRoute(
       path: ProtoRoutes.authOtp,
       parentNavigatorKey: rootNavigatorKey,
-      builder: (c, s) => const AuthOtpScreen(),
+      builder: (c, s) => AuthOtpScreen(args: s.extra as AuthOtpArgs?),
     ),
     GoRoute(
       path: ProtoRoutes.authBirthday,

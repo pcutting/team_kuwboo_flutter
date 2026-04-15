@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import 'auth_callbacks.dart';
+
 class AuthBirthdayScreen extends StatefulWidget {
   const AuthBirthdayScreen({super.key});
 
@@ -127,13 +129,7 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 40),
                     child: GestureDetector(
-                      onTap: () {
-                        if (_isUnder13) {
-                          state.push(ProtoRoutes.authAgeBlock);
-                        } else {
-                          state.push(ProtoRoutes.authProfile);
-                        }
-                      },
+                      onTap: () => _onContinue(context, state),
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -154,6 +150,35 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
         ],
       ),
         ));
+  }
+
+  Future<void> _onContinue(
+    BuildContext context,
+    PrototypeStateProvider state,
+  ) async {
+    if (_isUnder13) {
+      state.push(ProtoRoutes.authAgeBlock);
+      return;
+    }
+    final dob = DateTime(
+      _currentYear - _selectedYear,
+      _selectedMonth + 1,
+      _selectedDay + 1,
+    );
+    final callbacks = AuthCallbacksScope.maybeOf(context);
+    if (callbacks?.onSaveBirthday != null) {
+      try {
+        await callbacks!.onSaveBirthday!(dob);
+      } catch (e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not save: $e')),
+        );
+        return;
+      }
+    }
+    if (!context.mounted) return;
+    state.push(ProtoRoutes.authProfile);
   }
 }
 
