@@ -12,7 +12,12 @@
           "package_name": "com.kuwboo.mobile"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "194532972891-8rd7e2bn1kdingqs4f4at42dbiqisor2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAJi6YhDtNU3P5x4NrFoAyUZHXA_vU-t64"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "194532972891-8rd7e2bn1kdingqs4f4at42dbiqisor2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "194532972891-oi2l558ve6712eek7tv83ot17dk1lfle.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.kuwboo.mobile"
+              }
+            }
+          ]
         }
       }
     }
