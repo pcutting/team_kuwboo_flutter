@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 class AuthLoginScreen extends StatefulWidget {
@@ -109,7 +110,7 @@ class _AuthLoginScreenState extends State<AuthLoginScreen>
                   Padding(
                     padding: const EdgeInsets.only(bottom: 32),
                     child: GestureDetector(
-                      onTap: () => state.push(ProtoRoutes.authMethod),
+                      onTap: () => context.go(ProtoRoutes.authMethod),
                       child: Text.rich(
                         TextSpan(
                           text: "Don't have an account? ",

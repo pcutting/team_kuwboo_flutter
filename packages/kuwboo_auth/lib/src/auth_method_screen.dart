@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kuwboo_api_client/kuwboo_api_client.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
@@ -10,7 +11,6 @@ class AuthMethodScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
-    final state = PrototypeStateProvider.of(context);
     final callbacks = AuthCallbacksScope.maybeOf(context);
 
     Future<void> handleSso(
@@ -19,7 +19,7 @@ class AuthMethodScreen extends StatelessWidget {
     ) async {
       if (fn == null) {
         // Mock prototype flow — just advance to the profile screen.
-        state.push(ProtoRoutes.authProfile);
+        context.go(ProtoRoutes.authProfile);
         return;
       }
       try {
@@ -27,13 +27,13 @@ class AuthMethodScreen extends StatelessWidget {
         if (!context.mounted) return;
         switch (result) {
           case SsoLoginSuccess():
-            state.push(ProtoRoutes.authProfile);
+            context.go(ProtoRoutes.authProfile);
           case SsoLoginChallenge(:final challenge):
             // Email already owned — jump to OTP screen on the claimed
             // email so the user can prove ownership.
-            state.pushWithArgs(
+            context.go(
               ProtoRoutes.authOtp,
-              AuthOtpArgs(
+              extra: AuthOtpArgs(
                 identifier: challenge.email,
                 channel: AuthOtpChannel.email,
               ),
@@ -71,7 +71,7 @@ class AuthMethodScreen extends StatelessWidget {
                   _MethodButton(
                     icon: Icons.email_outlined,
                     label: 'Use phone or email',
-                    onTap: () => state.push(ProtoRoutes.authPhone),
+                    onTap: () => context.go(ProtoRoutes.authPhone),
                     filled: true,
                   ),
                   const SizedBox(height: 12),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/phone_number.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
@@ -32,7 +33,6 @@ class _AuthPhoneScreenState extends State<AuthPhoneScreen>
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
-    final state = PrototypeStateProvider.of(context);
 
     return Material(
       type: MaterialType.transparency,
@@ -72,8 +72,8 @@ class _AuthPhoneScreenState extends State<AuthPhoneScreen>
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _PhoneTab(state: state, theme: theme),
-                  _EmailTab(state: state, theme: theme),
+                  _PhoneTab(theme: theme),
+                  _EmailTab(theme: theme),
                 ],
               ),
             ),
@@ -121,9 +121,8 @@ class _TabPill extends StatelessWidget {
 }
 
 class _PhoneTab extends StatefulWidget {
-  final PrototypeStateProvider state;
   final ProtoTheme theme;
-  const _PhoneTab({required this.state, required this.theme});
+  const _PhoneTab({required this.theme});
 
   @override
   State<_PhoneTab> createState() => _PhoneTabState();
@@ -233,20 +232,46 @@ class _PhoneTabState extends State<_PhoneTab> {
       }
     }
     if (!context.mounted) return;
-    widget.state.pushWithArgs(
+    context.go(
       ProtoRoutes.authOtp,
-      AuthOtpArgs(identifier: e164, channel: AuthOtpChannel.phone),
+      extra: AuthOtpArgs(identifier: e164, channel: AuthOtpChannel.phone),
     );
   }
 }
 
-class _EmailTab extends StatelessWidget {
-  final PrototypeStateProvider state;
+class _EmailTab extends StatefulWidget {
   final ProtoTheme theme;
-  const _EmailTab({required this.state, required this.theme});
+  const _EmailTab({required this.theme});
+
+  @override
+  State<_EmailTab> createState() => _EmailTabState();
+}
+
+class _EmailTabState extends State<_EmailTab> {
+  final TextEditingController _emailController = TextEditingController();
+  String? _error;
+  bool _valid = false;
+
+  // Pragmatic email regex — same shape backend's class-validator uses.
+  static final RegExp _emailRe =
+      RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String value) {
+    setState(() {
+      _valid = _emailRe.hasMatch(value.trim());
+      _error = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final theme = widget.theme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -257,67 +282,59 @@ class _EmailTab extends StatelessWidget {
             style: theme.caption.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            decoration: BoxDecoration(
-              color: theme.background,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: theme.text.withValues(alpha: 0.08)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.email_outlined, size: 20, color: theme.textTertiary),
-                const SizedBox(width: 12),
-                Text(
-                  'you@example.com',
-                  style: theme.body.copyWith(color: theme.textTertiary),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Password',
-            style: theme.caption.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            decoration: BoxDecoration(
-              color: theme.background,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: theme.text.withValues(alpha: 0.08)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.lock_outline, size: 20, color: theme.textTertiary),
-                const SizedBox(width: 12),
-                Text(
-                  'Create a password',
-                  style: theme.body.copyWith(color: theme.textTertiary),
-                ),
-                const Spacer(),
-                Icon(Icons.visibility_off_outlined,
-                    size: 20, color: theme.textTertiary),
-              ],
+          TextField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            autocorrect: false,
+            enableSuggestions: false,
+            textCapitalization: TextCapitalization.none,
+            style: theme.body,
+            onChanged: _onChanged,
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: theme.background,
+              hintText: 'you@example.com',
+              hintStyle: theme.body.copyWith(color: theme.textTertiary),
+              prefixIcon:
+                  Icon(Icons.email_outlined, size: 20, color: theme.textTertiary),
+              errorText: _error,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide:
+                    BorderSide(color: theme.text.withValues(alpha: 0.08)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide:
+                    BorderSide(color: theme.text.withValues(alpha: 0.08)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: theme.primary, width: 2),
+              ),
             ),
           ),
           const Spacer(),
           Padding(
             padding: const EdgeInsets.only(bottom: 40),
             child: GestureDetector(
-              onTap: () => state.push(ProtoRoutes.authBirthday),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                  color: theme.primary,
-                  borderRadius: BorderRadius.circular(theme.radiusFull),
-                ),
-                child: Center(
-                  child: Text(
-                    'Next',
-                    style: theme.button.copyWith(fontSize: 16),
+              onTap: _valid ? () => _submit(context) : null,
+              child: Opacity(
+                opacity: _valid ? 1 : 0.45,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    color: theme.primary,
+                    borderRadius: BorderRadius.circular(theme.radiusFull),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Next',
+                      style: theme.button.copyWith(fontSize: 16),
+                    ),
                   ),
                 ),
               ),
@@ -325,6 +342,31 @@ class _EmailTab extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _submit(BuildContext context) async {
+    final email = _emailController.text.trim();
+    if (!_emailRe.hasMatch(email)) {
+      setState(() => _error = 'Enter a valid email address');
+      return;
+    }
+    final callbacks = AuthCallbacksScope.maybeOf(context);
+    if (callbacks?.onSendEmailOtp != null) {
+      try {
+        await callbacks!.onSendEmailOtp!(email);
+      } catch (e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not send code: $e')),
+        );
+        return;
+      }
+    }
+    if (!context.mounted) return;
+    context.go(
+      ProtoRoutes.authOtp,
+      extra: AuthOtpArgs(identifier: email, channel: AuthOtpChannel.email),
     );
   }
 }
