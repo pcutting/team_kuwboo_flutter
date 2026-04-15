@@ -229,3 +229,61 @@ Before Phase 5 (mobile auth integration) can complete end-to-end:
 - [ ] Firebase Google provider is enabled; `GoogleService-Info.plist` contains `REVERSED_CLIENT_ID`.
 - [ ] Release keystore SHA-1 registered on Firebase Android app.
 - [ ] OAuth consent screen at least partially configured (can leave in Testing status with test users allowlist).
+
+---
+
+## Apple client-secret JWT rotation
+
+The Apple Sign In client secret is a JWT signed with the SIWA `.p8` key (NOT the App Store Connect key — they are different). Backend reads it from AWS Secrets Manager via the bootstrap loader.
+
+| Field | Value |
+|---|---|
+| Apple Team ID | `5GQA38WHMY` |
+| Apple Services ID | `com.kuwboo.signin.service` |
+| SIWA Key ID | `RP24SW282K` |
+| SIWA `.p8` location | `keys/AuthKey_RP24SW282K.p8` (gitignored) |
+| ASC Key ID (DON'T confuse) | `3B764CRX7S` (TestFlight uploads, not SSO) |
+| Last rotated | **2026-04-15** |
+| Expires | **2026-10-12** (180-day max per Apple) |
+| Rotation script | `scripts/sso/generate_apple_client_secret.py` |
+
+### Rotate
+
+Run from the repo root, at least 7 days before expiry:
+
+```sh
+python3 scripts/sso/generate_apple_client_secret.py \
+  --team-id 5GQA38WHMY \
+  --services-id com.kuwboo.signin.service \
+  --key-id RP24SW282K \
+  --key-file keys/AuthKey_RP24SW282K.p8 \
+  --aws-profile neil-douglas-kuwboo \
+  --region eu-west-2
+```
+
+Then restart the EC2 API so the bootstrap reloads the new secret:
+
+```sh
+aws ssm send-command --profile neil-douglas-kuwboo --region eu-west-2 \
+  --instance-ids i-0766e373b3147a2aa \
+  --document-name AWS-RunShellScript \
+  --parameters 'commands=["sudo -u ubuntu pm2 restart kuwboo-api --update-env"]'
+```
+
+Verify in `pm2 logs`:
+
+```
+[aws-secrets] /kuwboo/apple/client-secret-jwt: 1 env var(s) loaded
+```
+
+### What gets stored
+
+The script upserts five separate AWS Secrets Manager entries (each holds a single scalar value, not JSON):
+
+| Secret | Env var | Notes |
+|---|---|---|
+| `/kuwboo/apple/team-id` | `APPLE_TEAM_ID` | constant, doesn't change |
+| `/kuwboo/apple/services-id` | `APPLE_SERVICE_ID` | constant |
+| `/kuwboo/apple/key-id` | `APPLE_KEY_ID` | constant unless SIWA key rotated |
+| `/kuwboo/apple/private-key` | `APPLE_PRIVATE_KEY` | the `.p8` PEM contents |
+| `/kuwboo/apple/client-secret-jwt` | `APPLE_CLIENT_SECRET` | the rotated JWT — only this changes per rotation |
