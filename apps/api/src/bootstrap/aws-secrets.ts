@@ -8,10 +8,20 @@ import {
  *
  * Order matters for readability only — each secret is fetched in parallel.
  */
-const SECRET_MAPPINGS: ReadonlyArray<{
-  secretId: string;
-  fields: Record<string, string>;
-}> = [
+/**
+ * Two payload shapes are supported:
+ *   - `fields`: the secret's SecretString is a JSON object; each (jsonKey →
+ *     envKey) pair pulls one field out into process.env. Used by /kuwboo/firebase.
+ *   - `envKey` (with no `fields`): the secret's SecretString is the raw value
+ *     itself, written to a single env var. Used by /kuwboo/apple/* — each
+ *     scalar lives in its own secret because that's what scripts/sso/
+ *     generate_apple_client_secret.py upserts.
+ */
+type SecretMapping =
+  | { secretId: string; fields: Record<string, string>; envKey?: never }
+  | { secretId: string; envKey: string; fields?: never };
+
+const SECRET_MAPPINGS: ReadonlyArray<SecretMapping> = [
   {
     secretId: '/kuwboo/firebase',
     fields: {
@@ -20,6 +30,13 @@ const SECRET_MAPPINGS: ReadonlyArray<{
       private_key: 'FIREBASE_PRIVATE_KEY',
     },
   },
+  // Apple Sign In — five scalar secrets minted by
+  // scripts/sso/generate_apple_client_secret.py
+  { secretId: '/kuwboo/apple/team-id', envKey: 'APPLE_TEAM_ID' },
+  { secretId: '/kuwboo/apple/services-id', envKey: 'APPLE_SERVICE_ID' },
+  { secretId: '/kuwboo/apple/key-id', envKey: 'APPLE_KEY_ID' },
+  { secretId: '/kuwboo/apple/private-key', envKey: 'APPLE_PRIVATE_KEY' },
+  { secretId: '/kuwboo/apple/client-secret-jwt', envKey: 'APPLE_CLIENT_SECRET' },
   // Future: /kuwboo/database, /kuwboo/redis, /kuwboo/jwt can join here
   // once the NestJS config modules are migrated off env-var-per-setting.
 ];
@@ -53,21 +70,31 @@ export async function loadAwsSecrets(): Promise<void> {
   const client = new SecretsManagerClient({ region });
 
   const results = await Promise.allSettled(
-    SECRET_MAPPINGS.map(async ({ secretId, fields }) => {
+    SECRET_MAPPINGS.map(async (mapping) => {
+      const { secretId } = mapping;
       const out = await client.send(
         new GetSecretValueCommand({ SecretId: secretId }),
       );
       if (!out.SecretString) {
         throw new Error(`Secret ${secretId} has no SecretString payload`);
       }
-      const parsed = JSON.parse(out.SecretString) as Record<string, string>;
       let applied = 0;
-      for (const [jsonKey, envKey] of Object.entries(fields)) {
-        if (process.env[envKey]) continue; // respect caller override
-        const value = parsed[jsonKey];
-        if (typeof value !== 'string') continue;
-        process.env[envKey] = value;
-        applied += 1;
+      if ('envKey' in mapping && mapping.envKey) {
+        // Raw-scalar secret — the SecretString is the value itself.
+        if (!process.env[mapping.envKey]) {
+          process.env[mapping.envKey] = out.SecretString;
+          applied = 1;
+        }
+      } else if (mapping.fields) {
+        // JSON-object secret — pluck named fields.
+        const parsed = JSON.parse(out.SecretString) as Record<string, string>;
+        for (const [jsonKey, envKey] of Object.entries(mapping.fields)) {
+          if (process.env[envKey]) continue; // respect caller override
+          const value = parsed[jsonKey];
+          if (typeof value !== 'string') continue;
+          process.env[envKey] = value;
+          applied += 1;
+        }
       }
       return { secretId, applied };
     }),
