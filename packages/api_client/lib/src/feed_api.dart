@@ -80,8 +80,7 @@ class FeedApi {
 
   // ─── Marketplace ────────────────────────────────────────────────────
   //
-  // Live at `/products` (not `/marketplace/products`); the shared
-  // `MarketplaceApi` uses the legacy prefix and is unused on mobile.
+  // Live at `/products` (not `/marketplace/products`).
 
   /// List products with optional filters. Returns `{items, nextCursor}`.
   Future<ProductPage> getProducts({
