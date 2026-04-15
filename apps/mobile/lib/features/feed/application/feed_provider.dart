@@ -3,6 +3,7 @@ import 'package:kuwboo_api_client/kuwboo_api_client.dart';
 import 'package:kuwboo_models/kuwboo_models.dart';
 
 import '../../../providers/api_provider.dart';
+import '../../../providers/location_provider.dart';
 
 /// Shared [FeedApi] backed by the authenticated [KuwbooApiClient].
 final feedApiProvider = Provider<FeedApi>(
@@ -194,29 +195,19 @@ class ShopFeedNotifier extends AsyncNotifier<ProductListState> {
 /// up; for now we use the same seeded coords as the backend fixtures so
 /// the UI can show data end-to-end.
 class YoyoNearbyNotifier extends AsyncNotifier<List<NearbyUser>> {
-  static const double _fallbackLat = 51.5074; // London
-  static const double _fallbackLng = -0.1278;
-
   YoyoApi get _api => ref.read(yoyoApiProvider);
 
-  @override
-  Future<List<NearbyUser>> build() {
-    return _api.getNearby(
-      lat: _fallbackLat,
-      lng: _fallbackLng,
-      radius: 50,
-    );
+  Future<List<NearbyUser>> _fetch() async {
+    final loc = await ref.watch(currentLocationProvider.future);
+    return _api.getNearby(lat: loc.lat, lng: loc.lng, radius: 50);
   }
+
+  @override
+  Future<List<NearbyUser>> build() => _fetch();
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() {
-      return _api.getNearby(
-        lat: _fallbackLat,
-        lng: _fallbackLng,
-        radius: 50,
-      );
-    });
+    state = await AsyncValue.guard(_fetch);
   }
 }
 

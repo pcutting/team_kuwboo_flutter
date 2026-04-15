@@ -5,6 +5,7 @@ import 'package:kuwboo_api_client/kuwboo_api_client.dart';
 import 'package:kuwboo_models/kuwboo_models.dart';
 
 import 'package:kuwboo_mobile/features/feed/application/feed_provider.dart';
+import 'package:kuwboo_mobile/providers/location_provider.dart';
 import 'package:kuwboo_mobile/features/feed/presentation/shop_feed_mobile_screen.dart';
 import 'package:kuwboo_mobile/features/feed/presentation/social_feed_mobile_screen.dart';
 import 'package:kuwboo_mobile/features/feed/presentation/video_feed_mobile_screen.dart';
@@ -206,7 +207,10 @@ void main() {
       ],
     );
     final container = ProviderContainer(
-      overrides: [yoyoApiProvider.overrideWithValue(yoyo)],
+      overrides: [
+        yoyoApiProvider.overrideWithValue(yoyo),
+        currentLocationProvider.overrideWith((ref) async => LatLng.london),
+      ],
     );
     addTearDown(container.dispose);
 
