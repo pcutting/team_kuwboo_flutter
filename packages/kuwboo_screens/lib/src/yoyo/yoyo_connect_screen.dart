@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kuwboo_models/kuwboo_models.dart' as api;
 import 'package:kuwboo_shell/kuwboo_shell.dart';
+
+import 'yoyo_providers.dart';
 
 /// Pending connections — list of sent/received connection requests
 /// with functional filter chips, accept/reject animations,
 /// encounter context badges and mutual interest highlights.
-class YoyoConnectScreen extends StatefulWidget {
+class YoyoConnectScreen extends ConsumerStatefulWidget {
   const YoyoConnectScreen({super.key});
 
   @override
-  State<YoyoConnectScreen> createState() => _YoyoConnectScreenState();
+  ConsumerState<YoyoConnectScreen> createState() => _YoyoConnectScreenState();
 }
 
-class _YoyoConnectScreenState extends State<YoyoConnectScreen> {
+class _YoyoConnectScreenState extends ConsumerState<YoyoConnectScreen> {
   @override
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
@@ -70,90 +74,102 @@ class _YoyoConnectScreenState extends State<YoyoConnectScreen> {
   }
 
   Widget _buildConnectList(BuildContext context, ProtoTheme theme, PrototypeStateProvider state) {
-    final connections = ProtoDemoData.connections;
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: connections.length,
-      itemBuilder: (context, i) {
-        final conn = connections[i];
-        return ProtoPressButton(
-          duration: const Duration(milliseconds: 100),
-          onTap: () => state.push(ProtoRoutes.yoyoProfile),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(12),
-            decoration: theme.cardDecoration,
-            child: Row(
-              children: [
-                ProtoAvatar(radius: 22, imageUrl: conn.imageUrl),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(conn.name, style: theme.title.copyWith(fontSize: 14)),
-                          const SizedBox(width: 6),
-                          // "How you met" badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: conn.howMet == EncounterType.nearby
-                                  ? theme.secondary.withValues(alpha: 0.15)
-                                  : Colors.amber.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  conn.howMet == EncounterType.nearby ? Icons.pin_drop_rounded : Icons.flash_on_rounded,
-                                  size: 10,
-                                  color: conn.howMet == EncounterType.nearby ? theme.secondary : Colors.amber.shade700,
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  conn.howMet == EncounterType.nearby ? 'Nearby' : 'Pass-by',
-                                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: conn.howMet == EncounterType.nearby ? theme.secondary : Colors.amber.shade700),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      // Mutual interests
-                      if (conn.mutualInterests.isNotEmpty)
-                        Row(
-                          children: [
-                            Icon(Icons.interests_rounded, size: 12, color: theme.primary),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                '${conn.mutualInterests.length} shared: ${conn.mutualInterests.join(", ")}',
-                                style: TextStyle(fontSize: 10, color: theme.primary),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      const SizedBox(height: 2),
-                      Text(conn.timeAgo, style: theme.caption.copyWith(fontSize: 10)),
-                    ],
-                  ),
-                ),
-                // Direction indicator
-                Icon(
-                  conn.isIncoming ? Icons.call_received_rounded : Icons.call_made_rounded,
-                  size: 16,
-                  color: conn.isIncoming ? theme.secondary : theme.textTertiary,
-                ),
-              ],
-            ),
-          ),
+    final nearbyAsync = ref.watch(yoyoNearbyProvider);
+    return nearbyAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text('Failed to load nearby users: $e', style: theme.body),
+        ),
+      ),
+      data: (users) {
+        if (users.isEmpty) {
+          return Center(
+            child: Text('No nearby users', style: theme.caption),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: users.length,
+          itemBuilder: (context, i) {
+            final u = users[i];
+            return _NearbyConnectRow(user: u);
+          },
         );
       },
+    );
+  }
+}
+
+class _NearbyConnectRow extends ConsumerWidget {
+  final api.NearbyUser user;
+  const _NearbyConnectRow({required this.user});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = ProtoTheme.of(context);
+    final state = PrototypeStateProvider.of(context);
+    final distanceKm = (user.distanceMeters / 1000).toStringAsFixed(1);
+    return ProtoPressButton(
+      duration: const Duration(milliseconds: 100),
+      onTap: () => state.push(ProtoRoutes.yoyoProfile),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(12),
+        decoration: theme.cardDecoration,
+        child: Row(
+          children: [
+            ProtoAvatar(
+              radius: 22,
+              imageUrl: user.avatarUrl ??
+                  'https://i.pravatar.cc/100?u=${user.id}',
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(user.name, style: theme.title.copyWith(fontSize: 14)),
+                  const SizedBox(height: 4),
+                  Text('$distanceKm km away', style: theme.caption),
+                  if (user.onlineStatus != null) ...[
+                    const SizedBox(height: 2),
+                    Text(user.onlineStatus!, style: theme.caption.copyWith(fontSize: 10)),
+                  ],
+                ],
+              ),
+            ),
+            ProtoPressButton(
+              onTap: () async {
+                try {
+                  await ref
+                      .read(yoyoApiProvider)
+                      .sendWave(toUserId: user.id);
+                  ref.invalidate(yoyoSentWavesProvider);
+                  if (!context.mounted) return;
+                  ProtoToast.show(context, theme.icons.wavingHand,
+                      'Waved at ${user.name}');
+                } catch (e) {
+                  if (!context.mounted) return;
+                  ProtoToast.show(context, theme.icons.close,
+                      'Failed to wave');
+                }
+              },
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: theme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(theme.icons.wavingHand,
+                    size: 18, color: theme.primary),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

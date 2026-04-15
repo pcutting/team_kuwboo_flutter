@@ -1,166 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
-class DatingMatchOverlay extends StatefulWidget {
-  const DatingMatchOverlay({super.key});
+/// Celebration overlay shown after a swipe-right yields a mutual like.
+/// Dumb presenter — takes the matched [Content] directly so it composes
+/// cleanly from the card stack's local state.
+class DatingMatchOverlay extends StatelessWidget {
+  const DatingMatchOverlay({super.key, this.match});
 
-  @override
-  State<DatingMatchOverlay> createState() => _DatingMatchOverlayState();
-}
-
-class _DatingMatchOverlayState extends State<DatingMatchOverlay>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _entranceController;
-  late final Animation<double> _scaleAnimation;
-  late final Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _entranceController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _entranceController, curve: Curves.elasticOut),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _entranceController, curve: const Interval(0.0, 0.4)),
-    );
-    _entranceController.forward();
-  }
-
-  @override
-  void dispose() {
-    _entranceController.dispose();
-    super.dispose();
-  }
+  /// The matched content card. Optional because the prototype route
+  /// builder still instantiates the overlay without context; in real use
+  /// the card stack passes the live [Content] it just matched on.
+  final Content? match;
 
   @override
   Widget build(BuildContext context) {
-    final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
-    final profile = DemoData.mainProfile;
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            theme.primary.withValues(alpha: 0.9),
-            theme.accent.withValues(alpha: 0.9),
-          ],
-        ),
-      ),
-      child: AnimatedBuilder(
-        animation: _entranceController,
-        builder: (context, child) {
-          return Opacity(
-            opacity: _fadeAnimation.value,
-            child: child,
-          );
-        },
+    final creator = match?.creator;
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: theme.cardDecoration,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const Spacer(flex: 2),
-            // Animated hearts + title
-            AnimatedBuilder(
-              animation: _scaleAnimation,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: _scaleAnimation.value,
-                  child: child,
-                );
-              },
-              child: Column(
-                children: [
-                  Icon(theme.icons.favoriteFilled, size: 48, color: Colors.white.withValues(alpha: 0.5)),
-                  const SizedBox(height: 16),
-                  Text("IT'S A MATCH!", style: theme.display.copyWith(fontSize: 36)),
-                  const SizedBox(height: 8),
-                  Text(
-                    'You and ${profile.name} liked each other',
-                    style: TextStyle(fontSize: 15, color: Colors.white.withValues(alpha: 0.8)),
-                  ),
-                ],
+            Icon(Icons.favorite_rounded, color: theme.primary, size: 64),
+            const SizedBox(height: 12),
+            Text("It's a match!", style: theme.title),
+            if (creator != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                'You and ${creator.name} liked each other.',
+                style: theme.body,
+                textAlign: TextAlign.center,
               ),
-            ),
-            const SizedBox(height: 32),
-
-            // Avatars
+              const SizedBox(height: 16),
+              ProtoAvatar(radius: 40, imageUrl: creator.avatarUrl ?? ''),
+            ],
+            const SizedBox(height: 20),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                ProtoAvatar(
-                  radius: 48,
-                  imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Keep swiping'),
                 ),
-                const SizedBox(width: 20),
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(theme.icons.favoriteFilled, size: 20, color: Colors.white),
-                ),
-                const SizedBox(width: 20),
-                ProtoAvatar(
-                  radius: 48,
-                  imageUrl: profile.imageUrl,
+                FilledButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Say hi'),
                 ),
               ],
             ),
-
-            const Spacer(),
-
-            // Action buttons
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Column(
-                children: [
-                  ProtoPressButton(
-                    onTap: () {
-                      state.pop();
-                      state.push(ProtoRoutes.chatConversation);
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(theme.radiusFull),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Send a Message',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: theme.primary),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ProtoPressButton(
-                    onTap: () => state.pop(),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
-                        borderRadius: BorderRadius.circular(theme.radiusFull),
-                      ),
-                      child: Center(
-                        child: Text('Keep Swiping', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Spacer(),
           ],
         ),
       ),

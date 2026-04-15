@@ -1,8 +1,29 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 import '../sponsored/sponsored_inline.dart';
+import 'video_providers.dart';
+
+/// Adapter: map an API [Content] (STI row, ContentType.video) onto the
+/// lightweight display tuple the feed UI consumes. Preserves the existing
+/// widget tree 1:1 while the data source switches to the live backend.
+DemoVideo _contentToDemoVideo(Content c) {
+  return DemoVideo(
+    creator: c.creator?.name ?? 'Creator',
+    caption: c.caption ?? '',
+    // Music track is not on Content yet — fall back to a neutral label so
+    // the marquee still renders.
+    musicTrack: 'Original sound',
+    likes: c.likeCount,
+    comments: c.commentCount,
+    shares: c.shareCount,
+    avatarUrl: c.creator?.avatarUrl ??
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+  );
+}
 
 /// Per-video interaction state (independent for each video in the feed).
 class _VideoInteractionState {
@@ -27,15 +48,15 @@ const _videoGradients = <List<Color>>[
   [Color(0xFF1a2e1a), Color(0xFF0a180a)], // evergreen
 ];
 
-class VideoFeedScreen extends StatefulWidget {
+class VideoFeedScreen extends ConsumerStatefulWidget {
   final bool isFollowingFeed;
   const VideoFeedScreen({super.key, this.isFollowingFeed = false});
 
   @override
-  State<VideoFeedScreen> createState() => _VideoFeedScreenState();
+  ConsumerState<VideoFeedScreen> createState() => _VideoFeedScreenState();
 }
 
-class _VideoFeedScreenState extends State<VideoFeedScreen>
+class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
     with TickerProviderStateMixin {
   late final PageController _pageController;
   int _currentPage = 0;
@@ -70,10 +91,9 @@ class _VideoFeedScreenState extends State<VideoFeedScreen>
   late AnimationController _likeBounceController;
   late Animation<double> _likeBounceScale;
 
-  // Video lists
-  late List<DemoVideo> _videos;
-  // Indices of "followed" creators for Following feed
-  static const _followingIndices = [0, 2, 5, 9];
+  // Video lists — populated from the live backend in build().
+  List<Content> _contents = const [];
+  List<DemoVideo> _videos = const [];
 
   bool get _hasEndCard => widget.isFollowingFeed;
   int get _totalPages => _videos.length + (_hasEndCard ? 1 : 0);
@@ -81,15 +101,6 @@ class _VideoFeedScreenState extends State<VideoFeedScreen>
   @override
   void initState() {
     super.initState();
-    final allVideos = DemoDataExtended.videos;
-    if (widget.isFollowingFeed) {
-      _videos = _followingIndices
-          .where((i) => i < allVideos.length)
-          .map((i) => allVideos[i])
-          .toList();
-    } else {
-      _videos = allVideos;
-    }
 
     _pageController = PageController();
 
@@ -161,17 +172,30 @@ class _VideoFeedScreenState extends State<VideoFeedScreen>
     setState(() => _currentPage = page);
     _overlayController.reset();
     _overlayController.forward();
+    // Log a view for the newly visible video. Fire-and-forget.
+    if (page < _contents.length) {
+      unawaited(
+          ref.read(interactionsApiProvider).logView(_contents[page].id));
+    }
   }
 
   void _handleDoubleTap(TapDownDetails details) {
     if (_currentPage >= _videos.length) return;
     final state = _stateFor(_currentPage);
+    final wasLiked = state.isLiked;
     setState(() {
       state.isLiked = true;
       _showHeartBurst = true;
       _heartPosition = details.localPosition;
     });
     _likeBounceController.forward(from: 0);
+    // Only fire the like API if this is a new like (double-tap is always
+    // a like-on, never an unlike).
+    if (!wasLiked && _currentPage < _contents.length) {
+      unawaited(ref
+          .read(interactionsApiProvider)
+          .likeContent(_contents[_currentPage].id));
+    }
     Future.delayed(const Duration(milliseconds: 600), () {
       if (mounted) setState(() => _showHeartBurst = false);
     });
@@ -190,14 +214,37 @@ class _VideoFeedScreenState extends State<VideoFeedScreen>
 
   @override
   Widget build(BuildContext context) {
-    return widget.isFollowingFeed && _videos.isEmpty
-        ? const ProtoEmptyState(
+    final kind = widget.isFollowingFeed
+        ? VideoFeedKind.following
+        : VideoFeedKind.forYou;
+    final feedAsync = ref.watch(videoFeedProvider(kind));
+
+    return feedAsync.when(
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      ),
+      error: (err, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            'Couldn\'t load videos.\n$err',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white70),
+          ),
+        ),
+      ),
+      data: (feed) {
+        _contents = feed.items;
+        _videos = feed.items.map(_contentToDemoVideo).toList();
+        if (widget.isFollowingFeed && _videos.isEmpty) {
+          return const ProtoEmptyState(
             icon: Icons.people_outline_rounded,
             title: 'No followed creators yet',
             subtitle: 'Follow creators to see their videos here',
             actionLabel: 'Discover Creators',
-          )
-        : Stack(
+          );
+        }
+        return Stack(
         children: [
           // Vertical swipeable feed
           PageView.builder(
@@ -220,6 +267,8 @@ class _VideoFeedScreenState extends State<VideoFeedScreen>
           _buildTopBar(context),
         ],
       );
+      },
+    );
   }
 
   Widget _buildVideoPage(BuildContext context, int index) {
@@ -520,6 +569,13 @@ class _VideoFeedScreenState extends State<VideoFeedScreen>
                   if (videoState.isLiked) {
                     _likeBounceController.forward(from: 0);
                   }
+                  // Fire-and-forget toggleLike on the backend. Optimistic
+                  // UI has already flipped local state.
+                  if (index < _contents.length) {
+                    unawaited(ref
+                        .read(interactionsApiProvider)
+                        .likeContent(_contents[index].id));
+                  }
                 },
                 child: Column(
                   children: [
@@ -565,8 +621,20 @@ class _VideoFeedScreenState extends State<VideoFeedScreen>
                 label: 'Comments, ${_formatCount(video.comments)}',
                 button: true,
                 child: ProtoPressButton(
-                onTap: () => PrototypeStateProvider.of(context)
-                    .push(ProtoRoutes.videoComments),
+                onTap: () {
+                  final contentId = index < _contents.length
+                      ? _contents[index].id
+                      : null;
+                  if (contentId != null) {
+                    PrototypeStateProvider.of(context).pushWithArgs(
+                      ProtoRoutes.videoComments,
+                      {'contentId': contentId},
+                    );
+                  } else {
+                    PrototypeStateProvider.of(context)
+                        .push(ProtoRoutes.videoComments);
+                  }
+                },
                 child: Column(
                   children: [
                     Icon(theme.icons.chatBubbleOutline,
@@ -611,7 +679,14 @@ class _VideoFeedScreenState extends State<VideoFeedScreen>
                 label: 'Share, ${_formatCount(video.shares)} shares',
                 button: true,
                 child: ProtoPressButton(
-                onTap: () => ProtoShareSheet.show(context),
+                onTap: () {
+                  ProtoShareSheet.show(context);
+                  if (index < _contents.length) {
+                    unawaited(ref
+                        .read(interactionsApiProvider)
+                        .logShare(_contents[index].id));
+                  }
+                },
                 child: Column(
                   children: [
                     Icon(theme.icons.share, size: 28, color: Colors.white),
@@ -633,13 +708,20 @@ class _VideoFeedScreenState extends State<VideoFeedScreen>
                 label: videoState.isSaved ? 'Remove from saved' : 'Save to favorites',
                 button: true,
                 child: ProtoPressButton(
-                onTap: () => setState(() {
-                  videoState.isSaved = !videoState.isSaved;
-                  if (videoState.isSaved) {
-                    ProtoToast.show(
-                        context, theme.icons.bookmarkFilled, 'Saved to favorites');
+                onTap: () {
+                  setState(() {
+                    videoState.isSaved = !videoState.isSaved;
+                    if (videoState.isSaved) {
+                      ProtoToast.show(
+                          context, theme.icons.bookmarkFilled, 'Saved to favorites');
+                    }
+                  });
+                  if (index < _contents.length) {
+                    unawaited(ref
+                        .read(interactionsApiProvider)
+                        .saveContent(_contents[index].id));
                   }
-                }),
+                },
                 child: Column(
                   children: [
                     Icon(

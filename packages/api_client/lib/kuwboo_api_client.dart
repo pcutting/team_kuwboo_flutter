@@ -7,6 +7,7 @@ export 'src/users_api.dart';
 export 'src/credentials_api.dart';
 export 'src/interests_api.dart';
 export 'src/content_api.dart';
+export 'src/dating_api.dart';
 export 'src/feed_api.dart';
 export 'src/marketplace_api.dart';
 export 'src/interactions_api.dart';

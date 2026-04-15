@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
-class SocialStumbleScreen extends StatelessWidget {
+import 'social_providers.dart';
+
+class SocialStumbleScreen extends ConsumerWidget {
   const SocialStumbleScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = ProtoTheme.of(context);
+    final stumble = ref.watch(socialStumbleProvider);
+
     return Container(
       color: theme.background,
       child: Column(
@@ -22,48 +28,91 @@ class SocialStumbleScreen extends StatelessWidget {
             ],
           ),
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text('Discover new friends nearby', style: theme.body),
-                const SizedBox(height: 16),
-                ...DemoData.nearbyUsers.map((user) => Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: theme.cardDecoration,
-                  child: Column(
-                    children: [
-                      Container(
-                        height: 180,
-                        decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                          image: DecorationImage(image: NetworkImage(user.imageUrl.replaceAll('100', '400')), fit: BoxFit.cover, onError: (_, __) {}),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(14),
-                        child: Row(
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(user.name, style: theme.title),
-                                Text(user.distance, style: theme.caption),
-                              ],
-                            ),
-                            const Spacer(),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(color: theme.primary, borderRadius: BorderRadius.circular(20)),
-                              child: Text('Add Friend', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
-              ],
+            child: stumble.when(
+              loading: () => const ProtoLoadingState(itemCount: 4),
+              error: (err, _) => ProtoErrorState(
+                message: 'Could not load discovery feed',
+                onRetry: () => ref.invalidate(socialStumbleProvider),
+              ),
+              data: (feed) {
+                if (feed.items.isEmpty) {
+                  return const ProtoEmptyState(
+                    icon: Icons.explore_outlined,
+                    title: 'Nothing to discover yet',
+                    subtitle: 'Check back soon for new people and posts.',
+                  );
+                }
+                return ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    Text('Discover new posts', style: theme.body),
+                    const SizedBox(height: 16),
+                    ...feed.items.map((c) => _StumbleCard(content: c, theme: theme)),
+                  ],
+                );
+              },
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StumbleCard extends StatelessWidget {
+  const _StumbleCard({required this.content, required this.theme});
+
+  final Content content;
+  final ProtoTheme theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final creatorName = content.creator?.name ?? 'Someone';
+    final avatarUrl = content.creator?.avatarUrl;
+    final bodyText = content.text ?? content.caption ?? content.title ?? '';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: theme.cardDecoration,
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              ProtoAvatar(radius: 20, imageUrl: avatarUrl ?? ''),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(creatorName, style: theme.title.copyWith(fontSize: 14)),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: theme.primary,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  'Follow',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          if (bodyText.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(bodyText, style: theme.body, maxLines: 3, overflow: TextOverflow.ellipsis),
+          ],
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(theme.icons.favoriteOutline, size: 16, color: theme.textTertiary),
+              const SizedBox(width: 4),
+              Text('${content.likeCount}', style: theme.caption),
+              const SizedBox(width: 16),
+              Icon(theme.icons.chatBubbleOutline, size: 16, color: theme.textTertiary),
+              const SizedBox(width: 4),
+              Text('${content.commentCount}', style: theme.caption),
+            ],
           ),
         ],
       ),

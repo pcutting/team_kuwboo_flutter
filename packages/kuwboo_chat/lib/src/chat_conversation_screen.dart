@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kuwboo_models/kuwboo_models.dart' as api;
 import 'package:kuwboo_shell/kuwboo_shell.dart';
+
+import 'chat_providers.dart';
 
 // ── Data Model ─────────────────────────────────────────────────────────────
 
@@ -255,15 +259,24 @@ const _conversation = <_ChatItem>[
 
 // ── Main Screen ─────────────────────────────────────────────────────────────
 
-class ChatConversationScreen extends StatefulWidget {
-  const ChatConversationScreen({super.key});
+class ChatConversationScreen extends ConsumerStatefulWidget {
+  /// When provided, messages + send are wired to live [MessagingApi].
+  /// When null, the screen renders the canned transactional prototype
+  /// (used by the design viewer).
+  final String? threadId;
+
+  const ChatConversationScreen({super.key, this.threadId});
 
   @override
-  State<ChatConversationScreen> createState() => _ChatConversationScreenState();
+  ConsumerState<ChatConversationScreen> createState() =>
+      _ChatConversationScreenState();
 }
 
-class _ChatConversationScreenState extends State<ChatConversationScreen> {
+class _ChatConversationScreenState
+    extends ConsumerState<ChatConversationScreen> {
   final _scrollController = ScrollController();
+  final _inputController = TextEditingController();
+  bool _sending = false;
 
   @override
   void initState() {
@@ -272,18 +285,42 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
       if (_scrollController.hasClients) {
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
+      final tid = widget.threadId;
+      if (tid != null) {
+        // Fire-and-forget; failures should not block the UI.
+        ref.read(messagingApiProvider).markThreadRead(tid).catchError((_) {});
+      }
     });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _inputController.dispose();
     super.dispose();
+  }
+
+  Future<void> _sendLive(String threadId) async {
+    final text = _inputController.text.trim();
+    if (text.isEmpty || _sending) return;
+    setState(() => _sending = true);
+    try {
+      await ref
+          .read(messagingApiProvider)
+          .sendMessage(threadId, api.SendMessageDto(text: text));
+      _inputController.clear();
+      ref.invalidate(messagesProvider(threadId));
+    } catch (_) {
+      // Surface a toast in Phase 8 error-handling pass.
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
+    final tid = widget.threadId;
 
     return Container(
       color: theme.background,
@@ -291,13 +328,151 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
         children: [
           _ChatHeader(theme: theme),
           Expanded(
-            child: _TransactionList(
+            child: tid == null
+                ? _TransactionList(
+                    theme: theme,
+                    scrollController: _scrollController,
+                  )
+                : _LiveMessageList(
+                    theme: theme,
+                    threadId: tid,
+                    scrollController: _scrollController,
+                  ),
+          ),
+          if (tid == null)
+            _RichInputBar(theme: theme)
+          else
+            _LiveInputBar(
               theme: theme,
-              scrollController: _scrollController,
+              controller: _inputController,
+              sending: _sending,
+              onSend: () => _sendLive(tid),
+            ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+}
+
+/// Simple live-data message list rendered from [messagesProvider].
+class _LiveMessageList extends ConsumerWidget {
+  final ProtoTheme theme;
+  final String threadId;
+  final ScrollController scrollController;
+
+  const _LiveMessageList({
+    required this.theme,
+    required this.threadId,
+    required this.scrollController,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(messagesProvider(threadId));
+    return async.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text('Could not load messages: $e',
+              style: TextStyle(color: theme.textSecondary)),
+        ),
+      ),
+      data: (page) {
+        final items = page.items;
+        if (items.isEmpty) {
+          return const Center(child: Text('No messages yet.'));
+        }
+        return RefreshIndicator(
+          onRefresh: () async =>
+              ref.invalidate(messagesProvider(threadId)),
+          child: ListView.builder(
+            controller: scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            itemCount: items.length,
+            itemBuilder: (context, i) => _LiveMessageBubble(
+              theme: theme,
+              message: items[i],
             ),
           ),
-          _RichInputBar(theme: theme),
-          const SizedBox(height: 20),
+        );
+      },
+    );
+  }
+}
+
+class _LiveMessageBubble extends StatelessWidget {
+  final ProtoTheme theme;
+  final api.Message message;
+
+  const _LiveMessageBubble({required this.theme, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: theme.surface,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(message.text, style: theme.body),
+      ),
+    );
+  }
+}
+
+class _LiveInputBar extends StatelessWidget {
+  final ProtoTheme theme;
+  final TextEditingController controller;
+  final bool sending;
+  final VoidCallback onSend;
+
+  const _LiveInputBar({
+    required this.theme,
+    required this.controller,
+    required this.sending,
+    required this.onSend,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: controller,
+              enabled: !sending,
+              decoration: InputDecoration(
+                hintText: 'Message…',
+                filled: true,
+                fillColor: theme.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 10),
+              ),
+              onSubmitted: (_) => onSend(),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: sending ? null : onSend,
+            icon: sending
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(Icons.send_rounded, color: theme.primary),
+          ),
         ],
       ),
     );

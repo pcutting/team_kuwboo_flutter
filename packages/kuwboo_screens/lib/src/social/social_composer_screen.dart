@@ -1,22 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
-class SocialComposerScreen extends StatefulWidget {
+import 'social_providers.dart';
+
+class SocialComposerScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic>? repostVideoArgs;
 
   const SocialComposerScreen({super.key, this.repostVideoArgs});
 
   @override
-  State<SocialComposerScreen> createState() => _SocialComposerScreenState();
+  ConsumerState<SocialComposerScreen> createState() => _SocialComposerScreenState();
 }
 
-class _SocialComposerScreenState extends State<SocialComposerScreen> {
+class _SocialComposerScreenState extends ConsumerState<SocialComposerScreen> {
   String _contentType = 'Post';
+  final TextEditingController _textController = TextEditingController();
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onSubmit() async {
+    final text = _textController.text.trim();
+    if (text.isEmpty) {
+      ProtoToast.show(context, Icons.error_outline, 'Please write something first');
+      return;
+    }
+
+    final controller = ref.read(socialComposerControllerProvider.notifier);
+    final post = await controller.submit(text: text);
+
+    if (!mounted) return;
+    if (post != null) {
+      ProtoToast.show(context, Icons.check_circle_rounded, '$_contentType published');
+      // Refresh the feed so the new post appears.
+      ref.invalidate(socialFeedProvider);
+      PrototypeStateProvider.of(context).pop();
+    } else {
+      final state = ref.read(socialComposerControllerProvider);
+      ProtoToast.show(
+        context,
+        Icons.error_outline,
+        'Could not publish: ${state.error}',
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
+    final submitState = ref.watch(socialComposerControllerProvider);
 
     return Container(
       color: theme.surface,
@@ -27,27 +64,44 @@ class _SocialComposerScreenState extends State<SocialComposerScreen> {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => state.pop(),
+                  onTap: submitState.isSubmitting ? null : () => state.pop(),
                   child: Text('Cancel', style: TextStyle(fontSize: 15, color: theme.textSecondary)),
                 ),
                 const Spacer(),
                 Text('New $_contentType', style: theme.title),
                 const Spacer(),
                 GestureDetector(
-                  onTap: () {
-                    ProtoToast.show(context, Icons.check_circle_rounded, '$_contentType published');
-                    state.pop();
-                  },
+                  onTap: submitState.isSubmitting ? null : _onSubmit,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    decoration: BoxDecoration(color: theme.primary, borderRadius: BorderRadius.circular(20)),
-                    child: Text('Post', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
+                    decoration: BoxDecoration(
+                      color: submitState.isSubmitting
+                          ? theme.primary.withValues(alpha: 0.5)
+                          : theme.primary,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: submitState.isSubmitting
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                            ),
+                          )
+                        : const Text(
+                            'Post',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
                   ),
                 ),
               ],
             ),
           ),
-          // Content type selector
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
@@ -88,19 +142,33 @@ class _SocialComposerScreenState extends State<SocialComposerScreen> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ProtoAvatar(radius: 20, imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop'),
+                      ProtoAvatar(
+                        radius: 20,
+                        imageUrl:
+                            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(
-                          widget.repostVideoArgs != null
-                              ? 'Add your thoughts...'
-                              : "What's on your mind?",
-                          style: theme.body.copyWith(fontSize: 16, color: theme.textTertiary),
+                        child: TextField(
+                          controller: _textController,
+                          maxLines: null,
+                          autofocus: true,
+                          enabled: !submitState.isSubmitting,
+                          style: theme.body.copyWith(fontSize: 16),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: widget.repostVideoArgs != null
+                                ? 'Add your thoughts...'
+                                : "What's on your mind?",
+                            hintStyle: theme.body.copyWith(
+                              fontSize: 16,
+                              color: theme.textTertiary,
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  // Video repost preview card
                   if (widget.repostVideoArgs != null) ...[
                     const SizedBox(height: 16),
                     _ComposerVideoEmbed(
@@ -113,7 +181,6 @@ class _SocialComposerScreenState extends State<SocialComposerScreen> {
               ),
             ),
           ),
-          // Bottom actions
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -184,7 +251,6 @@ class _ComposerVideoEmbed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ProtoTheme.of(context);
     final state = PrototypeStateProvider.of(context);
     final colors = _composerVideoGradients[gradientIndex % _composerVideoGradients.length];
 
@@ -203,14 +269,9 @@ class _ComposerVideoEmbed extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-            // Dark overlay
             Container(
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.35),
-              ),
+              decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.35)),
             ),
-
-            // Video badge (top-left)
             Positioned(
               top: 8,
               left: 8,
@@ -233,8 +294,6 @@ class _ComposerVideoEmbed extends StatelessWidget {
                 ),
               ),
             ),
-
-            // Play icon (centered)
             Center(
               child: Container(
                 width: 44,
@@ -247,8 +306,6 @@ class _ComposerVideoEmbed extends StatelessWidget {
                 child: const Icon(Icons.play_arrow_rounded, size: 28, color: Colors.white),
               ),
             ),
-
-            // Bottom strip: creator + caption
             Positioned(
               left: 0,
               right: 0,
@@ -259,10 +316,7 @@ class _ComposerVideoEmbed extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.6),
-                    ],
+                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.6)],
                   ),
                 ),
                 child: Row(
@@ -290,10 +344,7 @@ class _ComposerVideoEmbed extends StatelessWidget {
                     Expanded(
                       child: Text(
                         caption,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.white.withValues(alpha: 0.7),
-                        ),
+                        style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.7)),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

@@ -1,25 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
+
+import 'yoyo_providers.dart';
 
 /// YoYo settings — ghost mode toggle, range slider, show filters, notifications,
 /// session scheduling, data retention, visibility, DND, transparency.
-class YoyoSettingsScreen extends StatefulWidget {
+///
+/// Backend-wired fields (persisted via `YoyoApi.updateSettings`):
+///   * Ghost mode → `isVisible` (inverted)
+///   * Discovery range → `radiusKm`
+///
+/// Prototype-only fields (local UI state, no backend analogue yet):
+/// session scheduling, data retention, visibility tier, DND, transparency,
+/// background discovery, notifications, show-on-profile toggles.
+class YoyoSettingsScreen extends ConsumerStatefulWidget {
   const YoyoSettingsScreen({super.key});
 
   @override
-  State<YoyoSettingsScreen> createState() => _YoyoSettingsScreenState();
+  ConsumerState<YoyoSettingsScreen> createState() => _YoyoSettingsScreenState();
 }
 
-class _YoyoSettingsScreenState extends State<YoyoSettingsScreen> {
+class _YoyoSettingsScreenState extends ConsumerState<YoyoSettingsScreen> {
   bool _waveNotifications = true;
   bool _connectionNotifications = true;
   bool _dndEnabled = false;
   bool _backgroundDiscovery = false;
 
+  Future<void> _persistVisibility(bool isVisible) async {
+    try {
+      await ref.read(yoyoApiProvider).updateSettings(isVisible: isVisible);
+      ref.invalidate(yoyoSettingsProvider);
+    } catch (_) {
+      // Toast is shown by caller; failure here is silent for now.
+    }
+  }
+
+  Future<void> _persistRadius(int radiusKm) async {
+    try {
+      await ref.read(yoyoApiProvider).updateSettings(radiusKm: radiusKm);
+      ref.invalidate(yoyoSettingsProvider);
+    } catch (_) {
+      // swallow — local state already updated optimistically
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
+    final settingsAsync = ref.watch(yoyoSettingsProvider);
 
     return Container(
       color: theme.background,
@@ -29,7 +59,15 @@ class _YoyoSettingsScreenState extends State<YoyoSettingsScreen> {
             title: 'YoYo Settings',
           ),
           Expanded(
-            child: ListView(
+            child: settingsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text('Failed to load settings: $e', style: theme.body),
+                ),
+              ),
+              data: (_) => ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               children: [
                 // Session Scheduling
@@ -177,6 +215,10 @@ class _YoyoSettingsScreenState extends State<YoyoSettingsScreen> {
                         value: state.isYoyoHidden,
                         onChanged: (_) {
                           state.onYoyoHiddenToggle();
+                          // Persist visibility to backend:
+                          // ghost mode ON  → isVisible: false
+                          // ghost mode OFF → isVisible: true
+                          _persistVisibility(!state.isYoyoHidden);
                           ProtoToast.show(
                             context,
                             state.isYoyoHidden ? theme.icons.visibilityOn : theme.icons.visibilityOff,
@@ -223,6 +265,7 @@ class _YoyoSettingsScreenState extends State<YoyoSettingsScreen> {
                           max: 30,
                           divisions: 29,
                           onChanged: state.onYoyoRangeChanged,
+                          onChangeEnd: (v) => _persistRadius(v.toInt()),
                         ),
                       ),
                       Row(
@@ -300,6 +343,7 @@ class _YoyoSettingsScreenState extends State<YoyoSettingsScreen> {
                   ),
                 ),
               ],
+              ),
             ),
           ),
         ],

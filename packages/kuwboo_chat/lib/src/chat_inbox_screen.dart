@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kuwboo_models/kuwboo_models.dart' as api;
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import 'chat_ornaments.dart';
+import 'chat_providers.dart';
 import 'proto_conversation_card.dart';
 
 /// Canonical chat inbox screen.
@@ -12,7 +15,7 @@ import 'proto_conversation_card.dart';
 ///
 /// Optional [ornaments] control per-module visual extras such as
 /// encryption badges, retention timers, and online indicators.
-class ChatInboxScreen extends StatefulWidget {
+class ChatInboxScreen extends ConsumerStatefulWidget {
   /// Filter conversations to this module. Null means show all.
   final String? moduleKey;
 
@@ -30,12 +33,36 @@ class ChatInboxScreen extends StatefulWidget {
   });
 
   @override
-  State<ChatInboxScreen> createState() => _ChatInboxScreenState();
+  ConsumerState<ChatInboxScreen> createState() => _ChatInboxScreenState();
 }
 
-class _ChatInboxScreenState extends State<ChatInboxScreen> {
-  List<DemoConversation> get _conversations {
-    final all = ProtoDemoData.conversations;
+class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
+  /// Adapt a live [api.Thread] into a [DemoConversation] for rendering.
+  /// Real user/name/avatar resolution will land when the thread payload
+  /// includes participant data (Phase 7+).
+  DemoConversation _threadToDemo(api.Thread t) {
+    final module = t.moduleKey ?? 'Social';
+    final name = 'Thread ${t.id.length > 6 ? t.id.substring(0, 6) : t.id}';
+    return DemoConversation(
+      name: name,
+      lastMessage: t.lastMessageText ?? '(no messages yet)',
+      timeAgo: _timeAgo(t.lastMessageAt ?? t.createdAt),
+      unreadCount: 0,
+      moduleContext: module,
+      avatarUrl:
+          'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop',
+    );
+  }
+
+  String _timeAgo(DateTime when) {
+    final diff = DateTime.now().difference(when);
+    if (diff.inMinutes < 1) return 'now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+    if (diff.inHours < 24) return '${diff.inHours}h';
+    return '${diff.inDays}d';
+  }
+
+  List<DemoConversation> _applyFilter(List<DemoConversation> all) {
     if (widget.moduleKey == null) return all;
     return all.where((c) => c.moduleContext == widget.moduleKey).toList();
   }
@@ -46,8 +73,19 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
-    final convos = _conversations;
+    final threadsAsync = ref.watch(threadsProvider);
     final showModuleBadge = widget.moduleKey == null;
+
+    // Map live threads → DemoConversation view-models, then client-side
+    // filter by moduleKey. Fall back to static demo data when the backend
+    // is unreachable so the prototype remains usable offline.
+    final convos = threadsAsync.when(
+      data: (threads) =>
+          _applyFilter(threads.items.map(_threadToDemo).toList()),
+      loading: () => const <DemoConversation>[],
+      error: (_, __) => _applyFilter(ProtoDemoData.conversations),
+    );
+    final isLoading = threadsAsync.isLoading;
 
     return Container(
       color: theme.background,
@@ -120,14 +158,19 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
             ),
 
           Expanded(
-            child: convos.isEmpty
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : convos.isEmpty
                 ? const ProtoEmptyState(
                     icon: Icons.chat_bubble_outline_rounded,
                     title: 'No conversations yet',
                     subtitle: 'Start a chat to connect with others',
                     actionLabel: 'New Message',
                   )
-                : ListView.builder(
+                : RefreshIndicator(
+                    onRefresh: () async =>
+                        ref.invalidate(threadsProvider),
+                    child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: convos.length,
                     itemBuilder: (context, i) {
@@ -146,6 +189,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                         ),
                       );
                     },
+                  ),
                   ),
           ),
 

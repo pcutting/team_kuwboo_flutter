@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
-class YoyoUserProfile extends StatefulWidget {
+import 'yoyo_providers.dart';
+
+class YoyoUserProfile extends ConsumerStatefulWidget {
   const YoyoUserProfile({super.key});
 
   @override
-  State<YoyoUserProfile> createState() => _YoyoUserProfileState();
+  ConsumerState<YoyoUserProfile> createState() => _YoyoUserProfileState();
 }
 
-class _YoyoUserProfileState extends State<YoyoUserProfile> {
+class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
   bool _hasWaved = false;
   bool _isRevealed = true; // toggle for teaser/revealed demo
 
@@ -18,6 +21,9 @@ class _YoyoUserProfileState extends State<YoyoUserProfile> {
     final theme = ProtoTheme.of(context);
     final user = DemoData.nearbyUsers[0];
     final encounter = ProtoDemoData.encounters[0]; // Maya — shared, friend
+    // First real nearby user (if loaded) — target for the live wave button.
+    final realTarget =
+        ref.watch(yoyoNearbyProvider).valueOrNull?.firstOrNull;
 
     return Container(
       color: theme.background,
@@ -33,14 +39,14 @@ class _YoyoUserProfileState extends State<YoyoUserProfile> {
             ],
           ),
           Expanded(
-            child: _buildProfile(context, theme, state, user, encounter),
+            child: _buildProfile(context, theme, state, user, encounter, realTarget?.id),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildProfile(BuildContext context, ProtoTheme theme, PrototypeStateProvider state, NearbyUser user, DemoEncounter enc) {
+  Widget _buildProfile(BuildContext context, ProtoTheme theme, PrototypeStateProvider state, NearbyUser user, DemoEncounter enc, String? realTargetId) {
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       children: [
@@ -256,7 +262,7 @@ class _YoyoUserProfileState extends State<YoyoUserProfile> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildActionButtons(context, theme, state, user),
+          _buildActionButtons(context, theme, state, user, realTargetId),
         ],
         const SizedBox(height: 24),
         Center(
@@ -270,16 +276,24 @@ class _YoyoUserProfileState extends State<YoyoUserProfile> {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, ProtoTheme theme, PrototypeStateProvider state, NearbyUser user) {
+  Widget _buildActionButtons(BuildContext context, ProtoTheme theme, PrototypeStateProvider state, NearbyUser user, String? realTargetId) {
     return Row(
       children: [
         Expanded(
           child: ProtoPressButton(
-            onTap: () {
-              if (!_hasWaved) {
-                setState(() => _hasWaved = true);
-                ProtoToast.show(context, theme.icons.wavingHand, 'Waved at ${user.name}!');
+            onTap: () async {
+              if (_hasWaved) return;
+              setState(() => _hasWaved = true);
+              if (realTargetId != null) {
+                try {
+                  await ref
+                      .read(yoyoApiProvider)
+                      .sendWave(toUserId: realTargetId);
+                  ref.invalidate(yoyoSentWavesProvider);
+                } catch (_) {/* swallow */}
               }
+              if (!context.mounted) return;
+              ProtoToast.show(context, theme.icons.wavingHand, 'Waved at ${user.name}!');
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 250),
