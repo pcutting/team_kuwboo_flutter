@@ -71,6 +71,17 @@ Both `apps/mobile` and `apps/web` consume these packages via pub path dependenci
 - [`docs/team/internal/TESTFLIGHT_RUNBOOK.md`](docs/team/internal/TESTFLIGHT_RUNBOOK.md) — iOS deployment runbook
 - [`docs/team/internal/INFRASTRUCTURE.md`](docs/team/internal/INFRASTRUCTURE.md) — AWS resource inventory
 
+## Pending domain migration
+
+Legal pages (`/privacy.html`, `/terms.html`, `/delete-account.html`), the GCP OAuth consent screen, and the Apple Services ID currently point at `teamkuwbooflutter.vercel.app` as a placeholder. When the production domain (e.g. `kuwboo.com` / `kuwboo.app`) is registered, every externally-visible URL needs updating in one coordinated pass.
+
+Full migration checklist — **[issue #104](https://github.com/pcutting/team_kuwboo/issues/104)**. Covers:
+
+- GCP Console Branding + Authorized Domains + Audience promotion to Production ([console.cloud.google.com/auth/branding?project=kuwboo-mobile](https://console.cloud.google.com/auth/branding?project=kuwboo-mobile))
+- Apple Services ID `com.kuwboo.signin.service` domain + return URL, followed by re-minting the client-secret JWT via `scripts/sso/generate_apple_client_secret.py`
+- Swapping the placeholder contact email in the three legal pages for a branded alias
+- Adding Companies House registration details to the privacy policy footer
+
 ## Common commands
 
 ```bash
