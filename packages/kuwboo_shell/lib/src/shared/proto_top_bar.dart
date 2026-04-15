@@ -3,6 +3,7 @@ import '../theme/proto_theme.dart';
 import '../data/proto_demo_data.dart';
 import '../state/proto_state_provider.dart';
 import '../routes/proto_routes.dart';
+import 'proto_dialogs.dart';
 
 /// Interactive top bar matching the Kuwboo design.
 /// YoYo icon LEFT (doubles as area/list toggle), Profile avatar RIGHT, Chat with badge.
@@ -42,7 +43,7 @@ class ProtoTopBar extends StatelessWidget {
     if (transparent) {
       return Padding(
         padding: EdgeInsets.only(top: safeTop + 6, left: 16, right: 16, bottom: 6),
-        child: _buildNavContent(state, theme, withShadows: true),
+        child: _buildNavContent(context, state, theme, withShadows: true),
       );
     }
 
@@ -56,11 +57,12 @@ class ProtoTopBar extends StatelessWidget {
           ),
         ),
       ),
-      child: _buildNavContent(state, theme),
+      child: _buildNavContent(context, state, theme),
     );
   }
 
   Widget _buildNavContent(
+    BuildContext context,
     PrototypeStateProvider state,
     ProtoTheme theme, {
     bool withShadows = false,
@@ -181,7 +183,7 @@ class ProtoTopBar extends StatelessWidget {
           label: 'My profile, has notifications',
           button: true,
           child: GestureDetector(
-            onTap: () => state.push(ProtoRoutes.profileMy),
+            onTap: () => ProtoProfileMenu.show(context),
             child: iconBacking(SizedBox(
               width: 36,
               height: 36,
