@@ -19,6 +19,8 @@ dependencies:
     path: ../kuwboo_auth
   kuwboo_models:
     path: ../models
+  kuwboo_api_client:
+    path: ../api_client
   flutter_riverpod: ^2.6.0
   go_router: ^14.0.0
 
