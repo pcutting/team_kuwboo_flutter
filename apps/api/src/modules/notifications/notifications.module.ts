@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { JwtModule } from '@nestjs/jwt';
 import { Notification } from './entities/notification.entity';
@@ -12,7 +12,7 @@ import { WsAuthGuard } from '../../common/guards/ws-auth.guard';
 @Module({
   imports: [
     MikroOrmModule.forFeature([Notification, NotificationPreference]),
-    DevicesModule,
+    forwardRef(() => DevicesModule),
     JwtModule.register({}),
   ],
   controllers: [NotificationsController],
