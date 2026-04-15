@@ -68,10 +68,14 @@ export class Migration20260414IdentityCore extends Migration {
     this.addSql(
       `create index "trust_signals_user_id_index" on "trust_signals" ("user_id");`,
     );
+    // Plain index on user_id — a partial predicate referencing `now()`
+    // is rejected by Postgres ("functions in index predicate must be
+    // marked IMMUTABLE") so we keep the index total. Query planner can
+    // still use it for the common lookup path; the `expires_at` filter
+    // is applied afterwards.
     this.addSql(
       `create index "trust_signals_user_active_index"
-        on "trust_signals" ("user_id")
-        where "expires_at" is null or "expires_at" > now();`,
+        on "trust_signals" ("user_id", "expires_at");`,
     );
     this.addSql(
       `alter table "trust_signals"

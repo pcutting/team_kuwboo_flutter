@@ -1,5 +1,5 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
+import { Inject, Logger, forwardRef } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Job } from 'bullmq';
 import { User } from '../entities/user.entity';
@@ -59,6 +59,7 @@ export class ProfileCompletenessNudgeProcessor extends WorkerHost {
 
   constructor(
     private readonly em: EntityManager,
+    @Inject(forwardRef(() => NotificationsService))
     private readonly notifications: NotificationsService,
   ) {
     super();

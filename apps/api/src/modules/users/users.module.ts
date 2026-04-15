@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { BullModule } from '@nestjs/bullmq';
 import { User } from './entities/user.entity';
@@ -14,7 +14,7 @@ import { PROFILE_COMPLETENESS_NUDGE_QUEUE } from './workers/profile-completeness
   imports: [
     MikroOrmModule.forFeature([User, UserPreferences]),
     BullModule.registerQueue({ name: PROFILE_COMPLETENESS_NUDGE_QUEUE }),
-    NotificationsModule,
+    forwardRef(() => NotificationsModule),
   ],
   controllers: [UsersController],
   providers: [
