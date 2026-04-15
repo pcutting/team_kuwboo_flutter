@@ -4,8 +4,13 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { loadAwsSecrets } from './bootstrap/aws-secrets';
 
 async function bootstrap() {
+  // Fetch AWS Secrets Manager values into process.env before NestJS reads
+  // config. Gated by AWS_LOAD_SECRETS=1 so local dev falls through to .env.
+  await loadAwsSecrets();
+
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
   app.useLogger(app.get(Logger));
