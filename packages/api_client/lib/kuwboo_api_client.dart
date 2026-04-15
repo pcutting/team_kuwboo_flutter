@@ -11,6 +11,5 @@ export 'src/feed_api.dart';
 export 'src/interactions_api.dart';
 export 'src/comments_api.dart';
 export 'src/connections_api.dart';
-export 'src/marketplace_api.dart';
 export 'src/messaging_api.dart';
 export 'src/yoyo_api.dart';
