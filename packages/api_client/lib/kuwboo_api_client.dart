@@ -8,6 +8,7 @@ export 'src/credentials_api.dart';
 export 'src/interests_api.dart';
 export 'src/content_api.dart';
 export 'src/feed_api.dart';
+export 'src/marketplace_api.dart';
 export 'src/interactions_api.dart';
 export 'src/comments_api.dart';
 export 'src/connections_api.dart';
