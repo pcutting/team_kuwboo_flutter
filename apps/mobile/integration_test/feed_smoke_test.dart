@@ -33,6 +33,8 @@ void main() {
       ProviderScope(
         overrides: [
           feedApiProvider.overrideWithValue(_EmptyFeedApi()),
+          marketplaceApiProvider.overrideWithValue(_EmptyMarketplaceApi()),
+          yoyoApiProvider.overrideWithValue(_EmptyYoyoApi()),
         ],
         child: const KuwbooTestApp(),
       ),
@@ -59,57 +61,56 @@ void main() {
 /// Minimal stub that short-circuits every feed call with an empty response.
 class _EmptyFeedApi implements FeedApi {
   @override
-  Future<FeedResponse> getFeed({
-    String? tab,
+  Future<FeedResponse> getHome({
+    String tab = 'home',
     String? cursor,
-    int limit = 20,
+    int? limit,
   }) async =>
       const FeedResponse(items: [], hasMore: false);
 
   @override
   Future<FeedResponse> getFollowing({
-    String? tab,
+    String tab = 'home',
     String? cursor,
-    int limit = 20,
+    int? limit,
+    String? moduleScope,
   }) async =>
       const FeedResponse(items: [], hasMore: false);
 
   @override
-  Future<FeedResponse> getDiscover({String? tab, int limit = 20}) async =>
+  Future<FeedResponse> getDiscover({String tab = 'home', int? limit}) async =>
       const FeedResponse(items: [], hasMore: false);
 
   @override
-  Future<FeedResponse> getTrending({String? tab, int limit = 20}) async =>
+  Future<FeedResponse> getTrending({String tab = 'home', int? limit}) async =>
       const FeedResponse(items: [], hasMore: false);
+}
 
+class _EmptyMarketplaceApi implements MarketplaceApi {
   @override
-  Future<ProductPage> getProducts({
+  Future<ProductPage> listProducts({
     String? category,
     int? minPrice,
     int? maxPrice,
     String? condition,
     String? cursor,
-    int limit = 20,
+    int? limit,
   }) async =>
       const ProductPage();
 
   @override
-  Future<ProductPage> getProductDeals({String? cursor, int limit = 20}) async =>
-      const ProductPage();
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
+class _EmptyYoyoApi implements YoyoApi {
   @override
-  Future<Product> getProductDetail(String id) async =>
-      throw UnimplementedError();
-
-  @override
-  Future<Content> getContentDetail(String id) async =>
-      throw UnimplementedError();
-
-  @override
-  Future<List<NearbyUser>> getYoyoNearby({
+  Future<List<NearbyUser>> getNearby({
     required double lat,
     required double lng,
-    int? radiusKm,
+    int? radius,
   }) async =>
       const [];
+
+  @override
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

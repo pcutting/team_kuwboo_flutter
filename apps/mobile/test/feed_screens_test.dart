@@ -13,74 +13,74 @@ import 'package:kuwboo_mobile/features/feed/presentation/yoyo_nearby_mobile_scre
 // ─── Fakes ──────────────────────────────────────────────────────────────
 
 class _FakeFeedApi implements FeedApi {
-  _FakeFeedApi({
-    this.feedPage,
-    this.products,
-    this.nearby = const [],
-  });
+  _FakeFeedApi({this.feedPage});
 
   FeedResponse? feedPage;
-  ProductPage? products;
-  ProductPage? deals;
-  List<NearbyUser> nearby;
   String? lastFeedTab;
 
   @override
-  Future<FeedResponse> getFeed({
-    String? tab,
+  Future<FeedResponse> getHome({
+    String tab = 'home',
     String? cursor,
-    int limit = 20,
+    int? limit,
   }) async {
     lastFeedTab = tab;
     return feedPage ?? const FeedResponse(items: [], hasMore: false);
   }
 
   @override
-  Future<FeedResponse> getDiscover({String? tab, int limit = 20}) async =>
+  Future<FeedResponse> getDiscover({String tab = 'home', int? limit}) async =>
       const FeedResponse(items: [], hasMore: false);
 
   @override
-  Future<FeedResponse> getTrending({String? tab, int limit = 20}) async =>
+  Future<FeedResponse> getTrending({String tab = 'home', int? limit}) async =>
       const FeedResponse(items: [], hasMore: false);
 
   @override
   Future<FeedResponse> getFollowing({
-    String? tab,
+    String tab = 'home',
     String? cursor,
-    int limit = 20,
+    int? limit,
+    String? moduleScope,
   }) async =>
       const FeedResponse(items: [], hasMore: false);
+}
+
+class _FakeMarketplaceApi implements MarketplaceApi {
+  _FakeMarketplaceApi({this.products});
+
+  ProductPage? products;
 
   @override
-  Future<ProductPage> getProducts({
+  Future<ProductPage> listProducts({
     String? category,
     int? minPrice,
     int? maxPrice,
     String? condition,
     String? cursor,
-    int limit = 20,
+    int? limit,
   }) async =>
       products ?? const ProductPage();
 
   @override
-  Future<ProductPage> getProductDeals({String? cursor, int limit = 20}) async =>
-      deals ?? const ProductPage();
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeYoyoApi implements YoyoApi {
+  _FakeYoyoApi({this.nearby = const []});
+
+  List<NearbyUser> nearby;
 
   @override
-  Future<Product> getProductDetail(String id) async =>
-      throw UnimplementedError();
-
-  @override
-  Future<Content> getContentDetail(String id) async =>
-      throw UnimplementedError();
-
-  @override
-  Future<List<NearbyUser>> getYoyoNearby({
+  Future<List<NearbyUser>> getNearby({
     required double lat,
     required double lng,
-    int? radiusKm,
+    int? radius,
   }) async =>
       nearby;
+
+  @override
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────
@@ -181,11 +181,13 @@ void main() {
   });
 
   testWidgets('ShopFeedMobileScreen renders products with prices', (tester) async {
-    final api = _FakeFeedApi(
+    final marketplace = _FakeMarketplaceApi(
       products: ProductPage(items: [_product(title: 'Chair A')]),
     );
     final container = ProviderContainer(
-      overrides: [feedApiProvider.overrideWithValue(api)],
+      overrides: [
+        marketplaceApiProvider.overrideWithValue(marketplace),
+      ],
     );
     addTearDown(container.dispose);
 
@@ -197,14 +199,14 @@ void main() {
   });
 
   testWidgets('YoyoNearbyMobileScreen renders nearby users', (tester) async {
-    final api = _FakeFeedApi(
+    final yoyo = _FakeYoyoApi(
       nearby: const [
         NearbyUser(id: '1', name: 'Charlie', distanceMeters: 250),
         NearbyUser(id: '2', name: 'Dana', distanceMeters: 1500),
       ],
     );
     final container = ProviderContainer(
-      overrides: [feedApiProvider.overrideWithValue(api)],
+      overrides: [yoyoApiProvider.overrideWithValue(yoyo)],
     );
     addTearDown(container.dispose);
 

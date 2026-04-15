@@ -3,105 +3,102 @@ import 'package:kuwboo_models/kuwboo_models.dart';
 import 'api_client.dart';
 
 /// YoYo proximity discovery endpoints.
+///
+/// Mirrors `apps/api/src/modules/yoyo/yoyo.controller.ts` (8 HTTP routes).
+/// The corresponding Socket.io gateway (`proximity.gateway.ts`) is wired
+/// in a later phase — this class is HTTP-only for now.
+///
+/// All request shapes are modelled by the `*Dto` classes in
+/// `kuwboo_models` so callers can stage payloads as typed objects.
 class YoyoApi {
   YoyoApi(this._client);
 
   final KuwbooApiClient _client;
 
-  /// Report the user's current location.
-  Future<void> updateLocation({
-    required double latitude,
-    required double longitude,
-  }) async {
-    await _client.dio.post(
-      '/yoyo/location',
-      data: {
-        'latitude': latitude,
-        'longitude': longitude,
-      },
-    );
+  /// `POST /yoyo/location` — report the user's current location.
+  ///
+  /// Returns void; the backend responds `{message: 'Location updated'}`.
+  Future<void> updateLocation(UpdateLocationDto dto) async {
+    await _client.dio.post('/yoyo/location', data: dto.toJson());
   }
 
-  /// Fetch users within proximity. Backend accepts `lat` / `lng` / `radius`
-  /// (km).
-  Future<List<NearbyUser>> getNearbyUsers({
+  /// `GET /yoyo/nearby?lat=&lng=&radius=` — fetch users within proximity.
+  ///
+  /// Backend expects short-form `lat` / `lng` on the query string (unlike
+  /// the POST body, which uses `latitude` / `longitude`). `radius` is in
+  /// kilometres and falls back to the caller's saved [YoyoSettings.radiusKm].
+  Future<List<NearbyUser>> getNearby({
     required double lat,
     required double lng,
-    int? radiusKm,
+    int? radius,
   }) async {
     final response = await _client.dio.get(
       '/yoyo/nearby',
       queryParameters: {
         'lat': lat,
         'lng': lng,
-        if (radiusKm != null) 'radius': radiusKm,
+        if (radius != null) 'radius': radius,
       },
     );
     return _client.unwrapList(response, NearbyUser.fromJson);
   }
 
-  /// Get the user's YoYo discovery settings.
+  /// `GET /yoyo/settings` — get the user's discovery settings.
+  ///
+  /// If no row exists server-side, the backend creates defaults and
+  /// returns them (`isVisible: true`, `radiusKm: 10`).
   Future<YoyoSettings> getSettings() async {
     final response = await _client.dio.get('/yoyo/settings');
     return _client.unwrap(response, YoyoSettings.fromJson);
   }
 
-  /// Update discovery settings.
-  Future<YoyoSettings> updateSettings({
-    bool? isVisible,
-    int? radiusKm,
-    int? ageMin,
-    int? ageMax,
-    String? genderFilter,
-  }) async {
+  /// `PATCH /yoyo/settings` — partial update of discovery settings.
+  Future<YoyoSettings> updateSettings(UpdateYoyoSettingsDto dto) async {
     final response = await _client.dio.patch(
       '/yoyo/settings',
-      data: {
-        if (isVisible != null) 'isVisible': isVisible,
-        if (radiusKm != null) 'radiusKm': radiusKm,
-        if (ageMin != null) 'ageMin': ageMin,
-        if (ageMax != null) 'ageMax': ageMax,
-        if (genderFilter != null) 'genderFilter': genderFilter,
-      },
+      data: dto.toJson(),
     );
     return _client.unwrap(response, YoyoSettings.fromJson);
   }
 
-  /// Send a wave to another user.
-  Future<Wave> sendWave({
-    required String toUserId,
-    String? message,
-  }) async {
+  /// `POST /yoyo/overrides` — explicitly allow or block another user.
+  ///
+  /// Idempotent: upserts on (user, targetUser).
+  Future<YoyoOverride> createOverride(CreateOverrideDto dto) async {
     final response = await _client.dio.post(
-      '/yoyo/waves',
-      data: {
-        'toUserId': toUserId,
-        if (message != null) 'message': message,
-      },
+      '/yoyo/overrides',
+      data: dto.toJson(),
+    );
+    return _client.unwrap(response, YoyoOverride.fromJson);
+  }
+
+  /// `POST /yoyo/wave` — send an interest signal to another user.
+  ///
+  /// Backend rejects (409) if a pending wave already exists between the
+  /// two users, and (403) if the recipient has blocked the sender.
+  Future<Wave> sendWave(SendWaveDto dto) async {
+    final response = await _client.dio.post(
+      '/yoyo/wave',
+      data: dto.toJson(),
     );
     return _client.unwrap(response, Wave.fromJson);
   }
 
-  /// Get incoming waves.
-  Future<List<Wave>> getIncomingWaves() async {
-    final response = await _client.dio.get('/yoyo/waves/incoming');
+  /// `GET /yoyo/waves` — incoming pending waves for the current user.
+  Future<List<Wave>> getWaves() async {
+    final response = await _client.dio.get('/yoyo/waves');
     return _client.unwrapList(response, Wave.fromJson);
   }
 
-  /// Get sent waves.
-  Future<List<Wave>> getSentWaves() async {
-    final response = await _client.dio.get('/yoyo/waves/sent');
-    return _client.unwrapList(response, Wave.fromJson);
-  }
-
-  /// Accept or decline a wave.
-  Future<void> respondToWave({
-    required String waveId,
-    required bool accept,
-  }) async {
-    await _client.dio.post(
-      '/yoyo/waves/$waveId/respond',
-      data: {'accept': accept},
+  /// `POST /yoyo/waves/:id/respond` — accept or decline a pending wave.
+  ///
+  /// On `accept: true`, the backend additionally creates a messaging
+  /// thread (moduleKey: SOCIAL_STUMBLE) between the two users.
+  Future<WaveResponse> respondToWave(String id, RespondWaveDto dto) async {
+    final response = await _client.dio.post(
+      '/yoyo/waves/$id/respond',
+      data: dto.toJson(),
     );
+    return _client.unwrap(response, WaveResponse.fromJson);
   }
 }

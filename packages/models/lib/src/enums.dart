@@ -191,23 +191,36 @@ enum ModuleScope {
   final String value;
 }
 
-/// Notification event types.
+/// Notification event types. Matches backend `NotificationType` enum.
 @JsonEnum(valueField: 'value')
 enum NotificationType {
+  newFollower('NEW_FOLLOWER'),
   like('LIKE'),
   comment('COMMENT'),
-  follow('FOLLOW'),
-  match('MATCH'),
-  message('MESSAGE'),
-  bid('BID'),
-  auctionEnding('AUCTION_ENDING'),
-  auctionWon('AUCTION_WON'),
-  auctionOutbid('AUCTION_OUTBID'),
   mention('MENTION'),
-  yoyoNearby('YOYO_NEARBY'),
+  message('MESSAGE'),
+  friendRequest('FRIEND_REQUEST'),
+  friendAccepted('FRIEND_ACCEPTED'),
+  bidPlaced('BID_PLACED'),
+  bidOutbid('BID_OUTBID'),
+  auctionWon('AUCTION_WON'),
+  auctionEnded('AUCTION_ENDED'),
+  contentApproved('CONTENT_APPROVED'),
+  contentRemoved('CONTENT_REMOVED'),
   system('SYSTEM');
 
   const NotificationType(this.value);
+  final String value;
+}
+
+/// Device platform. Matches backend `DevicePlatform` enum.
+@JsonEnum(valueField: 'value')
+enum DevicePlatform {
+  ios('IOS'),
+  android('ANDROID'),
+  web('WEB');
+
+  const DevicePlatform(this.value);
   final String value;
 }
 

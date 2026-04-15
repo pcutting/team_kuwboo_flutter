@@ -31,16 +31,18 @@ Map<String, dynamic> _$NotificationModelToJson(_NotificationModel instance) =>
     };
 
 const _$NotificationTypeEnumMap = {
+  NotificationType.newFollower: 'NEW_FOLLOWER',
   NotificationType.like: 'LIKE',
   NotificationType.comment: 'COMMENT',
-  NotificationType.follow: 'FOLLOW',
-  NotificationType.match: 'MATCH',
-  NotificationType.message: 'MESSAGE',
-  NotificationType.bid: 'BID',
-  NotificationType.auctionEnding: 'AUCTION_ENDING',
-  NotificationType.auctionWon: 'AUCTION_WON',
-  NotificationType.auctionOutbid: 'AUCTION_OUTBID',
   NotificationType.mention: 'MENTION',
-  NotificationType.yoyoNearby: 'YOYO_NEARBY',
+  NotificationType.message: 'MESSAGE',
+  NotificationType.friendRequest: 'FRIEND_REQUEST',
+  NotificationType.friendAccepted: 'FRIEND_ACCEPTED',
+  NotificationType.bidPlaced: 'BID_PLACED',
+  NotificationType.bidOutbid: 'BID_OUTBID',
+  NotificationType.auctionWon: 'AUCTION_WON',
+  NotificationType.auctionEnded: 'AUCTION_ENDED',
+  NotificationType.contentApproved: 'CONTENT_APPROVED',
+  NotificationType.contentRemoved: 'CONTENT_REMOVED',
   NotificationType.system: 'SYSTEM',
 };

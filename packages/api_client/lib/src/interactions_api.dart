@@ -1,43 +1,40 @@
+import 'package:kuwboo_models/kuwboo_models.dart';
+
 import 'api_client.dart';
 
-/// Content interaction endpoints (likes, saves, views, shares).
+/// Content interaction endpoints (5 routes): likes, saves, views, shares,
+/// and the combined state projection.
 class InteractionsApi {
   InteractionsApi(this._client);
 
   final KuwbooApiClient _client;
 
-  /// Toggle a like on content. Returns true if now liked, false if unliked.
-  Future<bool> toggleLike(String contentId) async {
-    final response = await _client.dio.post('/content/$contentId/like');
-    final data = response.data['data'] as Map<String, dynamic>;
-    return data['liked'] as bool;
+  /// `POST /content/:id/like` — toggle like; returns new state + count.
+  Future<LikeResponse> likeContent(String id) async {
+    final response = await _client.dio.post('/content/$id/like');
+    return _client.unwrap(response, LikeResponse.fromJson);
   }
 
-  /// Toggle a save/bookmark on content.
-  Future<bool> toggleSave(String contentId) async {
-    final response = await _client.dio.post('/content/$contentId/save');
-    final data = response.data['data'] as Map<String, dynamic>;
-    return data['saved'] as bool;
+  /// `POST /content/:id/save` — toggle save/bookmark.
+  Future<SaveResponse> saveContent(String id) async {
+    final response = await _client.dio.post('/content/$id/save');
+    return _client.unwrap(response, SaveResponse.fromJson);
   }
 
-  /// Log a view event for content.
-  Future<void> logView(String contentId) async {
-    await _client.dio.post('/content/$contentId/view');
+  /// `POST /content/:id/view` — log a view event (fire-and-forget).
+  Future<void> logView(String id) async {
+    await _client.dio.post('/content/$id/view');
   }
 
-  /// Log a share event for content.
-  Future<void> logShare(String contentId) async {
-    await _client.dio.post('/content/$contentId/share');
+  /// `POST /content/:id/share` — log a share event.
+  Future<void> logShare(String id) async {
+    await _client.dio.post('/content/$id/share');
   }
 
-  /// Get the current user's interaction state for a content item.
-  Future<Map<String, bool>> getUserInteractions(String contentId) async {
-    final response =
-        await _client.dio.get('/content/$contentId/interactions');
-    final data = response.data['data'] as Map<String, dynamic>;
-    return {
-      'liked': data['liked'] as bool? ?? false,
-      'saved': data['saved'] as bool? ?? false,
-    };
+  /// `GET /content/:id/interactions` — current user's state + aggregate
+  /// interaction counts for a content item.
+  Future<InteractionState> getInteractionState(String id) async {
+    final response = await _client.dio.get('/content/$id/interactions');
+    return _client.unwrap(response, InteractionState.fromJson);
   }
 }

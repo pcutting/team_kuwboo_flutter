@@ -9,6 +9,16 @@ final feedApiProvider = Provider<FeedApi>(
   (ref) => FeedApi(ref.watch(apiClientProvider)),
 );
 
+/// Products live on `MarketplaceApi` (backend `/products/*`), not `FeedApi`.
+final marketplaceApiProvider = Provider<MarketplaceApi>(
+  (ref) => MarketplaceApi(ref.watch(apiClientProvider)),
+);
+
+/// Nearby users live on `YoyoApi` (backend `/yoyo/nearby`), not `FeedApi`.
+final yoyoApiProvider = Provider<YoyoApi>(
+  (ref) => YoyoApi(ref.watch(apiClientProvider)),
+);
+
 // ─── Feed state ──────────────────────────────────────────────────────────
 
 /// Snapshot of a paginated content feed screen.
@@ -78,7 +88,7 @@ abstract class _TabFeedNotifier extends AsyncNotifier<FeedListState> {
 
   @override
   Future<FeedListState> build() async {
-    final page = await _api.getFeed(tab: tab);
+    final page = await _api.getHome(tab: tab);
     return FeedListState(
       items: page.items,
       nextCursor: page.nextCursor,
@@ -89,7 +99,7 @@ abstract class _TabFeedNotifier extends AsyncNotifier<FeedListState> {
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      final page = await _api.getFeed(tab: tab);
+      final page = await _api.getHome(tab: tab);
       return FeedListState(
         items: page.items,
         nextCursor: page.nextCursor,
@@ -106,7 +116,7 @@ abstract class _TabFeedNotifier extends AsyncNotifier<FeedListState> {
 
     state = AsyncValue.data(current.copyWith(isLoadingMore: true));
     try {
-      final page = await _api.getFeed(tab: tab, cursor: cursor);
+      final page = await _api.getHome(tab: tab, cursor: cursor);
       state = AsyncValue.data(FeedListState(
         items: [...current.items, ...page.items],
         nextCursor: page.nextCursor,
@@ -133,11 +143,11 @@ class SocialFeedNotifier extends _TabFeedNotifier {
 /// Shop feed: calls `/products` so we get Product-typed rows with
 /// `title`, `priceCents`, `condition`.
 class ShopFeedNotifier extends AsyncNotifier<ProductListState> {
-  FeedApi get _api => ref.read(feedApiProvider);
+  MarketplaceApi get _api => ref.read(marketplaceApiProvider);
 
   @override
   Future<ProductListState> build() async {
-    final page = await _api.getProducts();
+    final page = await _api.listProducts();
     return ProductListState(
       items: page.items,
       nextCursor: page.nextCursor,
@@ -148,7 +158,7 @@ class ShopFeedNotifier extends AsyncNotifier<ProductListState> {
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      final page = await _api.getProducts();
+      final page = await _api.listProducts();
       return ProductListState(
         items: page.items,
         nextCursor: page.nextCursor,
@@ -165,7 +175,7 @@ class ShopFeedNotifier extends AsyncNotifier<ProductListState> {
 
     state = AsyncValue.data(current.copyWith(isLoadingMore: true));
     try {
-      final page = await _api.getProducts(cursor: cursor);
+      final page = await _api.listProducts(cursor: cursor);
       state = AsyncValue.data(ProductListState(
         items: [...current.items, ...page.items],
         nextCursor: page.nextCursor,
@@ -187,24 +197,24 @@ class YoyoNearbyNotifier extends AsyncNotifier<List<NearbyUser>> {
   static const double _fallbackLat = 51.5074; // London
   static const double _fallbackLng = -0.1278;
 
-  FeedApi get _api => ref.read(feedApiProvider);
+  YoyoApi get _api => ref.read(yoyoApiProvider);
 
   @override
   Future<List<NearbyUser>> build() {
-    return _api.getYoyoNearby(
+    return _api.getNearby(
       lat: _fallbackLat,
       lng: _fallbackLng,
-      radiusKm: 50,
+      radius: 50,
     );
   }
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() {
-      return _api.getYoyoNearby(
+      return _api.getNearby(
         lat: _fallbackLat,
         lng: _fallbackLng,
-        radiusKm: 50,
+        radius: 50,
       );
     });
   }

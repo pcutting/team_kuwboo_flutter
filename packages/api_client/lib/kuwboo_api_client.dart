@@ -16,3 +16,6 @@ export 'src/yoyo_api.dart';
 export 'src/sponsored_api.dart';
 export 'src/reports_api.dart';
 export 'src/consent_api.dart';
+export 'src/notifications_api.dart';
+export 'src/devices_api.dart';
+export 'src/media_api.dart';
