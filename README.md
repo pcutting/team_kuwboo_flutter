@@ -1,5 +1,7 @@
 # team_kuwboo
 
+> ⚠️ **Apple Sign-In client-secret JWT expires `2026-10-12`.** Rotate via `scripts/sso/generate_apple_client_secret.py` before then or Apple SSO will break. See `docs/team/internal/SSO_SETUP.md`.
+
 Kuwboo multi-platform monorepo: Flutter mobile app (iOS + Android), NestJS backend, shared Flutter packages, and two static web frontends. Managed with Melos + pub workspaces (Flutter) and npm (admin).
 
 **Current focus: the Flutter mobile app.** Web and admin are secondary in this phase.
