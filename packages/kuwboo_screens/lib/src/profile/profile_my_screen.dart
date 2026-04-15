@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 class ProfileMyScreen extends StatelessWidget {
@@ -6,7 +7,6 @@ class ProfileMyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
 
     return Container(
@@ -67,57 +67,20 @@ class ProfileMyScreen extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // Menu items
-                _MenuItem(icon: theme.icons.editOutline, label: 'Edit Profile', onTap: () => state.push(ProtoRoutes.profileEdit)),
+                _MenuItem(icon: theme.icons.editOutline, label: 'Edit Profile', onTap: () => context.go(ProtoRoutes.profileEdit)),
                 _MenuItemWithBadge(
                   icon: theme.icons.notificationsOutline,
                   label: 'Notifications',
                   badgeCount: 4,
-                  onTap: () => state.push(ProtoRoutes.profileNotifications),
+                  onTap: () => context.go(ProtoRoutes.profileNotifications),
                 ),
-                _MenuItem(icon: theme.icons.chatBubbleOutline, label: 'Messages', onTap: () => state.push(ProtoRoutes.chatInbox)),
-                _MenuItem(icon: theme.icons.storefrontOutline, label: 'My Listings', onTap: () {}),
-                _MenuItem(icon: theme.icons.favoriteOutline, label: 'Saved Items', onTap: () {}),
-                _MenuItem(icon: theme.icons.campaign, label: 'Promote', onTap: () => state.push(ProtoRoutes.sponsoredHub)),
+                _MenuItem(icon: theme.icons.chatBubbleOutline, label: 'Messages', onTap: () => context.go(ProtoRoutes.chatInbox)),
+                // TODO: enable when Listings + Saved features ship
+                // _MenuItem(icon: theme.icons.storefrontOutline, label: 'My Listings', onTap: () {}),
+                // _MenuItem(icon: theme.icons.favoriteOutline, label: 'Saved Items', onTap: () {}),
+                _MenuItem(icon: theme.icons.campaign, label: 'Promote', onTap: () => context.go(ProtoRoutes.sponsoredHub)),
                 _DarkModeToggle(),
-                _MenuItem(icon: theme.icons.settings, label: 'Settings', onTap: () => state.push(ProtoRoutes.profileSettings)),
-
-                // Demo convenience links — separated from main menu
-                const SizedBox(height: 24),
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 8),
-                  child: Text('Demo', style: theme.caption.copyWith(fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
-                ),
-                _MenuItem(icon: Icons.explore_outlined, label: 'Onboarding', onTap: () => state.push(ProtoRoutes.authOnboarding)),
-                _MenuItem(icon: Icons.waving_hand_outlined, label: 'Welcome Screen', onTap: () => state.push(ProtoRoutes.authWelcome)),
-                _MenuItem(icon: Icons.touch_app_outlined, label: 'Interaction Tutorial', onTap: () => state.push(ProtoRoutes.authTutorial)),
-
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 8),
-                  child: Text('Registration Flow', style: theme.caption.copyWith(fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
-                ),
-                _MenuItem(icon: Icons.how_to_reg_outlined, label: 'Sign Up Method', onTap: () => state.push(ProtoRoutes.authMethod)),
-                _MenuItem(icon: Icons.phone_outlined, label: 'Phone / Email', onTap: () => state.push(ProtoRoutes.authPhone)),
-                _MenuItem(icon: Icons.pin_outlined, label: 'OTP Verification', onTap: () => state.push(ProtoRoutes.authOtp)),
-                _MenuItem(icon: Icons.cake_outlined, label: 'Birthday', onTap: () => state.push(ProtoRoutes.authBirthday)),
-                _MenuItem(icon: Icons.person_outline, label: 'Create Profile', onTap: () => state.push(ProtoRoutes.authProfile)),
-                _MenuItem(icon: Icons.block_outlined, label: 'Age Block (Under 13)', onTap: () => state.push(ProtoRoutes.authAgeBlock)),
-
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 8),
-                  child: Text('Login Flow', style: theme.caption.copyWith(fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
-                ),
-                _MenuItem(icon: Icons.login_rounded, label: 'Login Screen', onTap: () => state.push(ProtoRoutes.authLogin)),
-
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 8),
-                  child: Text('Features', style: theme.caption.copyWith(fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
-                ),
-                _MenuItem(icon: Icons.inbox_rounded, label: 'Chat Inbox', onTap: () => state.push(ProtoRoutes.chatInbox)),
-                _MenuItem(icon: Icons.receipt_long_outlined, label: 'Chat Transaction Cards', onTap: () => state.pushWithArgs(ProtoRoutes.chatConversation, {'variant': 1})),
-                _MenuItem(icon: Icons.notifications_outlined, label: 'Notifications', onTap: () => state.push(ProtoRoutes.profileNotifications)),
+                _MenuItem(icon: theme.icons.settings, label: 'Settings', onTap: () => context.go(ProtoRoutes.profileSettings)),
                 const SizedBox(height: 20),
               ],
             ),
