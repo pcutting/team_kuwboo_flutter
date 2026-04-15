@@ -288,7 +288,7 @@ class _ChatConversationScreenState
       final tid = widget.threadId;
       if (tid != null) {
         // Fire-and-forget; failures should not block the UI.
-        ref.read(messagingApiProvider).markThreadRead(tid).catchError((_) {});
+        ref.read(messagingApiProvider).markThreadRead(tid).catchError((_) => '');
       }
     });
   }

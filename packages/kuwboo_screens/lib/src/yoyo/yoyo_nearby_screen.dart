@@ -158,7 +158,7 @@ class _YoyoNearbyScreenState extends ConsumerState<YoyoNearbyScreen> {
 // ─── Nearby View ────────────────────────────────────────────────────
 
 class _YoyoNearbyView extends StatelessWidget {
-  const _YoyoNearbyView({super.key});
+  const _YoyoNearbyView();
 
   @override
   Widget build(BuildContext context) {
@@ -1002,7 +1002,7 @@ class _BottomControlStrip extends StatelessWidget {
                   valueIndicatorColor: theme.primary,
                   valueIndicatorTextStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white),
                   valueIndicatorShape: const PaddleSliderValueIndicatorShape(),
-                  showValueIndicator: ShowValueIndicator.always,
+                  showValueIndicator: ShowValueIndicator.onDrag,
                 ),
                 child: Slider(
                   min: 0,
@@ -2238,7 +2238,7 @@ List<NearbyUser> _filteredUsers(PrototypeStateProvider state) {
 
 /// List view — vertical card list with tappable wave buttons
 class _YoyoListView extends StatefulWidget {
-  const _YoyoListView({super.key});
+  const _YoyoListView();
 
   @override
   State<_YoyoListView> createState() => _YoyoListViewState();
@@ -2409,7 +2409,7 @@ class _YoyoListViewState extends State<_YoyoListView> {
 /// Area view — organic avatars on a proximity radar with card carousel
 /// and action bar.
 class _YoyoAreaView extends StatelessWidget {
-  const _YoyoAreaView({super.key});
+  const _YoyoAreaView();
 
   @override
   Widget build(BuildContext context) {

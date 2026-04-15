@@ -93,3 +93,4 @@ keys/.android_key_alias.txt
 apps/mobile/android/fastlane/report.xml
 apps/mobile/android/fastlane/README.md
 apps/mobile/android/fastlane/test_output/
+android/.kotlin/
