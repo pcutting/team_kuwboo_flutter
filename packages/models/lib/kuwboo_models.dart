@@ -18,3 +18,6 @@ export 'src/product.dart';
 export 'src/thread.dart';
 export 'src/auction.dart';
 export 'src/yoyo.dart';
+export 'src/sponsored_campaign.dart';
+export 'src/report.dart';
+export 'src/consent.dart';

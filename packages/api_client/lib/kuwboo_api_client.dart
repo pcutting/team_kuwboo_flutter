@@ -13,3 +13,6 @@ export 'src/comments_api.dart';
 export 'src/connections_api.dart';
 export 'src/messaging_api.dart';
 export 'src/yoyo_api.dart';
+export 'src/sponsored_api.dart';
+export 'src/reports_api.dart';
+export 'src/consent_api.dart';
