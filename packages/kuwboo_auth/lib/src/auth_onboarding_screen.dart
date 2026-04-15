@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 /// Tracks whether the user tapped Skip on the birthday step during onboarding.
@@ -15,13 +16,12 @@ class AuthOnboardingScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
 
     void onSkip() {
       // D2b: call /users/me with birthday_skipped=true
       ref.read(onboardingSkippedProvider.notifier).state = true;
-      state.push(ProtoRoutes.authTutorial);
+      context.go(ProtoRoutes.authTutorial);
     }
 
     return Material(
@@ -126,7 +126,7 @@ class AuthOnboardingScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   GestureDetector(
-                    onTap: () => state.push(ProtoRoutes.authTutorial),
+                    onTap: () => context.go(ProtoRoutes.authTutorial),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 16),

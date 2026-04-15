@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 class AuthWelcomeScreen extends StatelessWidget {
@@ -6,7 +7,6 @@ class AuthWelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = PrototypeStateProvider.of(context);
 
     return Material(
       type: MaterialType.transparency,
@@ -51,7 +51,7 @@ class AuthWelcomeScreen extends StatelessWidget {
             child: Column(
               children: [
                 GestureDetector(
-                  onTap: () => state.push(ProtoRoutes.authMethod),
+                  onTap: () => context.go(ProtoRoutes.authMethod),
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -66,7 +66,7 @@ class AuthWelcomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 GestureDetector(
-                  onTap: () => state.push(ProtoRoutes.authLogin),
+                  onTap: () => context.go(ProtoRoutes.authLogin),
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 16),

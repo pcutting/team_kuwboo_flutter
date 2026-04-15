@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import 'auth_callbacks.dart';
@@ -9,7 +10,6 @@ class AuthProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
-    final state = PrototypeStateProvider.of(context);
 
     return Material(
       type: MaterialType.transparency,
@@ -126,7 +126,7 @@ class AuthProfileScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
             child: GestureDetector(
-              onTap: () => _onContinue(context, state),
+              onTap: () => _onContinue(context),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -145,10 +145,7 @@ class AuthProfileScreen extends StatelessWidget {
         ));
   }
 
-  Future<void> _onContinue(
-    BuildContext context,
-    PrototypeStateProvider state,
-  ) async {
+  Future<void> _onContinue(BuildContext context) async {
     final callbacks = AuthCallbacksScope.maybeOf(context);
     if (callbacks?.onSaveProfile != null) {
       try {
@@ -165,7 +162,7 @@ class AuthProfileScreen extends StatelessWidget {
       }
     }
     if (!context.mounted) return;
-    state.push(ProtoRoutes.authOnboarding);
+    context.go(ProtoRoutes.authOnboarding);
   }
 }
 

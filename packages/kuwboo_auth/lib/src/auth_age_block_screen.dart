@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 class AuthAgeBlockScreen extends StatelessWidget {
@@ -7,7 +8,6 @@ class AuthAgeBlockScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
-    final state = PrototypeStateProvider.of(context);
 
     return Material(
       type: MaterialType.transparency,
@@ -62,7 +62,7 @@ class AuthAgeBlockScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 48),
               child: GestureDetector(
-                onTap: () => state.push(ProtoRoutes.authWelcome),
+                onTap: () => context.go(ProtoRoutes.authWelcome),
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 16),
