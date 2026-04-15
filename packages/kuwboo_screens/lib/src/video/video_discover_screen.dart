@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
+import 'video_providers.dart';
 
-class VideoDiscoverScreen extends StatefulWidget {
+class VideoDiscoverScreen extends ConsumerStatefulWidget {
   const VideoDiscoverScreen({super.key});
 
   @override
-  State<VideoDiscoverScreen> createState() => _VideoDiscoverScreenState();
+  ConsumerState<VideoDiscoverScreen> createState() =>
+      _VideoDiscoverScreenState();
 }
 
-class _VideoDiscoverScreenState extends State<VideoDiscoverScreen> {
+class _VideoDiscoverScreenState extends ConsumerState<VideoDiscoverScreen> {
   final Set<String> _selectedCategories = {};
 
   static const _categories = ['Trending', 'Music', 'Comedy', 'Dance', 'Food', 'Travel', 'Sports', 'Art'];
@@ -17,6 +20,11 @@ class _VideoDiscoverScreenState extends State<VideoDiscoverScreen> {
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
+    // Live discover feed. Tiles use backend counts when available; the
+    // grid falls back to a fixed-length skeleton during loading / error.
+    final discoverAsync = ref.watch(videoFeedProvider(VideoFeedKind.discover));
+    final items = discoverAsync.asData?.value.items ?? const [];
+    final tileCount = items.isEmpty ? 4 : items.length.clamp(1, 8);
 
     return ListView(
         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -94,32 +102,56 @@ class _VideoDiscoverScreenState extends State<VideoDiscoverScreen> {
             mainAxisSpacing: 8,
             crossAxisSpacing: 8,
             childAspectRatio: 0.8,
-            children: List.generate(4, (i) => GestureDetector(
-              onTap: () => state.push(ProtoRoutes.videoSound),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color.lerp(theme.primary, theme.tertiary, i / 4)!.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(theme.radiusMd),
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      bottom: 10,
-                      left: 10,
-                      right: 10,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('#trending${i + 1}', style: theme.title.copyWith(fontSize: 13)),
-                          Text('${(i + 1) * 1200} videos', style: theme.caption),
-                        ],
+            children: List.generate(tileCount, (i) {
+              final content = i < items.length ? items[i] : null;
+              final label = content?.caption ??
+                  (content?.title ?? '#trending${i + 1}');
+              final viewCount = content?.viewCount ?? (i + 1) * 1200;
+              return GestureDetector(
+                onTap: () {
+                  if (content != null) {
+                    state.pushWithArgs(
+                      ProtoRoutes.videoFeed,
+                      {'contentId': content.id},
+                    );
+                  } else {
+                    state.push(ProtoRoutes.videoSound);
+                  }
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Color.lerp(theme.primary, theme.tertiary, i / tileCount)!
+                        .withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(theme.radiusMd),
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        bottom: 10,
+                        left: 10,
+                        right: 10,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              label.isEmpty ? '#trending${i + 1}' : label,
+                              style: theme.title.copyWith(fontSize: 13),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text('$viewCount views', style: theme.caption),
+                          ],
+                        ),
                       ),
-                    ),
-                    Center(child: Icon(theme.icons.playArrow, size: 32, color: theme.primary.withValues(alpha: 0.4))),
-                  ],
+                      Center(
+                          child: Icon(theme.icons.playArrow,
+                              size: 32,
+                              color: theme.primary.withValues(alpha: 0.4))),
+                    ],
+                  ),
                 ),
-              ),
-            )),
+              );
+            }),
           ),
         ],
       );

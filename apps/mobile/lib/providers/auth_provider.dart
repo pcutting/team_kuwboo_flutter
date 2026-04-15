@@ -6,20 +6,10 @@ import 'package:kuwboo_models/kuwboo_models.dart';
 import '../config/environment.dart';
 import 'api_provider.dart';
 
-// ─── Auth State ──────────────────────────────────────────────────────────
-
-/// Immutable authentication state.
-///
-/// Mirrors the authoritative token pair + canonical [User] from
-/// `kuwboo_models`. Tokens are authoritative in the shared client's secure
-/// storage; the copy held here is for synchronous reads by UI + router.
+/// Immutable mobile-side auth state. The authoritative token pair lives in
+/// [KuwbooApiClient]'s secure storage; this copy is for synchronous reads
+/// by UI + router redirect.
 class AuthState {
-  final String? accessToken;
-  final String? refreshToken;
-  final User? user;
-  final bool isLoading;
-  final bool isNewUser;
-
   const AuthState({
     this.accessToken,
     this.refreshToken,
@@ -28,9 +18,16 @@ class AuthState {
     this.isNewUser = false,
   });
 
-  bool get isAuthenticated => accessToken != null;
+  final String? accessToken;
+  final String? refreshToken;
+  final User? user;
+  final bool isLoading;
 
-  String? get userId => user?.id;
+  /// True immediately after verify-otp / SSO returns a brand-new account —
+  /// UI keeps the user in the auth flow until onboarding is complete.
+  final bool isNewUser;
+
+  bool get isAuthenticated => accessToken != null;
 
   AuthState copyWith({
     String? accessToken,
@@ -38,25 +35,34 @@ class AuthState {
     User? user,
     bool? isLoading,
     bool? isNewUser,
-  }) {
-    return AuthState(
-      accessToken: accessToken ?? this.accessToken,
-      refreshToken: refreshToken ?? this.refreshToken,
-      user: user ?? this.user,
-      isLoading: isLoading ?? this.isLoading,
-      isNewUser: isNewUser ?? this.isNewUser,
-    );
-  }
+  }) =>
+      AuthState(
+        accessToken: accessToken ?? this.accessToken,
+        refreshToken: refreshToken ?? this.refreshToken,
+        user: user ?? this.user,
+        isLoading: isLoading ?? this.isLoading,
+        isNewUser: isNewUser ?? this.isNewUser,
+      );
+
+  static const unauthenticated = AuthState();
 }
 
-// ─── Auth Notifier ───────────────────────────────────────────────────────
-
+/// Drives login/logout/SSO against the live backend. Uses the shared
+/// [KuwbooApiClient]'s secure storage for tokens so the Dio auth
+/// interceptor can read them on every authenticated call.
 class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier(this._ref) : super(const AuthState(isLoading: true)) {
     _init();
   }
 
   final Ref _ref;
+
+  /// Cached SSO provider token from the most recent apple/google call that
+  /// yielded a challenge. Used by [confirmSsoChallenge] because the
+  /// backend's `/auth/{provider}/confirm` re-verifies the original token
+  /// alongside the email OTP. Cleared on success or logout.
+  String? _pendingAppleIdentityToken;
+  String? _pendingGoogleIdToken;
 
   AuthApi get _authApi => _ref.read(authApiProvider);
   UsersApi get _usersApi => _ref.read(usersApiProvider);
@@ -67,32 +73,28 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final access = await _client.getAccessToken();
       final refresh = await _client.getRefreshToken();
       if (access == null || refresh == null) {
-        state = const AuthState();
+        state = AuthState.unauthenticated;
         return;
       }
-      // Best-effort hydrate of the user snapshot from the backend.
       User? user;
       try {
         user = await _usersApi.me();
       } catch (_) {
-        // 401 will trigger a logout on the next authenticated call; for
-        // init we degrade gracefully and let the redirect bounce to /login
-        // if tokens end up invalid.
-        user = null;
+        // 401 on next authenticated call will clear tokens; degrade here.
       }
       state = AuthState(
         accessToken: access,
         refreshToken: refresh,
         user: user,
+        isNewUser:
+            user?.onboardingProgress != OnboardingProgress.complete,
       );
     } catch (_) {
-      state = const AuthState();
+      state = AuthState.unauthenticated;
     }
   }
 
-  /// Request an OTP for [phone] (E.164). When the dev bypass is enabled
-  /// this is a no-op so the UI can flow without the SMS provider.
-  Future<void> requestOtp(String phone) async {
+  Future<void> sendPhoneOtp(String phone) async {
     if (Environment.devAuthBypass) return;
     try {
       await _authApi.sendPhoneOtp(phone: phone);
@@ -101,24 +103,34 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Verify OTP [code] for [phone], persist tokens, update state.
-  Future<void> verifyOtp(String phone, String code) async {
+  Future<void> sendEmailOtp(String email) async {
+    if (Environment.devAuthBypass) return;
+    try {
+      await _authApi.sendEmailOtp(email: email);
+    } on DioException catch (e) {
+      throw _translate(e, fallback: 'Could not send code');
+    }
+  }
+
+  /// Verify phone or email OTP. On success persists tokens (via
+  /// KuwbooApiClient secure storage) and updates [state].
+  Future<AuthResponse> verifyOtp({
+    required String identifier,
+    required String code,
+    required bool isPhone,
+  }) async {
     state = state.copyWith(isLoading: true);
     try {
       final AuthResponse response;
       if (Environment.devAuthBypass && code == Environment.devBypassOtp) {
-        // Backend's POST /auth/dev-login (gated by DEV_LOGIN_ENABLED=1)
-        // returns real JWTs so feed/yoyo calls succeed end-to-end.
-        response = await _authApi.devLogin(phone: phone);
+        response = await _authApi.devLogin(phone: identifier);
+      } else if (isPhone) {
+        response = await _authApi.verifyPhoneOtp(phone: identifier, code: code);
       } else {
-        response = await _authApi.verifyPhoneOtp(phone: phone, code: code);
+        response = await _authApi.verifyEmailOtp(email: identifier, code: code);
       }
-      state = AuthState(
-        accessToken: response.accessToken,
-        refreshToken: response.refreshToken,
-        user: response.user,
-        isNewUser: response.isNewUser,
-      );
+      await _applyAuthResponse(response);
+      return response;
     } on DioException catch (e) {
       state = state.copyWith(isLoading: false);
       throw _translate(e, fallback: 'Invalid code');
@@ -128,35 +140,132 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Update local user snapshot (e.g. after onboarding profile PATCH).
-  void updateUser(User user) {
-    state = state.copyWith(
-      user: user,
-      isNewUser: user.onboardingProgress != OnboardingProgress.complete,
-    );
+  Future<SsoLoginResult> signInWithApple({
+    required String identityToken,
+    required String authorizationCode,
+    String? fullName,
+  }) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final result = await _authApi.apple(
+        identityToken: identityToken,
+        authorizationCode: authorizationCode,
+        fullName: fullName,
+      );
+      if (result is SsoLoginSuccess) {
+        _pendingAppleIdentityToken = null;
+        await _applyAuthResponse(result.auth);
+      } else {
+        _pendingAppleIdentityToken = identityToken;
+        state = state.copyWith(isLoading: false);
+      }
+      return result;
+    } on DioException catch (e) {
+      state = state.copyWith(isLoading: false);
+      throw _translate(e, fallback: 'Apple sign-in failed');
+    }
   }
 
-  /// Mark onboarding complete without modifying the user record.
-  void clearNewUserFlag() {
+  Future<SsoLoginResult> signInWithGoogle({required String idToken}) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final result = await _authApi.google(idToken: idToken);
+      if (result is SsoLoginSuccess) {
+        _pendingGoogleIdToken = null;
+        await _applyAuthResponse(result.auth);
+      } else {
+        _pendingGoogleIdToken = idToken;
+        state = state.copyWith(isLoading: false);
+      }
+      return result;
+    } on DioException catch (e) {
+      state = state.copyWith(isLoading: false);
+      throw _translate(e, fallback: 'Google sign-in failed');
+    }
+  }
+
+  /// Confirm an SSO email-ownership challenge with the OTP the user
+  /// received on their pre-existing account's email channel. Uses the
+  /// cached provider token from the initial [signInWithApple] /
+  /// [signInWithGoogle] call.
+  Future<AuthResponse> confirmSsoChallenge(
+    PendingSsoChallenge challenge,
+    String emailOtp,
+  ) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final AuthResponse response;
+      if (_pendingAppleIdentityToken != null) {
+        response = await _authApi.appleConfirm(
+          identityToken: _pendingAppleIdentityToken!,
+          emailOtp: emailOtp,
+          challengeId: challenge.challengeId,
+        );
+        _pendingAppleIdentityToken = null;
+      } else if (_pendingGoogleIdToken != null) {
+        response = await _authApi.googleConfirm(
+          idToken: _pendingGoogleIdToken!,
+          emailOtp: emailOtp,
+          challengeId: challenge.challengeId,
+        );
+        _pendingGoogleIdToken = null;
+      } else {
+        throw StateError(
+          'No pending SSO token — retry sign-in before confirming.',
+        );
+      }
+      await _applyAuthResponse(response);
+      return response;
+    } on DioException catch (e) {
+      state = state.copyWith(isLoading: false);
+      throw _translate(e, fallback: 'Could not confirm sign-in');
+    }
+  }
+
+  /// Refresh the local user snapshot after an onboarding patch (birthday,
+  /// profile, tutorial complete) — the screens themselves hit UsersApi
+  /// directly; this just syncs state so the router redirect sees the new
+  /// onboardingProgress.
+  Future<void> refreshUser() async {
+    try {
+      final user = await _usersApi.me();
+      state = state.copyWith(
+        user: user,
+        isNewUser:
+            user.onboardingProgress != OnboardingProgress.complete,
+      );
+    } catch (_) {
+      // Non-fatal. State will eventually reconcile on next authenticated
+      // action.
+    }
+  }
+
+  void markOnboardingComplete() {
     if (state.isNewUser) state = state.copyWith(isNewUser: false);
   }
 
-  /// Revoke server session (best-effort) and clear local storage.
   Future<void> logout() async {
     try {
       if (state.accessToken != null && !Environment.devAuthBypass) {
         await _authApi.logout();
       }
     } catch (_) {
-      // Ignore — we are logging out anyway.
+      // Ignore; log out locally anyway.
     }
+    _pendingAppleIdentityToken = null;
+    _pendingGoogleIdToken = null;
     await _client.clearTokens();
-    state = const AuthState();
+    state = AuthState.unauthenticated;
   }
 
-  /// Re-check stored credentials (e.g. after app resume).
-  Future<void> checkAuth() async {
-    await _init();
+  Future<void> _applyAuthResponse(AuthResponse r) async {
+    state = AuthState(
+      accessToken: r.accessToken,
+      refreshToken: r.refreshToken,
+      user: r.user,
+      isNewUser: r.isNewUser ||
+          r.user.onboardingProgress != OnboardingProgress.complete,
+    );
   }
 
   String _translate(DioException e, {required String fallback}) {
@@ -171,8 +280,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     return fallback;
   }
 }
-
-// ─── Provider ────────────────────────────────────────────────────────────
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>(
   (ref) => AuthNotifier(ref),

@@ -5,6 +5,7 @@
 /// `kuwboo_screens` so auth can evolve alongside the backend.
 library kuwboo_auth;
 
+export 'src/auth_callbacks.dart';
 export 'src/auth_welcome_screen.dart';
 export 'src/auth_onboarding_screen.dart';
 export 'src/auth_tutorial_screen.dart';

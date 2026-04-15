@@ -2,7 +2,10 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
+
+import 'yoyo_providers.dart';
 
 // ─── Logarithmic range slider helpers ─────────────────────────────────
 // Maps 0.0–1.0 slider position to 200 m (0.2 km) → 40,000 km range
@@ -127,17 +130,22 @@ const _interestIcons = <String, IconData>{
 /// YoYo Nearby — toggles between vertical card list and area (proximity) view.
 /// The view mode is controlled by PrototypeStateProvider.isYoyoAreaView,
 /// toggled via the YoYo icon in the top bar.
-class YoyoNearbyScreen extends StatefulWidget {
+class YoyoNearbyScreen extends ConsumerStatefulWidget {
   const YoyoNearbyScreen({super.key});
 
   @override
-  State<YoyoNearbyScreen> createState() => _YoyoNearbyScreenState();
+  ConsumerState<YoyoNearbyScreen> createState() => _YoyoNearbyScreenState();
 }
 
-class _YoyoNearbyScreenState extends State<YoyoNearbyScreen> {
+class _YoyoNearbyScreenState extends ConsumerState<YoyoNearbyScreen> {
   @override
   Widget build(BuildContext context) {
-    final state = PrototypeStateProvider.of(context);
+    // Prime the live nearby-user fetch so child screens and the wave action
+    // can read `yoyoNearbyProvider.valueOrNull` synchronously. Errors surface
+    // where the list is rendered (currently the Connect screen); the radar
+    // UI keeps its prototype data until the backend model carries the
+    // richer encounter metadata the radar needs.
+    ref.watch(yoyoNearbyProvider);
 
     // The outer ProtoScaffold is provided by the app shell (router).
     // This screen just returns its body. The shell reads the
@@ -150,7 +158,7 @@ class _YoyoNearbyScreenState extends State<YoyoNearbyScreen> {
 // ─── Nearby View ────────────────────────────────────────────────────
 
 class _YoyoNearbyView extends StatelessWidget {
-  const _YoyoNearbyView({super.key});
+  const _YoyoNearbyView();
 
   @override
   Widget build(BuildContext context) {
@@ -994,7 +1002,7 @@ class _BottomControlStrip extends StatelessWidget {
                   valueIndicatorColor: theme.primary,
                   valueIndicatorTextStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white),
                   valueIndicatorShape: const PaddleSliderValueIndicatorShape(),
-                  showValueIndicator: ShowValueIndicator.always,
+                  showValueIndicator: ShowValueIndicator.onDrag,
                 ),
                 child: Slider(
                   min: 0,
@@ -2230,7 +2238,7 @@ List<NearbyUser> _filteredUsers(PrototypeStateProvider state) {
 
 /// List view — vertical card list with tappable wave buttons
 class _YoyoListView extends StatefulWidget {
-  const _YoyoListView({super.key});
+  const _YoyoListView();
 
   @override
   State<_YoyoListView> createState() => _YoyoListViewState();
@@ -2401,7 +2409,7 @@ class _YoyoListViewState extends State<_YoyoListView> {
 /// Area view — organic avatars on a proximity radar with card carousel
 /// and action bar.
 class _YoyoAreaView extends StatelessWidget {
-  const _YoyoAreaView({super.key});
+  const _YoyoAreaView();
 
   @override
   Widget build(BuildContext context) {

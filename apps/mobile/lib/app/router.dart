@@ -1,73 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kuwboo_models/kuwboo_models.dart';
 import 'package:kuwboo_screens/kuwboo_screens.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
-import '../features/auth/login_screen.dart';
-import '../features/auth/onboarding_screen.dart';
-import '../features/auth/otp_screen.dart';
 import '../features/feed/presentation/shop_feed_mobile_screen.dart';
 import '../features/feed/presentation/social_feed_mobile_screen.dart';
 import '../features/feed/presentation/video_feed_mobile_screen.dart';
 import '../features/feed/presentation/yoyo_nearby_mobile_screen.dart';
 import '../providers/auth_provider.dart';
-
-// ─── Onboarding resume ──────────────────────────────────────────────────
-
-/// Canonical route for each [OnboardingProgress] step per the prototype
-/// route table in `ProtoRoutes`. Returns `null` when the user has completed
-/// onboarding and should proceed into the shell.
-///
-/// Mobile currently only implements three of these screens (`/login`,
-/// `/otp`, `/onboarding`); the helper exposes the full prototype mapping
-/// for callers that want it, and [_mobileOnboardingRoute] below collapses
-/// the unimplemented steps onto the nearest mobile equivalent.
-String? onboardingRouteFor(OnboardingProgress progress) {
-  switch (progress) {
-    case OnboardingProgress.welcome:
-      return ProtoRoutes.authWelcome;
-    case OnboardingProgress.method:
-      return ProtoRoutes.authMethod;
-    case OnboardingProgress.phone:
-      return ProtoRoutes.authPhone;
-    case OnboardingProgress.otp:
-      return ProtoRoutes.authOtp;
-    case OnboardingProgress.birthday:
-      return ProtoRoutes.authBirthday;
-    case OnboardingProgress.interests:
-      return ProtoRoutes.authOnboarding;
-    case OnboardingProgress.profile:
-      return ProtoRoutes.authProfile;
-    case OnboardingProgress.tutorial:
-      return ProtoRoutes.authTutorial;
-    case OnboardingProgress.complete:
-      return null;
-  }
-}
-
-/// Resolve the onboarding route to a concrete mobile route. Mobile only
-/// ships `/login`, `/otp`, and `/onboarding` today — anything that would
-/// land on a not-yet-implemented step falls back to the closest available
-/// screen so the redirect never loops.
-String? _mobileOnboardingRoute(OnboardingProgress progress) {
-  switch (progress) {
-    case OnboardingProgress.welcome:
-    case OnboardingProgress.method:
-    case OnboardingProgress.phone:
-      return '/login';
-    case OnboardingProgress.otp:
-      return '/otp';
-    case OnboardingProgress.birthday:
-    case OnboardingProgress.interests:
-    case OnboardingProgress.profile:
-    case OnboardingProgress.tutorial:
-      return '/onboarding';
-    case OnboardingProgress.complete:
-      return null;
-  }
-}
 
 // ─── Navigation Keys ─────────────────────────────────────────────────────
 
@@ -76,18 +17,12 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 // ─── Proto Shell Widget ─────────────────────────────────────────────────
 
-/// Wraps the active screen in ProtoScaffold with the right-side notched FAB
-/// service switcher and 4 per-service sub-tabs.
 class _ProtoShellWrapper extends StatelessWidget {
   final Widget child;
   const _ProtoShellWrapper({required this.child});
 
   @override
   Widget build(BuildContext context) {
-    // Derive module + tab from the current GoRouter location instead of
-    // watching a Riverpod provider. Watching here would make the shell rebuild
-    // in the same frame as GoRouter's own ShellRoute rebuild, leaving two
-    // copies of the child Navigator (with its GlobalKey) in the tree.
     final location = GoRouterState.of(context).matchedLocation;
     final activeModule = _moduleFor(location);
     final activeTab = _tabFor(location);
@@ -122,11 +57,11 @@ class _ProtoShellWrapper extends StatelessWidget {
 // ─── Router Provider ─────────────────────────────────────────────────────
 
 final routerProvider = Provider<GoRouter>((ref) {
-  // Refresh the router whenever auth state changes, instead of rebuilding
-  // the entire GoRouter. Rebuilding would recreate the shell navigator and
-  // collide with the existing `_shellNavigatorKey` still mounted.
+  // Rebuild redirects whenever auth state changes, WITHOUT rebuilding the
+  // router itself (which would collide with the already-mounted shell
+  // navigator's GlobalKey).
   final refresh = ValueNotifier<int>(0);
-  ref.listen(authProvider, (_, next) => refresh.value++);
+  ref.listen(authProvider, (_, _) => refresh.value++);
   ref.onDispose(refresh.dispose);
 
   return GoRouter(
@@ -134,60 +69,35 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: ProtoRoutes.yoyoNearby,
     refreshListenable: refresh,
     redirect: (context, state) {
-      final authState = ref.read(authProvider);
-      if (authState.isLoading) return null;
+      final auth = ref.read(authProvider);
+      if (auth.isLoading) return null;
 
-      final isAuth = authState.isAuthenticated;
-      final currentLoc = state.matchedLocation;
-      final isAuthRoute = currentLoc == '/login' ||
-          currentLoc == '/otp' ||
-          currentLoc == '/onboarding';
+      final loc = state.matchedLocation;
+      final onAuthRoute = loc.startsWith('/auth/');
 
-      if (!isAuth && !isAuthRoute) return '/login';
-
-      if (isAuth) {
-        // Onboarding resume — honour `user.onboardingProgress` if the server
-        // says the user is mid-flow. Falls back to the legacy `isNewUser`
-        // flag when the user snapshot is not yet hydrated (e.g. fresh
-        // verify-otp response that preceded the /users/me round-trip).
-        final user = authState.user;
-        final progress = user?.onboardingProgress;
-        final resumeRoute = progress == null
-            ? (authState.isNewUser ? '/onboarding' : null)
-            : _mobileOnboardingRoute(progress);
-
-        if (resumeRoute != null && currentLoc != resumeRoute) {
-          return resumeRoute;
-        }
-        if (resumeRoute == null && isAuthRoute) {
-          return ProtoRoutes.yoyoNearby;
-        }
+      if (!auth.isAuthenticated) {
+        // Unauthenticated users only see the auth sub-tree. Any other path
+        // bounces them to the welcome screen.
+        return onAuthRoute ? null : ProtoRoutes.authWelcome;
       }
 
+      if (auth.isNewUser) {
+        // Authenticated but mid-onboarding — let them roam inside /auth/*
+        // so they can finish the flow. If they try to escape, push them
+        // back to the method screen (the standard onboarding entry point
+        // post-sign-in).
+        return onAuthRoute ? null : ProtoRoutes.authMethod;
+      }
+
+      // Fully onboarded — route out of /auth/* into the main shell.
+      if (onAuthRoute) return ProtoRoutes.yoyoNearby;
       return null;
     },
     routes: [
-      // ── Auth Routes ──────────────────────────────────────────────────
-      GoRoute(
-        path: '/login',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: '/otp',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) {
-          final phone = state.extra as String? ?? '';
-          return OtpScreen(phone: phone);
-        },
-      ),
-      GoRoute(
-        path: '/onboarding',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const OnboardingScreen(),
-      ),
-
-      // ── Main Shell (ProtoScaffold with notched FAB) ─────────────────
+      // Auth sub-tree — screens + route builders live in kuwboo_auth via
+      // buildProtoModalRoutes(). AuthCallbacksScope (provided by
+      // KuwbooAuthFlow in app.dart) wraps the whole tree so screens can
+      // reach the mobile-side AuthCallbacks.
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) => _ProtoShellWrapper(child: child),
@@ -198,8 +108,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           shopBrowseOverride: () => const ShopFeedMobileScreen(),
         ),
       ),
-
-      // ── Sub-screens (push on top of shell) ──────────────────────────
       ...buildProtoModalRoutes(rootNavigatorKey: rootNavigatorKey),
     ],
   );

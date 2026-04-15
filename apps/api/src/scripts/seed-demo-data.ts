@@ -106,11 +106,27 @@ async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule, { logger: ['error', 'warn', 'log'] });
   const em = app.get(EntityManager).fork();
 
-  const existingCount = await em.count(User);
-  if (existingCount > 0) {
-    console.log(`[seed] Skipping — ${existingCount} users already exist. Truncate to re-seed.`);
-    await app.close();
-    return;
+  const force = process.argv.includes('--force');
+  const SEED_PHONE_PREFIX = '+44791'; // all SAMPLE_USERS match this prefix
+
+  if (force) {
+    // Re-seed path. Delete our previously-seeded users by phone prefix;
+    // cascading FK constraints remove their Videos/Posts/Products/Waves.
+    const deleted = await em.nativeDelete(User, {
+      phone: { $like: `${SEED_PHONE_PREFIX}%` },
+    });
+    console.log(`[seed] --force: deleted ${deleted} previously-seeded users (cascades to their content).`);
+  } else {
+    const existingSeedUsers = await em.count(User, {
+      phone: { $like: `${SEED_PHONE_PREFIX}%` },
+    });
+    if (existingSeedUsers > 0) {
+      console.log(
+        `[seed] Skipping — ${existingSeedUsers} seed users already exist. Re-run with --force to regenerate.`,
+      );
+      await app.close();
+      return;
+    }
   }
 
   const summary = { users: 0, videos: 0, posts: 0, products: 0, waves: 0 };

@@ -3,6 +3,8 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/phone_number.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import 'auth_callbacks.dart';
+
 class AuthPhoneScreen extends StatefulWidget {
   const AuthPhoneScreen({super.key});
 
@@ -191,14 +193,7 @@ class _PhoneTabState extends State<_PhoneTab> {
           Padding(
             padding: const EdgeInsets.only(bottom: 40),
             child: GestureDetector(
-              onTap: _valid
-                  ? () {
-                      // Full E.164 phone: widget.state could persist `_phone!.completeNumber`
-                      // once a user/session store exists. Prototype just advances.
-                      final _ = _phone!.completeNumber;
-                      widget.state.push(ProtoRoutes.authOtp);
-                    }
-                  : null,
+              onTap: _valid ? () => _submit(context) : null,
               child: Opacity(
                 opacity: _valid ? 1 : 0.45,
                 child: Container(
@@ -220,6 +215,27 @@ class _PhoneTabState extends State<_PhoneTab> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _submit(BuildContext context) async {
+    final e164 = _phone!.completeNumber;
+    final callbacks = AuthCallbacksScope.maybeOf(context);
+    if (callbacks?.onSendPhoneOtp != null) {
+      try {
+        await callbacks!.onSendPhoneOtp!(e164);
+      } catch (e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not send code: $e')),
+        );
+        return;
+      }
+    }
+    if (!context.mounted) return;
+    widget.state.pushWithArgs(
+      ProtoRoutes.authOtp,
+      AuthOtpArgs(identifier: e164, channel: AuthOtpChannel.phone),
     );
   }
 }

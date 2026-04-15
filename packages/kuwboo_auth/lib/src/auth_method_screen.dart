@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:kuwboo_api_client/kuwboo_api_client.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
+
+import 'auth_callbacks.dart';
 
 class AuthMethodScreen extends StatelessWidget {
   const AuthMethodScreen({super.key});
@@ -8,6 +11,41 @@ class AuthMethodScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
     final state = PrototypeStateProvider.of(context);
+    final callbacks = AuthCallbacksScope.maybeOf(context);
+
+    Future<void> handleSso(
+      Future<SsoLoginResult> Function()? fn,
+      String providerLabel,
+    ) async {
+      if (fn == null) {
+        // Mock prototype flow — just advance to the profile screen.
+        state.push(ProtoRoutes.authProfile);
+        return;
+      }
+      try {
+        final result = await fn();
+        if (!context.mounted) return;
+        switch (result) {
+          case SsoLoginSuccess():
+            state.push(ProtoRoutes.authProfile);
+          case SsoLoginChallenge(:final challenge):
+            // Email already owned — jump to OTP screen on the claimed
+            // email so the user can prove ownership.
+            state.pushWithArgs(
+              ProtoRoutes.authOtp,
+              AuthOtpArgs(
+                identifier: challenge.email,
+                channel: AuthOtpChannel.email,
+              ),
+            );
+        }
+      } catch (e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$providerLabel sign-in failed: $e')),
+        );
+      }
+    }
 
     return Material(
       type: MaterialType.transparency,
@@ -42,7 +80,7 @@ class AuthMethodScreen extends StatelessWidget {
                   _MethodButton(
                     icon: Icons.g_mobiledata_rounded,
                     label: 'Continue with Google',
-                    onTap: () => state.push(ProtoRoutes.authProfile),
+                    onTap: () => handleSso(callbacks?.onSignInWithGoogle, 'Google'),
                   ),
                   const SizedBox(height: 12),
 
@@ -50,7 +88,7 @@ class AuthMethodScreen extends StatelessWidget {
                   _MethodButton(
                     icon: Icons.apple_rounded,
                     label: 'Continue with Apple',
-                    onTap: () => state.push(ProtoRoutes.authProfile),
+                    onTap: () => handleSso(callbacks?.onSignInWithApple, 'Apple'),
                   ),
 
                   const Spacer(),

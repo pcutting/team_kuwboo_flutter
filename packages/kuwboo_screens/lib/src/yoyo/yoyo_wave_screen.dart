@@ -1,33 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kuwboo_models/kuwboo_models.dart' as api;
 import 'package:kuwboo_shell/kuwboo_shell.dart';
+
+import 'yoyo_providers.dart';
 
 /// Broadcast wave — wave confirmation + recent waves list
 /// with quick/full wave types, session context, reach indicator.
-class YoyoWaveScreen extends StatefulWidget {
+class YoyoWaveScreen extends ConsumerStatefulWidget {
   const YoyoWaveScreen({super.key});
 
   @override
-  State<YoyoWaveScreen> createState() => _YoyoWaveScreenState();
+  ConsumerState<YoyoWaveScreen> createState() => _YoyoWaveScreenState();
 }
 
-class _YoyoWaveScreenState extends State<YoyoWaveScreen> {
+class _YoyoWaveScreenState extends ConsumerState<YoyoWaveScreen> {
   bool _waveSent = false;
-  final Set<int> _wavedBackIndices = {};
+  final Set<String> _respondedWaveIds = {};
   int _waveType = 0; // 0 = Quick Wave, 1 = Full Wave
 
-  void _handleSendWave() {
+  Future<void> _handleSendWave() async {
     setState(() => _waveSent = true);
     final theme = ProtoTheme.of(context);
+    // Fire-and-forget wave to the first nearby user (prototype behaviour —
+    // real "wave all" semantics are a backend RPC we don't yet have).
+    final nearby = ref.read(yoyoNearbyProvider).valueOrNull ?? const [];
+    if (nearby.isNotEmpty) {
+      try {
+        await ref.read(yoyoApiProvider).sendWave(toUserId: nearby.first.id);
+        ref.invalidate(yoyoSentWavesProvider);
+      } catch (_) {/* swallow */}
+    }
+    if (!mounted) return;
     ProtoToast.show(context, theme.icons.wavingHand, 'Wave sent to nearby users!');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _waveSent = false);
     });
   }
 
-  void _handleWaveBack(int index, String name) {
-    setState(() => _wavedBackIndices.add(index));
+  Future<void> _handleWaveBack(api.Wave wave) async {
+    setState(() => _respondedWaveIds.add(wave.id));
     final theme = ProtoTheme.of(context);
-    ProtoToast.show(context, theme.icons.wavingHand, 'Waved back at $name!');
+    try {
+      await ref.read(yoyoApiProvider).respondToWave(
+            waveId: wave.id,
+            accept: true,
+          );
+      ref.invalidate(yoyoIncomingWavesProvider);
+    } catch (_) {/* swallow */}
+    if (!mounted) return;
+    ProtoToast.show(
+      context,
+      theme.icons.wavingHand,
+      'Waved back at ${wave.fromUserName ?? 'user'}!',
+    );
   }
 
   @override
@@ -154,7 +180,7 @@ class _YoyoWaveScreenState extends State<YoyoWaveScreen> {
                 ),
                 const SizedBox(height: 16),
                 ProtoPressButton(
-                  onTap: _waveSent ? null : _handleSendWave,
+                  onTap: _waveSent ? null : () => _handleSendWave(),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 250),
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -190,11 +216,54 @@ class _YoyoWaveScreenState extends State<YoyoWaveScreen> {
           Text('Recent Waves', style: theme.title),
           const SizedBox(height: 10),
 
-          // Waves with encounter context
-          for (int i = 0; i < ProtoDemoData.waves.length; i++) ...[
+          // Live incoming waves from backend.
+          _IncomingWavesList(
+            onWaveBack: _handleWaveBack,
+            respondedIds: _respondedWaveIds,
+          ),
+        ],
+      );
+  }
+}
+
+class _IncomingWavesList extends ConsumerWidget {
+  final Future<void> Function(api.Wave) onWaveBack;
+  final Set<String> respondedIds;
+
+  const _IncomingWavesList({
+    required this.onWaveBack,
+    required this.respondedIds,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = ProtoTheme.of(context);
+    final state = PrototypeStateProvider.of(context);
+    final wavesAsync = ref.watch(yoyoIncomingWavesProvider);
+
+    return wavesAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text('Failed to load waves: $e', style: theme.caption),
+      ),
+      data: (waves) {
+        if (waves.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: Text('No recent waves', style: theme.caption),
+            ),
+          );
+        }
+        return Column(
+          children: [
+            for (final wave in waves)
               Builder(builder: (context) {
-                final wave = ProtoDemoData.waves[i];
-                final hasWavedBack = _wavedBackIndices.contains(i);
+                final hasWavedBack = respondedIds.contains(wave.id);
                 return ProtoPressButton(
                   duration: const Duration(milliseconds: 100),
                   onTap: () => state.push(ProtoRoutes.yoyoProfile),
@@ -204,57 +273,61 @@ class _YoyoWaveScreenState extends State<YoyoWaveScreen> {
                     decoration: theme.cardDecoration,
                     child: Row(
                       children: [
-                        ProtoAvatar(radius: 20, imageUrl: wave.imageUrl),
+                        ProtoAvatar(
+                          radius: 20,
+                          imageUrl: wave.fromUserAvatar ??
+                              'https://i.pravatar.cc/100?u=${wave.fromUserId}',
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  Text(wave.name, style: theme.title.copyWith(fontSize: 14)),
-                                  const SizedBox(width: 6),
-                                  Icon(
-                                    wave.encounterType == EncounterType.passby ? Icons.flash_on_rounded : Icons.pin_drop_rounded,
-                                    size: 12,
-                                    color: wave.encounterType == EncounterType.passby ? Colors.amber.shade700 : theme.secondary,
-                                  ),
-                                ],
+                              Text(
+                                wave.fromUserName ?? 'Someone',
+                                style: theme.title.copyWith(fontSize: 14),
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 hasWavedBack
                                     ? 'You waved back!'
-                                    : wave.isIncoming ? 'Waved at you (${wave.encounterType == EncounterType.passby ? "pass-by" : "nearby"})' : 'You waved',
+                                    : (wave.message ?? 'Waved at you'),
                                 style: theme.caption.copyWith(
                                   color: hasWavedBack ? theme.secondary : null,
-                                  fontWeight: hasWavedBack ? FontWeight.w600 : null,
+                                  fontWeight:
+                                      hasWavedBack ? FontWeight.w600 : null,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        Text(wave.timeAgo, style: theme.caption),
                         const SizedBox(width: 8),
-                        if (wave.isIncoming && !hasWavedBack)
+                        if (!hasWavedBack)
                           ProtoPressButton(
-                            onTap: () => _handleWaveBack(i, wave.name),
+                            onTap: () => onWaveBack(wave),
                             child: Container(
-                              width: 32, height: 32,
-                              decoration: BoxDecoration(color: theme.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
-                              child: Icon(theme.icons.wavingHand, size: 16, color: theme.primary),
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: theme.primary.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(theme.icons.wavingHand,
+                                  size: 16, color: theme.primary),
                             ),
                           )
                         else
-                          Icon(theme.icons.check, size: 18, color: hasWavedBack ? theme.secondary : theme.textTertiary),
+                          Icon(theme.icons.check,
+                              size: 18, color: theme.secondary),
                       ],
                     ),
                   ),
                 );
               }),
-            ],
-        ],
-      );
+          ],
+        );
+      },
+    );
   }
 }
 

@@ -1,11 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import 'auth_callbacks.dart';
+
 const int _otpLength = 6;
 
 class AuthOtpScreen extends StatefulWidget {
-  const AuthOtpScreen({super.key});
+  const AuthOtpScreen({super.key, this.args});
+
+  /// Identifier (phone or email) and channel the code was sent on.
+  /// When null (mock prototype), screen shows a placeholder identifier
+  /// and advances to the birthday screen on auto-submit.
+  final AuthOtpArgs? args;
 
   @override
   State<AuthOtpScreen> createState() => _AuthOtpScreenState();
@@ -107,15 +116,41 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
     final full = _controllers.map((c) => c.text).join();
     if (full.length == _otpLength && !_submitted) {
       _submitted = true;
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          PrototypeStateProvider.of(context).push(ProtoRoutes.authBirthday);
-        }
-      });
+      unawaited(_submit(full));
     }
   }
 
-  void _resend() {
+  Future<void> _submit(String code) async {
+    final callbacks = AuthCallbacksScope.maybeOf(context);
+    final args = widget.args;
+    if (callbacks?.onVerifyOtp != null && args != null) {
+      try {
+        await callbacks!.onVerifyOtp!(args.identifier, code, args.channel);
+        if (!mounted) return;
+        // Host's auth state change drives the next screen via router
+        // redirect; no manual push needed.
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _submitted = false;
+          for (final c in _controllers) {
+            c.clear();
+          }
+        });
+        FocusScope.of(context).requestFocus(_focusNodes[0]);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invalid code: $e')),
+        );
+      }
+      return;
+    }
+    // Mock prototype flow — advance after a brief delay.
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted) return;
+    PrototypeStateProvider.of(context).push(ProtoRoutes.authBirthday);
+  }
+
+  Future<void> _resend() async {
     setState(() {
       _canResend = false;
       _countdown = 30;
@@ -126,6 +161,18 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
     });
     FocusScope.of(context).requestFocus(_focusNodes[0]);
     _startCountdown();
+    final callbacks = AuthCallbacksScope.maybeOf(context);
+    final args = widget.args;
+    if (callbacks?.onResendOtp != null && args != null) {
+      try {
+        await callbacks!.onResendOtp!(args.identifier, args.channel);
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not resend: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -152,7 +199,7 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '+44 7XXX XXX XX3',
+                      widget.args?.identifier ?? '+44 7XXX XXX XX3',
                       style: theme.body.copyWith(
                         fontWeight: FontWeight.w600,
                         color: theme.primary,

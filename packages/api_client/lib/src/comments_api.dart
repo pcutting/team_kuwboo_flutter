@@ -2,53 +2,50 @@ import 'package:kuwboo_models/kuwboo_models.dart';
 
 import 'api_client.dart';
 
-/// Comment endpoints.
+/// Comment endpoints (4 routes).
 class CommentsApi {
   CommentsApi(this._client);
 
   final KuwbooApiClient _client;
 
-  /// Create a comment on a content item.
-  Future<Comment> createComment({
-    required String contentId,
-    required String text,
-    String? parentCommentId,
-  }) async {
+  /// `POST /content/:contentId/comments` — create a comment.
+  Future<Comment> createComment(
+    String contentId,
+    CreateCommentDto dto,
+  ) async {
     final response = await _client.dio.post(
       '/content/$contentId/comments',
-      data: {
-        'text': text,
-        if (parentCommentId != null) 'parentCommentId': parentCommentId,
-      },
+      data: dto.toJson(),
     );
     return _client.unwrap(response, Comment.fromJson);
   }
 
-  /// Get paginated comments for a content item.
-  Future<List<Comment>> getComments({
-    required String contentId,
+  /// `GET /content/:contentId/comments` — cursor-paginated.
+  Future<List<Comment>> listComments(
+    String contentId, {
     String? cursor,
-    int limit = 20,
+    int? limit,
   }) async {
     final response = await _client.dio.get(
       '/content/$contentId/comments',
       queryParameters: {
-        'limit': limit,
+        if (limit != null) 'limit': limit,
         if (cursor != null) 'cursor': cursor,
       },
     );
     return _client.unwrapList(response, Comment.fromJson);
   }
 
-  /// Like a comment. Returns true if now liked.
-  Future<bool> likeComment(String commentId) async {
-    final response = await _client.dio.post('/comments/$commentId/like');
+  /// `POST /comments/:id/like` — toggle like on a comment.
+  /// Returns true if now liked.
+  Future<bool> likeComment(String id) async {
+    final response = await _client.dio.post('/comments/$id/like');
     final data = response.data['data'] as Map<String, dynamic>;
     return data['liked'] as bool;
   }
 
-  /// Delete a comment.
-  Future<void> deleteComment(String commentId) async {
-    await _client.dio.delete('/comments/$commentId');
+  /// `DELETE /comments/:id` — delete a comment.
+  Future<void> deleteComment(String id) async {
+    await _client.dio.delete('/comments/$id');
   }
 }

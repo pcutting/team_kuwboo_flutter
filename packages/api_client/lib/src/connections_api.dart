@@ -2,98 +2,94 @@ import 'package:kuwboo_models/kuwboo_models.dart';
 
 import 'api_client.dart';
 
-/// Social connection endpoints (follow, friend, block).
+/// Social connection endpoints (10 routes).
+///
+/// NOTE: listFollowers / listFollowing use OFFSET pagination
+/// (`limit` + `offset`), not cursor. This diverges from the comments
+/// API's cursor model and matches the canonical backend contract.
 class ConnectionsApi {
   ConnectionsApi(this._client);
 
   final KuwbooApiClient _client;
 
-  /// Follow a user.
-  Future<Connection> follow(String userId, {ModuleScope? moduleScope}) async {
+  /// `POST /connections/follow` — follow a user.
+  Future<Connection> follow(FollowDto dto) async {
     final response = await _client.dio.post(
       '/connections/follow',
-      data: {
-        'targetUserId': userId,
+      data: dto.toJson(),
+    );
+    return _client.unwrap(response, Connection.fromJson);
+  }
+
+  /// `DELETE /connections/follow/:userId` — unfollow a user.
+  /// Optional moduleScope allows unfollowing only the per-module edge.
+  Future<void> unfollow(String userId, {ModuleScope? moduleScope}) async {
+    await _client.dio.delete(
+      '/connections/follow/$userId',
+      queryParameters: {
         if (moduleScope != null) 'moduleScope': moduleScope.value,
       },
     );
-    return _client.unwrap(response, Connection.fromJson);
   }
 
-  /// Unfollow a user.
-  Future<void> unfollow(String userId) async {
-    await _client.dio.delete('/connections/follow/$userId');
-  }
-
-  /// Send a friend request.
-  Future<Connection> sendFriendRequest(String userId) async {
+  /// `POST /connections/friend-request` — send a friend request.
+  Future<FriendRequest> sendFriendRequest(FollowDto dto) async {
     final response = await _client.dio.post(
       '/connections/friend-request',
-      data: {'targetUserId': userId},
+      data: dto.toJson(),
     );
-    return _client.unwrap(response, Connection.fromJson);
+    return _client.unwrap(response, FriendRequest.fromJson);
   }
 
-  /// Accept a friend request.
-  Future<Connection> acceptFriendRequest(String connectionId) async {
-    final response = await _client.dio.post(
-      '/connections/friend-request/$connectionId/accept',
-    );
-    return _client.unwrap(response, Connection.fromJson);
+  /// `POST /connections/friend-request/:id/accept`.
+  Future<FriendRequest> acceptFriendRequest(String id) async {
+    final response =
+        await _client.dio.post('/connections/friend-request/$id/accept');
+    return _client.unwrap(response, FriendRequest.fromJson);
   }
 
-  /// Get followers of the current user.
-  Future<List<Connection>> getFollowers({
-    String? cursor,
+  /// `POST /connections/friend-request/:id/reject`.
+  Future<void> rejectFriendRequest(String id) async {
+    await _client.dio.post('/connections/friend-request/$id/reject');
+  }
+
+  /// `GET /connections/followers` — OFFSET-paginated.
+  Future<List<Connection>> listFollowers({
     int limit = 20,
+    int offset = 0,
   }) async {
     final response = await _client.dio.get(
       '/connections/followers',
-      queryParameters: {
-        'limit': limit,
-        if (cursor != null) 'cursor': cursor,
-      },
+      queryParameters: {'limit': limit, 'offset': offset},
     );
     return _client.unwrapList(response, Connection.fromJson);
   }
 
-  /// Get users the current user is following.
-  Future<List<Connection>> getFollowing({
-    String? cursor,
+  /// `GET /connections/following` — OFFSET-paginated.
+  Future<List<Connection>> listFollowing({
     int limit = 20,
+    int offset = 0,
   }) async {
     final response = await _client.dio.get(
       '/connections/following',
-      queryParameters: {
-        'limit': limit,
-        if (cursor != null) 'cursor': cursor,
-      },
+      queryParameters: {'limit': limit, 'offset': offset},
     );
     return _client.unwrapList(response, Connection.fromJson);
   }
 
-  /// Block a user.
-  Future<void> block(String userId) async {
-    await _client.dio.post('/blocks', data: {'targetUserId': userId});
+  /// `POST /blocks` — block a user.
+  Future<void> block(BlockDto dto) async {
+    await _client.dio.post('/blocks', data: dto.toJson());
   }
 
-  /// Unblock a user.
+  /// `DELETE /blocks/:userId` — unblock a user.
   Future<void> unblock(String userId) async {
     await _client.dio.delete('/blocks/$userId');
   }
 
-  /// Get the current user's block list.
-  Future<List<Map<String, dynamic>>> getBlocks({
-    String? cursor,
-    int limit = 20,
-  }) async {
-    final response = await _client.dio.get(
-      '/blocks',
-      queryParameters: {
-        'limit': limit,
-        if (cursor != null) 'cursor': cursor,
-      },
-    );
+  /// `GET /blocks` — list blocked users.
+  Future<List<Map<String, dynamic>>> listBlocks() async {
+    final response = await _client.dio.get('/blocks');
     final wrapped = response.data as Map<String, dynamic>;
     final list = wrapped['data'] as List<dynamic>;
     return list.cast<Map<String, dynamic>>();

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
+
+import 'yoyo_providers.dart';
 
 /// All known interest tags used in demo data.
 const _allInterests = [
@@ -14,11 +17,11 @@ String _interestLabel(String key) =>
 
 /// YoYo filter bottom sheet — range slider, interest chips, friends-only toggle,
 /// encounter type and relationship filter chips.
-class YoyoFilterSheet extends StatelessWidget {
+class YoyoFilterSheet extends ConsumerWidget {
   const YoyoFilterSheet({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
 
@@ -61,7 +64,16 @@ class YoyoFilterSheet extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 ProtoPressButton(
-                  onTap: () {
+                  onTap: () async {
+                    // Persist the range filter to backend settings.
+                    try {
+                      await ref.read(yoyoApiProvider).updateSettings(
+                            radiusKm: state.yoyoRange.toInt(),
+                          );
+                      ref.invalidate(yoyoSettingsProvider);
+                      ref.invalidate(yoyoNearbyProvider);
+                    } catch (_) {/* swallow */}
+                    if (!context.mounted) return;
                     ProtoToast.show(context, theme.icons.checkCircle, 'Filters applied');
                     state.pop();
                   },

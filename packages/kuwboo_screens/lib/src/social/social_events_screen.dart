@@ -1,69 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
-class SocialEventsScreen extends StatelessWidget {
+/// Events screen — backend has NO events module today, so this renders a
+/// "Coming soon" empty state. TODO: wire to real endpoint when the backend
+/// events module is added (tracked in docs/team/internal/TECHNICAL_DESIGN.md).
+class SocialEventsScreen extends ConsumerWidget {
   const SocialEventsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = ProtoTheme.of(context);
-    return ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+    return Container(
+      color: theme.background,
+      child: Column(
         children: [
           const SizedBox(height: 12),
-          Text('Events', style: theme.headline.copyWith(fontSize: 24)),
-          const SizedBox(height: 12),
-          ...ProtoDemoData.events.map((event) => Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: theme.cardDecoration,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                  child: ProtoNetworkImage(imageUrl: event.imageUrl, height: 120, width: double.infinity),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(event.title, style: theme.title),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(theme.icons.calendarToday, size: 14, color: theme.textTertiary),
-                          const SizedBox(width: 6),
-                          Text('${event.date} at ${event.time}', style: theme.caption),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(theme.icons.locationOn, size: 14, color: theme.textTertiary),
-                          const SizedBox(width: 6),
-                          Text('${event.location} • ${event.distance}', style: theme.caption),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Text('${event.goingCount} going', style: theme.caption.copyWith(color: theme.primary)),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                            decoration: BoxDecoration(color: theme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
-                            child: Text('Interested', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: theme.primary)),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Events', style: theme.headline.copyWith(fontSize: 24)),
             ),
-          )),
+          ),
+          const Expanded(
+            child: ProtoEmptyState(
+              icon: Icons.event_outlined,
+              title: 'Events are coming soon',
+              subtitle:
+                  "We're building an events module. Check back once it's live — "
+                  'you\'ll be able to discover and RSVP to events near you.',
+            ),
+          ),
         ],
-      );
+      ),
+    );
   }
 }

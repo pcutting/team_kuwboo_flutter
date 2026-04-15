@@ -104,3 +104,142 @@ abstract class Post with _$Post {
 
   factory Post.fromJson(Map<String, dynamic> json) => _$PostFromJson(json);
 }
+
+// ─── DTOs ────────────────────────────────────────────────────────────
+//
+// Plain request payload classes (no Freezed / build_runner) matching the
+// canonical backend DTOs:
+//   apps/api/src/modules/content/dto/create-video.dto.ts
+//   apps/api/src/modules/content/dto/create-post.dto.ts
+//   apps/api/src/modules/content/dto/set-interest-tags.dto.ts
+
+/// POST `/content/videos` body.
+class CreateVideoDto {
+  const CreateVideoDto({
+    required this.videoUrl,
+    required this.thumbnailUrl,
+    required this.durationSeconds,
+    this.caption,
+    this.musicId,
+    this.visibility,
+    this.latitude,
+    this.longitude,
+    this.locationName,
+    this.tags,
+  });
+
+  final String videoUrl;
+  final String thumbnailUrl;
+
+  /// 1..300 (seconds) per backend validation.
+  final int durationSeconds;
+  final String? caption;
+  final String? musicId;
+  final Visibility? visibility;
+  final double? latitude;
+  final double? longitude;
+  final String? locationName;
+  final List<String>? tags;
+
+  Map<String, dynamic> toJson() => {
+        'videoUrl': videoUrl,
+        'thumbnailUrl': thumbnailUrl,
+        'durationSeconds': durationSeconds,
+        if (caption != null) 'caption': caption,
+        if (musicId != null) 'musicId': musicId,
+        if (visibility != null) 'visibility': visibility!.value,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+        if (locationName != null) 'locationName': locationName,
+        if (tags != null) 'tags': tags,
+      };
+}
+
+/// POST `/content/posts` body.
+class CreatePostDto {
+  const CreatePostDto({
+    required this.text,
+    this.subType,
+    this.isPinned,
+    this.visibility,
+    this.latitude,
+    this.longitude,
+    this.locationName,
+    this.tags,
+  });
+
+  final String text;
+  final PostSubType? subType;
+  final bool? isPinned;
+  final Visibility? visibility;
+  final double? latitude;
+  final double? longitude;
+  final String? locationName;
+  final List<String>? tags;
+
+  Map<String, dynamic> toJson() => {
+        'text': text,
+        if (subType != null) 'subType': subType!.value,
+        if (isPinned != null) 'isPinned': isPinned,
+        if (visibility != null) 'visibility': visibility!.value,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+        if (locationName != null) 'locationName': locationName,
+        if (tags != null) 'tags': tags,
+      };
+}
+
+/// POST `/content/:id/interest-tags` and
+/// POST `/admin/content/:id/interest-tags` body.
+///
+/// Note: backend uses snake_case `interest_ids` (not camelCase) — matches
+/// `SetInterestTagsDto` in `apps/api`.
+class SetInterestTagsDto {
+  const SetInterestTagsDto({required this.interestIds});
+
+  /// Up to 20 Interest UUIDs (backend enforces `ArrayMaxSize(20)`).
+  final List<String> interestIds;
+
+  Map<String, dynamic> toJson() => {
+        'interest_ids': interestIds,
+      };
+}
+
+/// Row in the `{interest_tags: [...]}` response from
+/// GET `/content/:id/interest-tags`. All keys are snake_case on the wire.
+class ContentInterestTag {
+  const ContentInterestTag({
+    required this.interestId,
+    required this.slug,
+    required this.label,
+    this.confidence,
+    this.assignedAt,
+  });
+
+  final String interestId;
+  final String slug;
+  final String label;
+  final double? confidence;
+  final DateTime? assignedAt;
+
+  factory ContentInterestTag.fromJson(Map<String, dynamic> json) {
+    final conf = json['confidence'];
+    final assigned = json['assigned_at'];
+    return ContentInterestTag(
+      interestId: json['interest_id'] as String,
+      slug: json['slug'] as String,
+      label: json['label'] as String,
+      confidence: conf == null ? null : (conf as num).toDouble(),
+      assignedAt: assigned == null ? null : DateTime.parse(assigned as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'interest_id': interestId,
+        'slug': slug,
+        'label': label,
+        if (confidence != null) 'confidence': confidence,
+        if (assignedAt != null) 'assigned_at': assignedAt!.toIso8601String(),
+      };
+}
+

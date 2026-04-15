@@ -28,3 +28,30 @@ abstract class Credential with _$Credential {
   factory Credential.fromJson(Map<String, dynamic> json) =>
       _$CredentialFromJson(json);
 }
+
+/// Request body for `POST /credentials` (IDENTITY_CONTRACT §4.8, §11.2).
+///
+/// For `phone` / `email` the caller first requests an OTP via
+/// `AuthApi.sendPhoneOtp` / `sendEmailOtp` and includes the received code
+/// here. `google` / `apple` credentials are attached via
+/// `/auth/{google|apple}/confirm`, not via this endpoint.
+///
+/// Hand-written (not Freezed) so the file can be edited without re-running
+/// build_runner; mirrors the wire shape exactly.
+class AttachCredentialDto {
+  const AttachCredentialDto({
+    required this.type,
+    required this.identifier,
+    this.otp,
+  });
+
+  final CredentialType type;
+  final String identifier;
+  final String? otp;
+
+  Map<String, dynamic> toJson() => {
+        'type': type.value,
+        'identifier': identifier,
+        if (otp != null) 'otp': otp,
+      };
+}
