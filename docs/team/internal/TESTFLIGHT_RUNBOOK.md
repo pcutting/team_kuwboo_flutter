@@ -1,10 +1,24 @@
 # TestFlight Runbook
 
-**Last updated:** 2026-04-09
+**Last updated:** 2026-04-15
 **Owner:** Philip Cutting (LionPro Dev)
 **App:** Kuwboo Mobile (iOS)
 
 This runbook covers everything needed to ship Kuwboo iOS builds to TestFlight.
+
+> **New runbook location (2026-04-15):** day-to-day ship commands now live in the root `CLAUDE.md` under §"Deploying to TestFlight". iOS builds run locally, not in GitHub Actions, per the CI Offload Policy in `~/.claude/CLAUDE.md`. The hosted `ios-testflight.yml` and `ios-pr-validation.yml` workflows have been retired. This runbook retains the full one-time setup, signing background, and troubleshooting lessons.
+
+---
+
+## iOS 26 SDK migration (2026-04-15)
+
+App Store Connect began emitting warning **ITMS-90725** ("SDK version issue") on uploads built with pre-iOS-26 SDKs, with a deadline of **2026-04-28** after which those uploads would be rejected. Kuwboo's hosted macOS CI runner did not yet have Xcode 26 available, so this triggered the move to local-only iOS builds.
+
+The proven fix was local **Xcode 26.4** with the existing **Flutter 3.41.4** toolchain. No `pubspec.yaml`, `Podfile`, or deployment-target changes were required — the bump is purely in the build toolchain. Deployment target remains iOS 15.0.
+
+Build **2604150937** was the first iOS 26 SDK upload and went through cleanly. It was produced from a clean `flutter clean && flutter pub get && pod install && bundle exec fastlane beta` run on the local Mac.
+
+**Signing gotcha encountered during this migration.** The local login keychain accumulated two "Apple Distribution: Lion MGT LLC" certificates (the old one with SHA-1 `E7168B0FF8690BCF8099464BDB665F839B5933EE`, and the current one with SHA-1 `96CE08EF9B19A6E0CCAFC056614110177901E6CE` matching the active `keys/kuwboo_distribution.p12`). With two certs of the same Common Name present, xcodebuild picks the first one it finds, which is often the stale one. The archive step succeeds, but `-exportArchive` fails with the misleading error "Provisioning profile 'Kuwboo Mobile App Store' doesn't include signing certificate 'Apple Distribution: Lion MGT LLC'". The fix is to pin `signingCertificate` in `apps/mobile/ios/ExportOptions.plist` to the SHA-1 `96CE08EF9B19A6E0CCAFC056614110177901E6CE`. Alternative fix: open Keychain Access, filter "My Certificates" for "Apple Distribution", and delete the older duplicate so only the currently-active one remains.
 
 ---
 
