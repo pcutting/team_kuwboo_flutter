@@ -7,3 +7,19 @@ import '../config/environment.dart';
 final apiClientProvider = Provider<KuwbooApiClient>((ref) {
   return KuwbooApiClient(baseUrl: Environment.apiBaseUrl);
 });
+
+final authApiProvider = Provider<AuthApi>(
+  (ref) => AuthApi(ref.watch(apiClientProvider)),
+);
+
+final usersApiProvider = Provider<UsersApi>(
+  (ref) => UsersApi(ref.watch(apiClientProvider)),
+);
+
+final credentialsApiProvider = Provider<CredentialsApi>(
+  (ref) => CredentialsApi(ref.watch(apiClientProvider)),
+);
+
+final interestsApiProvider = Provider<InterestsApi>(
+  (ref) => InterestsApi(ref.watch(apiClientProvider)),
+);

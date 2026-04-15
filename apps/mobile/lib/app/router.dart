@@ -8,6 +8,7 @@ import '../features/feed/presentation/shop_feed_mobile_screen.dart';
 import '../features/feed/presentation/social_feed_mobile_screen.dart';
 import '../features/feed/presentation/video_feed_mobile_screen.dart';
 import '../features/feed/presentation/yoyo_nearby_mobile_screen.dart';
+import '../providers/auth_provider.dart';
 
 // ─── Navigation Keys ─────────────────────────────────────────────────────
 
@@ -56,10 +57,47 @@ class _ProtoShellWrapper extends StatelessWidget {
 // ─── Router Provider ─────────────────────────────────────────────────────
 
 final routerProvider = Provider<GoRouter>((ref) {
+  // Rebuild redirects whenever auth state changes, WITHOUT rebuilding the
+  // router itself (which would collide with the already-mounted shell
+  // navigator's GlobalKey).
+  final refresh = ValueNotifier<int>(0);
+  ref.listen(authProvider, (_, _) => refresh.value++);
+  ref.onDispose(refresh.dispose);
+
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: ProtoRoutes.yoyoNearby,
+    refreshListenable: refresh,
+    redirect: (context, state) {
+      final auth = ref.read(authProvider);
+      if (auth.isLoading) return null;
+
+      final loc = state.matchedLocation;
+      final onAuthRoute = loc.startsWith('/auth/');
+
+      if (!auth.isAuthenticated) {
+        // Unauthenticated users only see the auth sub-tree. Any other path
+        // bounces them to the welcome screen.
+        return onAuthRoute ? null : ProtoRoutes.authWelcome;
+      }
+
+      if (auth.isNewUser) {
+        // Authenticated but mid-onboarding — let them roam inside /auth/*
+        // so they can finish the flow. If they try to escape, push them
+        // back to the method screen (the standard onboarding entry point
+        // post-sign-in).
+        return onAuthRoute ? null : ProtoRoutes.authMethod;
+      }
+
+      // Fully onboarded — route out of /auth/* into the main shell.
+      if (onAuthRoute) return ProtoRoutes.yoyoNearby;
+      return null;
+    },
     routes: [
+      // Auth sub-tree — screens + route builders live in kuwboo_auth via
+      // buildProtoModalRoutes(). AuthCallbacksScope (provided by
+      // KuwbooAuthFlow in app.dart) wraps the whole tree so screens can
+      // reach the mobile-side AuthCallbacks.
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) => _ProtoShellWrapper(child: child),
