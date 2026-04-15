@@ -43,7 +43,7 @@ class ProtoTopBar extends StatelessWidget {
     if (transparent) {
       return Padding(
         padding: EdgeInsets.only(top: safeTop + 6, left: 16, right: 16, bottom: 6),
-        child: _buildNavContent(state, theme, withShadows: true),
+        child: _buildNavContent(context, state, theme, withShadows: true),
       );
     }
 
@@ -57,11 +57,12 @@ class ProtoTopBar extends StatelessWidget {
           ),
         ),
       ),
-      child: _buildNavContent(state, theme),
+      child: _buildNavContent(context, state, theme),
     );
   }
 
   Widget _buildNavContent(
+    BuildContext context,
     PrototypeStateProvider state,
     ProtoTheme theme, {
     bool withShadows = false,
