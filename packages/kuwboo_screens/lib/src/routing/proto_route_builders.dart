@@ -24,6 +24,11 @@ import '../social/social_composer_screen.dart';
 import '../social/social_events_screen.dart';
 import '../social/social_feed_screen.dart';
 import '../social/social_friends_list.dart';
+import '../social/social_story_viewer.dart';
+import '../social/social_stumble_screen.dart';
+import '../sponsored/sponsored_campaign_detail.dart';
+import '../sponsored/sponsored_create_campaign.dart';
+import '../sponsored/sponsored_hub.dart';
 import '../video/video_creator_profile.dart';
 import '../video/video_comments_sheet.dart';
 import '../video/video_discover_screen.dart';
@@ -140,6 +145,11 @@ List<RouteBase> buildProtoShellRoutes({
       pageBuilder: (c, s) =>
           const NoTransitionPage(child: SocialComposerScreen()),
     ),
+    GoRoute(
+      path: ProtoRoutes.socialStumble,
+      pageBuilder: (c, s) =>
+          const NoTransitionPage(child: SocialStumbleScreen()),
+    ),
     // Shop
     GoRoute(
       path: ProtoRoutes.shopBrowse,
@@ -154,6 +164,11 @@ List<RouteBase> buildProtoShellRoutes({
       path: ProtoRoutes.shopCreate,
       pageBuilder: (c, s) =>
           const NoTransitionPage(child: ShopCreateListing()),
+    ),
+    GoRoute(
+      path: ProtoRoutes.shopMessages,
+      pageBuilder: (c, s) =>
+          const NoTransitionPage(child: ChatInboxScreen(moduleKey: 'Shop')),
     ),
     GoRoute(
       path: ProtoRoutes.chatInbox,
@@ -257,6 +272,28 @@ List<RouteBase> buildProtoModalRoutes({
       path: ProtoRoutes.profileNotifications,
       parentNavigatorKey: rootNavigatorKey,
       builder: (c, s) => const ProfileNotificationsScreen(),
+    ),
+    // Social story viewer (modal overlay)
+    GoRoute(
+      path: ProtoRoutes.socialStory,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const SocialStoryViewer(),
+    ),
+    // Sponsored (advertiser surfaces — modals)
+    GoRoute(
+      path: ProtoRoutes.sponsoredHub,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const SponsoredHub(),
+    ),
+    GoRoute(
+      path: ProtoRoutes.sponsoredCreate,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const SponsoredCreateCampaign(),
+    ),
+    GoRoute(
+      path: ProtoRoutes.sponsoredCampaign,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const SponsoredCampaignDetail(),
     ),
     // Auth prototype screens
     GoRoute(
