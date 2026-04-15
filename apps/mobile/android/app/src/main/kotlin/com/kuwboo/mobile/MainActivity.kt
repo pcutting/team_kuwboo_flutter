@@ -1,4 +1,4 @@
-package com.kuwboo.kuwboo_mobile
+package com.kuwboo.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

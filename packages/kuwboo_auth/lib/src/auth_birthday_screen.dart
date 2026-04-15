@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
@@ -163,16 +165,13 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
       _selectedDay + 1,
     );
     final callbacks = AuthCallbacksScope.maybeOf(context);
+    // Best-effort save — never block onboarding navigation on a backend write.
+    // Profile is editable later; the local _isUnder13 gate above is what
+    // actually matters for compliance.
     if (callbacks?.onSaveBirthday != null) {
-      try {
-        await callbacks!.onSaveBirthday!(dob);
-      } catch (e) {
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not save: $e')),
-        );
-        return;
-      }
+      unawaited(callbacks!.onSaveBirthday!(dob).catchError((Object e) {
+        debugPrint('[birthday] save failed (will retry on next patch): $e');
+      }));
     }
     if (!context.mounted) return;
     context.go(ProtoRoutes.authProfile);

@@ -27,19 +27,20 @@ class AuthWelcomeScreen extends StatelessWidget {
           const Spacer(flex: 3),
           // Logo
           Container(
-            width: 80,
-            height: 80,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
               boxShadow: ProtoTheme.of(context).warmShadow,
             ),
-            child: Center(
-              child: Text('K', style: TextStyle(fontSize: 40, fontWeight: FontWeight.w700, color: ProtoTheme.of(context).primary, fontFamily: ProtoTheme.of(context).displayFont)),
+            child: Image.asset(
+              'assets/images/kuwboo-logo.png',
+              package: 'kuwboo_shell',
+              height: 56,
+              fit: BoxFit.contain,
             ),
           ),
           const SizedBox(height: 20),
-          Text('KUWBOO', style: ProtoTheme.of(context).display.copyWith(fontSize: 36, letterSpacing: 6)),
           const SizedBox(height: 8),
           Text('Connect. Discover. Be You.', style: TextStyle(fontSize: 16, color: Colors.white.withValues(alpha: 0.7))),
 
