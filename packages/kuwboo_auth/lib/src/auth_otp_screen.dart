@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import 'auth_callbacks.dart';
@@ -127,8 +128,10 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
       try {
         await callbacks!.onVerifyOtp!(args.identifier, code, args.channel);
         if (!mounted) return;
-        // Host's auth state change drives the next screen via router
-        // redirect; no manual push needed.
+        // Auth state has flipped to authenticated. The router's redirect
+        // keeps new users inside /auth/* but won't choose a step for us —
+        // explicitly advance to the next onboarding screen.
+        context.go(ProtoRoutes.authBirthday);
       } catch (e) {
         if (!mounted) return;
         setState(() {
@@ -147,7 +150,7 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
     // Mock prototype flow — advance after a brief delay.
     await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
-    PrototypeStateProvider.of(context).push(ProtoRoutes.authBirthday);
+    context.go(ProtoRoutes.authBirthday);
   }
 
   Future<void> _resend() async {
