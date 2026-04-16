@@ -287,7 +287,14 @@ as bool,
 /// @nodoc
 mixin _$Content {
 
- String get id; ContentType get type; String get creatorId; FeedCreator? get creator; Visibility get visibility; ContentTier get tier; ContentStatus get status; int get likeCount; int get commentCount; int get viewCount; int get shareCount; int get saveCount; DateTime get createdAt;// Video subtype
+// `id`, `creatorId`, and `createdAt` are nullable because the backend
+// occasionally returns rows where these columns are null on the feed
+// endpoints (`/feed?tab=video`, `/feed?tab=social`). Keeping them
+// required crashed the whole feed as a cast error during
+// `_$ContentFromJson`. Rows with a null id are filtered out upstream
+// in the mobile feed provider because they can't be liked, opened,
+// or used as a stable widget key.
+ String? get id; ContentType get type; String? get creatorId; FeedCreator? get creator; Visibility get visibility; ContentTier get tier; ContentStatus get status; int get likeCount; int get commentCount; int get viewCount; int get shareCount; int get saveCount; DateTime? get createdAt;// Video subtype
  String? get videoUrl; String? get thumbnailUrl; int? get durationSeconds; String? get caption;// Post subtype
  String? get text; PostSubType? get subType;// Product subtype (also surfaced as `Product` for the marketplace API)
  String? get title; int? get priceCents; String get currency; String? get condition;
@@ -323,7 +330,7 @@ abstract mixin class $ContentCopyWith<$Res>  {
   factory $ContentCopyWith(Content value, $Res Function(Content) _then) = _$ContentCopyWithImpl;
 @useResult
 $Res call({
- String id, ContentType type, String creatorId, FeedCreator? creator, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, DateTime createdAt, String? videoUrl, String? thumbnailUrl, int? durationSeconds, String? caption, String? text, PostSubType? subType, String? title, int? priceCents, String currency, String? condition
+ String? id, ContentType type, String? creatorId, FeedCreator? creator, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, DateTime? createdAt, String? videoUrl, String? thumbnailUrl, int? durationSeconds, String? caption, String? text, PostSubType? subType, String? title, int? priceCents, String currency, String? condition
 });
 
 
@@ -340,12 +347,12 @@ class _$ContentCopyWithImpl<$Res>
 
 /// Create a copy of Content
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? creatorId = null,Object? creator = freezed,Object? visibility = null,Object? tier = null,Object? status = null,Object? likeCount = null,Object? commentCount = null,Object? viewCount = null,Object? shareCount = null,Object? saveCount = null,Object? createdAt = null,Object? videoUrl = freezed,Object? thumbnailUrl = freezed,Object? durationSeconds = freezed,Object? caption = freezed,Object? text = freezed,Object? subType = freezed,Object? title = freezed,Object? priceCents = freezed,Object? currency = null,Object? condition = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? type = null,Object? creatorId = freezed,Object? creator = freezed,Object? visibility = null,Object? tier = null,Object? status = null,Object? likeCount = null,Object? commentCount = null,Object? viewCount = null,Object? shareCount = null,Object? saveCount = null,Object? createdAt = freezed,Object? videoUrl = freezed,Object? thumbnailUrl = freezed,Object? durationSeconds = freezed,Object? caption = freezed,Object? text = freezed,Object? subType = freezed,Object? title = freezed,Object? priceCents = freezed,Object? currency = null,Object? condition = freezed,}) {
   return _then(_self.copyWith(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as ContentType,creatorId: null == creatorId ? _self.creatorId : creatorId // ignore: cast_nullable_to_non_nullable
-as String,creator: freezed == creator ? _self.creator : creator // ignore: cast_nullable_to_non_nullable
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as ContentType,creatorId: freezed == creatorId ? _self.creatorId : creatorId // ignore: cast_nullable_to_non_nullable
+as String?,creator: freezed == creator ? _self.creator : creator // ignore: cast_nullable_to_non_nullable
 as FeedCreator?,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
 as Visibility,tier: null == tier ? _self.tier : tier // ignore: cast_nullable_to_non_nullable
 as ContentTier,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -354,8 +361,8 @@ as int,commentCount: null == commentCount ? _self.commentCount : commentCount //
 as int,viewCount: null == viewCount ? _self.viewCount : viewCount // ignore: cast_nullable_to_non_nullable
 as int,shareCount: null == shareCount ? _self.shareCount : shareCount // ignore: cast_nullable_to_non_nullable
 as int,saveCount: null == saveCount ? _self.saveCount : saveCount // ignore: cast_nullable_to_non_nullable
-as int,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,videoUrl: freezed == videoUrl ? _self.videoUrl : videoUrl // ignore: cast_nullable_to_non_nullable
+as int,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,videoUrl: freezed == videoUrl ? _self.videoUrl : videoUrl // ignore: cast_nullable_to_non_nullable
 as String?,thumbnailUrl: freezed == thumbnailUrl ? _self.thumbnailUrl : thumbnailUrl // ignore: cast_nullable_to_non_nullable
 as String?,durationSeconds: freezed == durationSeconds ? _self.durationSeconds : durationSeconds // ignore: cast_nullable_to_non_nullable
 as int?,caption: freezed == caption ? _self.caption : caption // ignore: cast_nullable_to_non_nullable
@@ -462,7 +469,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  ContentType type,  String creatorId,  FeedCreator? creator,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime createdAt,  String? videoUrl,  String? thumbnailUrl,  int? durationSeconds,  String? caption,  String? text,  PostSubType? subType,  String? title,  int? priceCents,  String currency,  String? condition)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? id,  ContentType type,  String? creatorId,  FeedCreator? creator,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime? createdAt,  String? videoUrl,  String? thumbnailUrl,  int? durationSeconds,  String? caption,  String? text,  PostSubType? subType,  String? title,  int? priceCents,  String currency,  String? condition)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Content() when $default != null:
 return $default(_that.id,_that.type,_that.creatorId,_that.creator,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.createdAt,_that.videoUrl,_that.thumbnailUrl,_that.durationSeconds,_that.caption,_that.text,_that.subType,_that.title,_that.priceCents,_that.currency,_that.condition);case _:
@@ -483,7 +490,7 @@ return $default(_that.id,_that.type,_that.creatorId,_that.creator,_that.visibili
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  ContentType type,  String creatorId,  FeedCreator? creator,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime createdAt,  String? videoUrl,  String? thumbnailUrl,  int? durationSeconds,  String? caption,  String? text,  PostSubType? subType,  String? title,  int? priceCents,  String currency,  String? condition)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? id,  ContentType type,  String? creatorId,  FeedCreator? creator,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime? createdAt,  String? videoUrl,  String? thumbnailUrl,  int? durationSeconds,  String? caption,  String? text,  PostSubType? subType,  String? title,  int? priceCents,  String currency,  String? condition)  $default,) {final _that = this;
 switch (_that) {
 case _Content():
 return $default(_that.id,_that.type,_that.creatorId,_that.creator,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.createdAt,_that.videoUrl,_that.thumbnailUrl,_that.durationSeconds,_that.caption,_that.text,_that.subType,_that.title,_that.priceCents,_that.currency,_that.condition);case _:
@@ -503,7 +510,7 @@ return $default(_that.id,_that.type,_that.creatorId,_that.creator,_that.visibili
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  ContentType type,  String creatorId,  FeedCreator? creator,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime createdAt,  String? videoUrl,  String? thumbnailUrl,  int? durationSeconds,  String? caption,  String? text,  PostSubType? subType,  String? title,  int? priceCents,  String currency,  String? condition)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? id,  ContentType type,  String? creatorId,  FeedCreator? creator,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime? createdAt,  String? videoUrl,  String? thumbnailUrl,  int? durationSeconds,  String? caption,  String? text,  PostSubType? subType,  String? title,  int? priceCents,  String currency,  String? condition)?  $default,) {final _that = this;
 switch (_that) {
 case _Content() when $default != null:
 return $default(_that.id,_that.type,_that.creatorId,_that.creator,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.createdAt,_that.videoUrl,_that.thumbnailUrl,_that.durationSeconds,_that.caption,_that.text,_that.subType,_that.title,_that.priceCents,_that.currency,_that.condition);case _:
@@ -518,12 +525,19 @@ return $default(_that.id,_that.type,_that.creatorId,_that.creator,_that.visibili
 @JsonSerializable()
 
 class _Content implements Content {
-  const _Content({required this.id, required this.type, required this.creatorId, this.creator, this.visibility = Visibility.public_, this.tier = ContentTier.free, this.status = ContentStatus.active, this.likeCount = 0, this.commentCount = 0, this.viewCount = 0, this.shareCount = 0, this.saveCount = 0, required this.createdAt, this.videoUrl, this.thumbnailUrl, this.durationSeconds, this.caption, this.text, this.subType, this.title, this.priceCents, this.currency = 'GBP', this.condition});
+  const _Content({this.id, required this.type, this.creatorId, this.creator, this.visibility = Visibility.public_, this.tier = ContentTier.free, this.status = ContentStatus.active, this.likeCount = 0, this.commentCount = 0, this.viewCount = 0, this.shareCount = 0, this.saveCount = 0, this.createdAt, this.videoUrl, this.thumbnailUrl, this.durationSeconds, this.caption, this.text, this.subType, this.title, this.priceCents, this.currency = 'GBP', this.condition});
   factory _Content.fromJson(Map<String, dynamic> json) => _$ContentFromJson(json);
 
-@override final  String id;
+// `id`, `creatorId`, and `createdAt` are nullable because the backend
+// occasionally returns rows where these columns are null on the feed
+// endpoints (`/feed?tab=video`, `/feed?tab=social`). Keeping them
+// required crashed the whole feed as a cast error during
+// `_$ContentFromJson`. Rows with a null id are filtered out upstream
+// in the mobile feed provider because they can't be liked, opened,
+// or used as a stable widget key.
+@override final  String? id;
 @override final  ContentType type;
-@override final  String creatorId;
+@override final  String? creatorId;
 @override final  FeedCreator? creator;
 @override@JsonKey() final  Visibility visibility;
 @override@JsonKey() final  ContentTier tier;
@@ -533,7 +547,7 @@ class _Content implements Content {
 @override@JsonKey() final  int viewCount;
 @override@JsonKey() final  int shareCount;
 @override@JsonKey() final  int saveCount;
-@override final  DateTime createdAt;
+@override final  DateTime? createdAt;
 // Video subtype
 @override final  String? videoUrl;
 @override final  String? thumbnailUrl;
@@ -581,7 +595,7 @@ abstract mixin class _$ContentCopyWith<$Res> implements $ContentCopyWith<$Res> {
   factory _$ContentCopyWith(_Content value, $Res Function(_Content) _then) = __$ContentCopyWithImpl;
 @override @useResult
 $Res call({
- String id, ContentType type, String creatorId, FeedCreator? creator, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, DateTime createdAt, String? videoUrl, String? thumbnailUrl, int? durationSeconds, String? caption, String? text, PostSubType? subType, String? title, int? priceCents, String currency, String? condition
+ String? id, ContentType type, String? creatorId, FeedCreator? creator, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, DateTime? createdAt, String? videoUrl, String? thumbnailUrl, int? durationSeconds, String? caption, String? text, PostSubType? subType, String? title, int? priceCents, String currency, String? condition
 });
 
 
@@ -598,12 +612,12 @@ class __$ContentCopyWithImpl<$Res>
 
 /// Create a copy of Content
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? type = null,Object? creatorId = null,Object? creator = freezed,Object? visibility = null,Object? tier = null,Object? status = null,Object? likeCount = null,Object? commentCount = null,Object? viewCount = null,Object? shareCount = null,Object? saveCount = null,Object? createdAt = null,Object? videoUrl = freezed,Object? thumbnailUrl = freezed,Object? durationSeconds = freezed,Object? caption = freezed,Object? text = freezed,Object? subType = freezed,Object? title = freezed,Object? priceCents = freezed,Object? currency = null,Object? condition = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? type = null,Object? creatorId = freezed,Object? creator = freezed,Object? visibility = null,Object? tier = null,Object? status = null,Object? likeCount = null,Object? commentCount = null,Object? viewCount = null,Object? shareCount = null,Object? saveCount = null,Object? createdAt = freezed,Object? videoUrl = freezed,Object? thumbnailUrl = freezed,Object? durationSeconds = freezed,Object? caption = freezed,Object? text = freezed,Object? subType = freezed,Object? title = freezed,Object? priceCents = freezed,Object? currency = null,Object? condition = freezed,}) {
   return _then(_Content(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as ContentType,creatorId: null == creatorId ? _self.creatorId : creatorId // ignore: cast_nullable_to_non_nullable
-as String,creator: freezed == creator ? _self.creator : creator // ignore: cast_nullable_to_non_nullable
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as ContentType,creatorId: freezed == creatorId ? _self.creatorId : creatorId // ignore: cast_nullable_to_non_nullable
+as String?,creator: freezed == creator ? _self.creator : creator // ignore: cast_nullable_to_non_nullable
 as FeedCreator?,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
 as Visibility,tier: null == tier ? _self.tier : tier // ignore: cast_nullable_to_non_nullable
 as ContentTier,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -612,8 +626,8 @@ as int,commentCount: null == commentCount ? _self.commentCount : commentCount //
 as int,viewCount: null == viewCount ? _self.viewCount : viewCount // ignore: cast_nullable_to_non_nullable
 as int,shareCount: null == shareCount ? _self.shareCount : shareCount // ignore: cast_nullable_to_non_nullable
 as int,saveCount: null == saveCount ? _self.saveCount : saveCount // ignore: cast_nullable_to_non_nullable
-as int,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,videoUrl: freezed == videoUrl ? _self.videoUrl : videoUrl // ignore: cast_nullable_to_non_nullable
+as int,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,videoUrl: freezed == videoUrl ? _self.videoUrl : videoUrl // ignore: cast_nullable_to_non_nullable
 as String?,thumbnailUrl: freezed == thumbnailUrl ? _self.thumbnailUrl : thumbnailUrl // ignore: cast_nullable_to_non_nullable
 as String?,durationSeconds: freezed == durationSeconds ? _self.durationSeconds : durationSeconds // ignore: cast_nullable_to_non_nullable
 as int?,caption: freezed == caption ? _self.caption : caption // ignore: cast_nullable_to_non_nullable

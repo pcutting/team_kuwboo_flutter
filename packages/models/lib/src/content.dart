@@ -27,9 +27,16 @@ abstract class FeedCreator with _$FeedCreator {
 @freezed
 abstract class Content with _$Content {
   const factory Content({
-    required String id,
+    // `id`, `creatorId`, and `createdAt` are nullable because the backend
+    // occasionally returns rows where these columns are null on the feed
+    // endpoints (`/feed?tab=video`, `/feed?tab=social`). Keeping them
+    // required crashed the whole feed as a cast error during
+    // `_$ContentFromJson`. Rows with a null id are filtered out upstream
+    // in the mobile feed provider because they can't be liked, opened,
+    // or used as a stable widget key.
+    String? id,
     required ContentType type,
-    required String creatorId,
+    String? creatorId,
     FeedCreator? creator,
     @Default(Visibility.public_) Visibility visibility,
     @Default(ContentTier.free) ContentTier tier,
@@ -39,7 +46,7 @@ abstract class Content with _$Content {
     @Default(0) int viewCount,
     @Default(0) int shareCount,
     @Default(0) int saveCount,
-    required DateTime createdAt,
+    DateTime? createdAt,
     // Video subtype
     String? videoUrl,
     String? thumbnailUrl,

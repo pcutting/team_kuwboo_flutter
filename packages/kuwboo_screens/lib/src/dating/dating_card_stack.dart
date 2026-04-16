@@ -24,10 +24,18 @@ class _DatingCardStackState extends ConsumerState<DatingCardStack> {
 
   Future<void> _like(Content card) async {
     if (_acting) return;
+    final cardId = card.id;
+    // Content rows without an id can't be liked — advance silently
+    // rather than crash. `datingCardsProvider` does not filter these
+    // upstream because dating pulls from a dedicated endpoint.
+    if (cardId == null) {
+      _advance();
+      return;
+    }
     setState(() => _acting = true);
     try {
       final interactions = ref.read(datingInteractionsApiProvider);
-      final res = await interactions.likeContent(card.id);
+      final res = await interactions.likeContent(cardId);
       if (res.liked && mounted) {
         await showDialog<void>(
           context: context,

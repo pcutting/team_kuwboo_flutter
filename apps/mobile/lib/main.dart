@@ -3,11 +3,10 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kuwboo_screens/kuwboo_screens.dart' as screens;
 
 import 'app/app.dart';
 import 'firebase_options.dart';
-import 'providers/api_provider.dart';
+import 'providers/package_overrides.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,18 +24,26 @@ void main() async {
     return true;
   };
 
+  // Bridge every `throw UnimplementedError` provider declared across the
+  // shared packages (kuwboo_screens, kuwboo_chat) onto the real mobile
+  // `apiClientProvider`. See `providers/package_overrides.dart` for the
+  // full list and the rationale behind each entry.
+  final overrides = buildPackageOverrides();
+
+  if (kDebugMode) {
+    // Fail loudly at startup if a new `throw UnimplementedError` provider
+    // landed in a shared package without a matching override here.
+    final probe = ProviderContainer(overrides: overrides);
+    try {
+      assertNoUnoverriddenPackageProviders(probe);
+    } finally {
+      probe.dispose();
+    }
+  }
+
   runApp(
     ProviderScope(
-      overrides: [
-        // Bridge kuwboo_screens' package-local `apiClientProvider` (declared
-        // with `throw UnimplementedError` so the host app must override it)
-        // to the real mobile `apiClientProvider`. Without this, profile
-        // screens that depend on `meProvider` / `unreadNotificationCountProvider`
-        // crash on first read.
-        screens.apiClientProvider.overrideWith(
-          (ref) => ref.watch(apiClientProvider),
-        ),
-      ],
+      overrides: overrides,
       child: const KuwbooApp(),
     ),
   );
