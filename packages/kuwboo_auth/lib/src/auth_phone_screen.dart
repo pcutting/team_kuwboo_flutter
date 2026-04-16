@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl_phone_field/countries.dart' as countries_pkg;
+import 'package:intl_phone_field/country_picker_dialog.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/phone_number.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
@@ -128,9 +130,23 @@ class _PhoneTab extends StatefulWidget {
   State<_PhoneTab> createState() => _PhoneTabState();
 }
 
+// Pin the common English-speaking markets at the top of the country picker,
+// then the rest in the package's original (alphabetical) order.
+final List<countries_pkg.Country> _orderedCountries = () {
+  const pinned = ['US', 'GB', 'CA', 'AU', 'IE'];
+  final all = countries_pkg.countries;
+  final top = [
+    for (final code in pinned)
+      all.firstWhere((c) => c.code == code),
+  ];
+  final rest = all.where((c) => !pinned.contains(c.code)).toList();
+  return [...top, ...rest];
+}();
+
 class _PhoneTabState extends State<_PhoneTab> {
   PhoneNumber? _phone;
   bool _valid = false;
+  bool _submitting = false;
   // Full E.164 phone passed forward once validation completes.
   // ignore: unused_field
   String _e164 = '';
@@ -151,9 +167,21 @@ class _PhoneTabState extends State<_PhoneTab> {
           // TODO(D2): derive initialCountryCode from device locale.
           IntlPhoneField(
             initialCountryCode: 'US',
+            countries: _orderedCountries,
             disableLengthCheck: false,
             style: theme.body,
             dropdownTextStyle: theme.body,
+            showCountryFlag: true,
+            pickerDialogStyle: PickerDialogStyle(
+              searchFieldInputDecoration: InputDecoration(
+                hintText: 'Search country',
+                prefixIcon:
+                    Icon(Icons.search, size: 18, color: theme.textTertiary),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
             decoration: InputDecoration(
               filled: true,
               fillColor: theme.background,
@@ -189,28 +217,11 @@ class _PhoneTabState extends State<_PhoneTab> {
             },
           ),
           const Spacer(),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 40),
-            child: GestureDetector(
-              onTap: _valid ? () => _submit(context) : null,
-              child: Opacity(
-                opacity: _valid ? 1 : 0.45,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: BoxDecoration(
-                    color: theme.primary,
-                    borderRadius: BorderRadius.circular(theme.radiusFull),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Send Code',
-                      style: theme.button.copyWith(fontSize: 16),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          _BottomAction(
+            label: _submitting ? 'Sending…' : 'Send Code',
+            enabled: _valid && !_submitting,
+            onTap: () => _submit(context),
+            theme: theme,
           ),
         ],
       ),
@@ -218,6 +229,8 @@ class _PhoneTabState extends State<_PhoneTab> {
   }
 
   Future<void> _submit(BuildContext context) async {
+    FocusScope.of(context).unfocus();
+    setState(() => _submitting = true);
     final e164 = _phone!.completeNumber;
     final callbacks = AuthCallbacksScope.maybeOf(context);
     if (callbacks?.onSendPhoneOtp != null) {
@@ -225,6 +238,7 @@ class _PhoneTabState extends State<_PhoneTab> {
         await callbacks!.onSendPhoneOtp!(e164);
       } catch (e) {
         if (!context.mounted) return;
+        setState(() => _submitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Could not send code: $e')),
         );
@@ -232,6 +246,7 @@ class _PhoneTabState extends State<_PhoneTab> {
       }
     }
     if (!context.mounted) return;
+    setState(() => _submitting = false);
     context.go(
       ProtoRoutes.authOtp,
       extra: AuthOtpArgs(identifier: e164, channel: AuthOtpChannel.phone),
@@ -251,6 +266,7 @@ class _EmailTabState extends State<_EmailTab> {
   final TextEditingController _emailController = TextEditingController();
   String? _error;
   bool _valid = false;
+  bool _submitting = false;
 
   // Pragmatic email regex — same shape backend's class-validator uses.
   static final RegExp _emailRe =
@@ -317,28 +333,11 @@ class _EmailTabState extends State<_EmailTab> {
             ),
           ),
           const Spacer(),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 40),
-            child: GestureDetector(
-              onTap: _valid ? () => _submit(context) : null,
-              child: Opacity(
-                opacity: _valid ? 1 : 0.45,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: BoxDecoration(
-                    color: theme.primary,
-                    borderRadius: BorderRadius.circular(theme.radiusFull),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Next',
-                      style: theme.button.copyWith(fontSize: 16),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          _BottomAction(
+            label: _submitting ? 'Sending…' : 'Next',
+            enabled: _valid && !_submitting,
+            onTap: () => _submit(context),
+            theme: theme,
           ),
         ],
       ),
@@ -346,17 +345,20 @@ class _EmailTabState extends State<_EmailTab> {
   }
 
   Future<void> _submit(BuildContext context) async {
+    FocusScope.of(context).unfocus();
     final email = _emailController.text.trim();
     if (!_emailRe.hasMatch(email)) {
       setState(() => _error = 'Enter a valid email address');
       return;
     }
+    setState(() => _submitting = true);
     final callbacks = AuthCallbacksScope.maybeOf(context);
     if (callbacks?.onSendEmailOtp != null) {
       try {
         await callbacks!.onSendEmailOtp!(email);
       } catch (e) {
         if (!context.mounted) return;
+        setState(() => _submitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Could not send code: $e')),
         );
@@ -364,9 +366,60 @@ class _EmailTabState extends State<_EmailTab> {
       }
     }
     if (!context.mounted) return;
+    setState(() => _submitting = false);
     context.go(
       ProtoRoutes.authOtp,
       extra: AuthOtpArgs(identifier: email, channel: AuthOtpChannel.email),
+    );
+  }
+}
+
+/// Bottom CTA that rides above the keyboard. Uses MediaQuery.viewInsetsOf
+/// so the button stays visible as the on-screen keyboard opens/closes.
+class _BottomAction extends StatelessWidget {
+  final String label;
+  final bool enabled;
+  final VoidCallback onTap;
+  final ProtoTheme theme;
+  const _BottomAction({
+    required this.label,
+    required this.enabled,
+    required this.onTap,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+    // When the keyboard is up, lift the button just above it with a small
+    // visual gap. Otherwise sit above the home indicator with a resting
+    // margin so it's not crammed against the bottom bezel.
+    final lift = keyboard > 0 ? keyboard + 8 : safeBottom + 24;
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 150),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(bottom: lift),
+      child: GestureDetector(
+        onTap: enabled ? onTap : null,
+        child: Opacity(
+          opacity: enabled ? 1 : 0.45,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: theme.primary,
+              borderRadius: BorderRadius.circular(theme.radiusFull),
+            ),
+            child: Center(
+              child: Text(
+                label,
+                style: theme.button.copyWith(fontSize: 16),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

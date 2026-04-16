@@ -189,6 +189,7 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
         child: Column(
           children: [
             ProtoSubBar(title: 'Verification'),
+            const _TestBuildBanner(),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -323,6 +324,39 @@ class _OtpBox extends StatelessWidget {
             onChanged: onChanged,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _TestBuildBanner extends StatelessWidget {
+  const _TestBuildBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade700,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.amber.shade900),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.science_outlined, size: 16, color: Colors.white),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'TEST BUILD — use OTP 000000 to sign in',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
