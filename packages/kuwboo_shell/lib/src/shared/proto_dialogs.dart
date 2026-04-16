@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../theme/proto_theme.dart';
 import '../theme/brand_colors.dart';
@@ -291,8 +292,16 @@ class ProtoConfirmDialog {
 
 /// Bottom sheet menu shown when tapping the profile avatar in the top bar.
 /// Provides quick access to profile, settings, and a dark mode toggle.
+///
+/// In debug builds an additional "Reset onboarding (dev)" item appears when
+/// [onDevReset] is supplied. The callback is wired from the mobile app
+/// (it knows about Riverpod's `authProvider`, which this package intentionally
+/// does not import) and is expected to clear secure-storage tokens, invalidate
+/// the auth provider, and route back to `/auth/welcome`. The item is gated on
+/// `kDebugMode` too so the menu item never ships in TestFlight/App Store
+/// builds even if a future caller forgets to null-check the callback.
 class ProtoProfileMenu {
-  static void show(BuildContext context) {
+  static void show(BuildContext context, {VoidCallback? onDevReset}) {
     final theme = ProtoTheme.of(context);
     final state = PrototypeStateProvider.of(context);
 
@@ -303,7 +312,11 @@ class ProtoProfileMenu {
         borderRadius: BorderRadius.vertical(top: Radius.circular(theme.radiusLg)),
       ),
       builder: (ctx) {
-        return _ProfileMenuContent(theme: theme, state: state);
+        return _ProfileMenuContent(
+          theme: theme,
+          state: state,
+          onDevReset: onDevReset,
+        );
       },
     );
   }
@@ -312,8 +325,13 @@ class ProtoProfileMenu {
 class _ProfileMenuContent extends StatefulWidget {
   final ProtoTheme theme;
   final PrototypeStateProvider state;
+  final VoidCallback? onDevReset;
 
-  const _ProfileMenuContent({required this.theme, required this.state});
+  const _ProfileMenuContent({
+    required this.theme,
+    required this.state,
+    this.onDevReset,
+  });
 
   @override
   State<_ProfileMenuContent> createState() => _ProfileMenuContentState();
@@ -393,6 +411,20 @@ class _ProfileMenuContentState extends State<_ProfileMenuContent> {
                 ],
               ),
             ),
+            // Dev-only: reset onboarding. Double-gated on kDebugMode and a
+            // callback being supplied so it can never appear in release
+            // builds. Useful for re-running the auth flow without
+            // uninstalling the app.
+            if (kDebugMode && widget.onDevReset != null)
+              _ProfileMenuItem(
+                icon: Icons.refresh_rounded,
+                label: 'Reset onboarding (dev)',
+                theme: theme,
+                onTap: () {
+                  Navigator.pop(context);
+                  widget.onDevReset!();
+                },
+              ),
           ],
         ),
       ),

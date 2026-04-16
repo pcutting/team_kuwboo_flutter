@@ -1,3 +1,4 @@
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -37,11 +38,26 @@ void showAuthError(BuildContext context, String message) {
   }
 }
 
-/// Debug-only print helper used from catch blocks. Gated on `!kReleaseMode`
-/// so release builds don't spam stdout. Crashlytics hookup lives elsewhere
-/// (PR #120 and A3's patch).
+/// Logs an auth-flow exception to the right place for the current build mode.
+///
+/// - Debug / profile builds: `debugPrint` to stdout so the developer sees it
+///   in the attached console. Gated on `!kReleaseMode` so release builds
+///   don't spam stdout.
+/// - Release builds: forwarded to Firebase Crashlytics with `reason` set to
+///   the catch-block tag (e.g. `auth/otp-verify`) so TestFlight / App Store
+///   failures are debuggable post-hoc. Wrapped in try/catch because
+///   `FirebaseCrashlytics.instance` throws if Firebase wasn't initialised —
+///   which can happen on dev simulator builds that intentionally skip
+///   `google-services.json`. We never want diagnostic code to crash the app.
 void debugLogAuthError(String tag, Object error, StackTrace stack) {
   if (!kReleaseMode) {
     debugPrint('[$tag] $error\n$stack');
+    return;
+  }
+  try {
+    FirebaseCrashlytics.instance.recordError(error, stack, reason: tag);
+  } catch (_) {
+    // Firebase not initialised (or plugin missing) — swallow so a logging
+    // failure never masks the original error the caller is handling.
   }
 }

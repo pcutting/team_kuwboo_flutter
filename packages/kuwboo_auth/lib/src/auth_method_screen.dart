@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kuwboo_api_client/kuwboo_api_client.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import '_step_chip.dart';
 import 'auth_callbacks.dart';
 
 class AuthMethodScreen extends StatefulWidget {
@@ -79,6 +80,7 @@ class _AuthMethodScreenState extends State<AuthMethodScreen> {
       child: Column(
         children: [
           ProtoSubBar(title: 'Sign Up'),
+          const StepChip(step: 1),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
