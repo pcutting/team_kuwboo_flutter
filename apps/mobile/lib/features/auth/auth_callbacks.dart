@@ -13,6 +13,7 @@ import '../../providers/auth_provider.dart';
 AuthCallbacks buildMobileAuthCallbacks(Ref ref) {
   final authNotifier = ref.read(authProvider.notifier);
   final usersApi = ref.read(usersApiProvider);
+  final interestsApi = ref.read(interestsApiProvider);
 
   return AuthCallbacks(
     // ── SSO ───────────────────────────────────────────────────────────
@@ -91,6 +92,15 @@ AuthCallbacks buildMobileAuthCallbacks(Ref ref) {
         bio: bio,
       ));
       await authNotifier.refreshUser();
+    },
+
+    onSaveInterests: (interestIds) async {
+      // Replace the authenticated user's declared interest set. The
+      // backend returns the resulting full selection; we ignore the
+      // response here and let downstream providers re-fetch on demand.
+      await interestsApi.selectMany(
+        SelectInterestsDto(interestIds: interestIds),
+      );
     },
 
     onCompleteTutorial: () async {
