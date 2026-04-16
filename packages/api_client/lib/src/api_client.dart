@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kuwboo_models/kuwboo_models.dart';
@@ -29,6 +31,16 @@ class KuwbooApiClient {
   final Dio _dio;
   final FlutterSecureStorage _secureStorage;
 
+  /// Single-flight token refresh guard.
+  ///
+  /// When two concurrent requests both receive 401, only the first one
+  /// hits `/auth/refresh`; the second awaits this completer and picks up
+  /// whatever tokens (or error) the first call produced. Without this,
+  /// the two refreshes race on secure-storage writes and whichever
+  /// finishes second overwrites the winner's tokens with its own — leaving
+  /// the app holding a refresh token the backend has already rotated out.
+  Completer<TokenPair>? _refreshing;
+
   /// Exposed for sub-API classes to make requests.
   Dio get dio => _dio;
 
@@ -59,6 +71,64 @@ class KuwbooApiClient {
   Future<String?> getRefreshToken() =>
       _secureStorage.read(key: _kRefreshTokenKey);
 
+  /// Perform a single-flight token refresh. The first concurrent caller
+  /// does the actual HTTP call; subsequent callers await the same future.
+  /// All waiters receive either the new [TokenPair] or the same error.
+  Future<TokenPair> _refreshTokens() {
+    final existing = _refreshing;
+    if (existing != null) return existing.future;
+
+    final completer = Completer<TokenPair>();
+    _refreshing = completer;
+
+    () async {
+      try {
+        final expiredAccess = await getAccessToken();
+        final refreshToken = await getRefreshToken();
+        if (expiredAccess == null || refreshToken == null) {
+          throw DioException(
+            requestOptions: RequestOptions(path: '/auth/refresh'),
+            type: DioExceptionType.badResponse,
+            error: 'missing tokens for refresh',
+          );
+        }
+
+        // Separate Dio instance avoids interceptor recursion.
+        // Contract §4.7: expired access token in Authorization header,
+        // refresh token in body.
+        final refreshDio = Dio(BaseOptions(baseUrl: _dio.options.baseUrl));
+        final response = await refreshDio.post(
+          '/auth/refresh',
+          data: {'refreshToken': refreshToken},
+          options: Options(
+            headers: {
+              'Authorization': 'Bearer $expiredAccess',
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+          ),
+        );
+
+        final data = response.data['data'] as Map<String, dynamic>;
+        final newTokens = TokenPair(
+          accessToken: data['accessToken'] as String,
+          refreshToken: data['refreshToken'] as String,
+        );
+        await saveTokens(newTokens);
+        completer.complete(newTokens);
+      } catch (error, stack) {
+        // Clear tokens so every 401 waiter drops to logged-out state
+        // consistently instead of some retrying and some not.
+        await clearTokens();
+        completer.completeError(error, stack);
+      } finally {
+        _refreshing = null;
+      }
+    }();
+
+    return completer.future;
+  }
+
   /// Auth interceptor: adds Bearer token and handles 401 with refresh.
   Interceptor _authInterceptor() {
     return InterceptorsWrapper(
@@ -74,50 +144,28 @@ class KuwbooApiClient {
           return handler.next(error);
         }
 
-        // Attempt token refresh
+        // Don't retry the refresh call itself.
+        if (error.requestOptions.path.endsWith('/auth/refresh')) {
+          await clearTokens();
+          return handler.next(error);
+        }
+
         final refreshToken = await getRefreshToken();
         if (refreshToken == null) {
           return handler.next(error);
         }
 
         try {
-          // Use a separate Dio instance to avoid interceptor recursion.
-          // Contract §4.7: expired access token in Authorization header,
-          // refresh token in body.
-          final expiredAccess = await getAccessToken();
-          if (expiredAccess == null) {
-            await clearTokens();
-            return handler.next(error);
-          }
-          final refreshDio = Dio(BaseOptions(baseUrl: _dio.options.baseUrl));
-          final response = await refreshDio.post(
-            '/auth/refresh',
-            data: {'refreshToken': refreshToken},
-            options: Options(
-              headers: {
-                'Authorization': 'Bearer $expiredAccess',
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-              },
-            ),
-          );
-
-          final data = response.data['data'] as Map<String, dynamic>;
-          final newTokens = TokenPair(
-            accessToken: data['accessToken'] as String,
-            refreshToken: data['refreshToken'] as String,
-          );
-          await saveTokens(newTokens);
-
-          // Retry the original request with new token.
+          final newTokens = await _refreshTokens();
+          // Retry the original request with the new token.
           final retryOptions = error.requestOptions;
           retryOptions.headers['Authorization'] =
               'Bearer ${newTokens.accessToken}';
           final retryResponse = await _dio.fetch(retryOptions);
           return handler.resolve(retryResponse);
-        } on DioException {
-          // Refresh failed — clear tokens and propagate the original error.
-          await clearTokens();
+        } catch (_) {
+          // Refresh failed — tokens have already been cleared by
+          // _refreshTokens(). Propagate the original 401.
           return handler.next(error);
         }
       },
