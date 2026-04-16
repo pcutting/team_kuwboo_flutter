@@ -171,7 +171,12 @@ class _PhoneTabState extends State<_PhoneTab> {
                     .instance.platformDispatcher.locale.countryCode ??
                 'GB',
             countries: _orderedCountries,
-            disableLengthCheck: false,
+            // Our `_PhoneNumberFormatter` inserts separators into the input
+            // (e.g. `(614) 285-6789`), which breaks the package's built-in
+            // length enforcement — it compares the formatted-string length
+            // against maxLength and cuts the user off early. Turn the
+            // internal check off and validate digit count ourselves below.
+            disableLengthCheck: true,
             style: theme.body,
             dropdownTextStyle: theme.body,
             showCountryFlag: true,
@@ -198,6 +203,9 @@ class _PhoneTabState extends State<_PhoneTab> {
               fillColor: theme.background,
               hintText: '555 123 4567',
               hintStyle: theme.body.copyWith(color: theme.textTertiary),
+              // Hide the digit counter — without maxLength enforcement it
+              // would otherwise render as `10/∞` which reads as noise.
+              counterText: '',
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               border: OutlineInputBorder(
@@ -479,7 +487,17 @@ class _PhoneNumberFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    var digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+
+    // Backspace on a separator: Flutter only removed the non-digit, leaving
+    // the same digit-count. Without this, the next format pass re-inserts
+    // the separator and the user appears stuck on it. Detect a deletion
+    // that didn't shrink the digit set and drop the trailing digit too.
+    final oldDigits = oldValue.text.replaceAll(RegExp(r'\D'), '');
+    final isDelete = newValue.text.length < oldValue.text.length;
+    if (isDelete && digits.length == oldDigits.length && digits.isNotEmpty) {
+      digits = digits.substring(0, digits.length - 1);
+    }
     if (digits.isEmpty) return newValue.copyWith(text: '');
     final iso = _iso;
     if (iso == null) return newValue;
@@ -489,7 +507,7 @@ class _PhoneNumberFormatter extends TextInputFormatter {
         destinationCountry: iso,
       );
       final formatted = parsed.formatNsn();
-      if (formatted.isEmpty || formatted == digits) return newValue;
+      if (formatted.isEmpty) return newValue;
       return TextEditingValue(
         text: formatted,
         selection: TextSelection.collapsed(offset: formatted.length),
