@@ -175,8 +175,10 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
     _overlayController.forward();
     // Log a view for the newly visible video. Fire-and-forget.
     if (page < _contents.length) {
-      unawaited(
-          ref.read(interactionsApiProvider).logView(_contents[page].id));
+      final id = _contents[page].id;
+      if (id != null) {
+        unawaited(ref.read(interactionsApiProvider).logView(id));
+      }
     }
   }
 
@@ -193,9 +195,10 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
     // Only fire the like API if this is a new like (double-tap is always
     // a like-on, never an unlike).
     if (!wasLiked && _currentPage < _contents.length) {
-      unawaited(ref
-          .read(interactionsApiProvider)
-          .likeContent(_contents[_currentPage].id));
+      final id = _contents[_currentPage].id;
+      if (id != null) {
+        unawaited(ref.read(interactionsApiProvider).likeContent(id));
+      }
     }
     Future.delayed(const Duration(milliseconds: 600), () {
       if (mounted) setState(() => _showHeartBurst = false);
@@ -589,9 +592,12 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                   // Fire-and-forget toggleLike on the backend. Optimistic
                   // UI has already flipped local state.
                   if (index < _contents.length) {
-                    unawaited(ref
-                        .read(interactionsApiProvider)
-                        .likeContent(_contents[index].id));
+                    final id = _contents[index].id;
+                    if (id != null) {
+                      unawaited(ref
+                          .read(interactionsApiProvider)
+                          .likeContent(id));
+                    }
                   }
                 },
                 child: Column(
@@ -701,9 +707,12 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                 onTap: () {
                   ProtoShareSheet.show(context);
                   if (index < _contents.length) {
-                    unawaited(ref
-                        .read(interactionsApiProvider)
-                        .logShare(_contents[index].id));
+                    final id = _contents[index].id;
+                    if (id != null) {
+                      unawaited(ref
+                          .read(interactionsApiProvider)
+                          .logShare(id));
+                    }
                   }
                 },
                 child: Column(
@@ -736,9 +745,12 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                     }
                   });
                   if (index < _contents.length) {
-                    unawaited(ref
-                        .read(interactionsApiProvider)
-                        .saveContent(_contents[index].id));
+                    final id = _contents[index].id;
+                    if (id != null) {
+                      unawaited(ref
+                          .read(interactionsApiProvider)
+                          .saveContent(id));
+                    }
                   }
                 },
                 child: Column(

@@ -182,8 +182,10 @@ class SocialStoryViewer extends ConsumerWidget {
     );
   }
 
-  String _relativeTime(DateTime d) {
+  String _relativeTime(DateTime? d) {
+    if (d == null) return '';
     final diff = DateTime.now().difference(d);
+    if (diff.isNegative) return '';
     if (diff.inHours >= 24) return '${diff.inDays}d';
     if (diff.inHours > 0) return '${diff.inHours}h';
     if (diff.inMinutes > 0) return '${diff.inMinutes}m';

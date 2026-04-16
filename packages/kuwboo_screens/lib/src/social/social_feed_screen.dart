@@ -400,6 +400,11 @@ class _PostCardState extends ConsumerState<_PostCard> {
 
   Future<void> _onLike() async {
     if (_likeInFlight) return;
+    final contentId = widget.content.id;
+    // Guard against Content rows the backend returned without an id.
+    // Mobile feed filters these upstream; the web prototype still
+    // reads the unfiltered response — fail quietly rather than crash.
+    if (contentId == null) return;
     final currentlyLiked = _optimisticLiked ?? false;
     final nextLiked = !currentlyLiked;
     setState(() {
@@ -408,7 +413,7 @@ class _PostCardState extends ConsumerState<_PostCard> {
       _likeInFlight = true;
     });
     try {
-      final serverLiked = await togglePostLike(ref, widget.content.id);
+      final serverLiked = await togglePostLike(ref, contentId);
       if (!mounted) return;
       setState(() {
         _optimisticLiked = serverLiked;
@@ -558,8 +563,10 @@ class _PostCardState extends ConsumerState<_PostCard> {
     );
   }
 
-  String _relativeTime(DateTime d) {
+  String _relativeTime(DateTime? d) {
+    if (d == null) return '';
     final diff = DateTime.now().difference(d);
+    if (diff.isNegative) return '';
     if (diff.inDays > 30) return '${(diff.inDays / 30).floor()}mo';
     if (diff.inDays > 0) return '${diff.inDays}d';
     if (diff.inHours > 0) return '${diff.inHours}h';

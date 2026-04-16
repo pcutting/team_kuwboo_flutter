@@ -109,10 +109,11 @@ class _VideoDiscoverScreenState extends ConsumerState<VideoDiscoverScreen> {
               final viewCount = content?.viewCount ?? (i + 1) * 1200;
               return GestureDetector(
                 onTap: () {
-                  if (content != null) {
+                  final id = content?.id;
+                  if (id != null) {
                     state.pushWithArgs(
                       ProtoRoutes.videoFeed,
-                      {'contentId': content.id},
+                      {'contentId': id},
                     );
                   } else {
                     state.push(ProtoRoutes.videoSound);
