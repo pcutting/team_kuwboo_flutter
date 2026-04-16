@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_models/kuwboo_models.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
+import '../screens_test_ids.dart';
 import '../sponsored/sponsored_inline.dart';
 import 'video_providers.dart';
 
@@ -256,7 +257,11 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
               if (index >= _videos.length && _hasEndCard) {
                 return _buildEndCard(context);
               }
-              return _buildVideoPage(context, index);
+              return Semantics(
+                identifier: ScreensIds.videoFeedCard(index),
+                label: 'Video ${index + 1}',
+                child: _buildVideoPage(context, index),
+              );
             },
           ),
 
@@ -341,22 +346,26 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
         // Mute icon overlay (center)
         if (_showMuteIcon && _currentPage == index)
           Center(
-            child: AnimatedOpacity(
-              opacity: _showMuteIcon ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  _isMuted
-                      ? Icons.volume_off_rounded
-                      : Icons.volume_up_rounded,
-                  size: 32,
-                  color: Colors.white,
+            child: Semantics(
+              identifier: ScreensIds.videoFeedMute,
+              label: _isMuted ? 'Muted' : 'Unmuted',
+              child: AnimatedOpacity(
+                opacity: _showMuteIcon ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                child: Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _isMuted
+                        ? Icons.volume_off_rounded
+                        : Icons.volume_up_rounded,
+                    size: 32,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -441,29 +450,35 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                 ),
               ),
               const SizedBox(width: 8),
-              ProtoPressButton(
-                onTap: () =>
-                    setState(() => videoState.isFollowing = !videoState.isFollowing),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: videoState.isFollowing
-                        ? theme.primary
-                        : Colors.transparent,
-                    border: Border.all(
+              Semantics(
+                identifier: ScreensIds.videoFeedFollowCreator,
+                button: true,
+                selected: videoState.isFollowing,
+                label: videoState.isFollowing ? 'Following' : 'Follow',
+                child: ProtoPressButton(
+                  onTap: () => setState(
+                      () => videoState.isFollowing = !videoState.isFollowing),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    decoration: BoxDecoration(
                       color: videoState.isFollowing
                           ? theme.primary
-                          : Colors.white54,
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: videoState.isFollowing
+                            ? theme.primary
+                            : Colors.white54,
+                      ),
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    videoState.isFollowing ? 'Following' : 'Follow',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+                    child: Text(
+                      videoState.isFollowing ? 'Following' : 'Follow',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -561,8 +576,10 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
           children: [
             // Like button
             Semantics(
+              identifier: ScreensIds.videoFeedLike,
               label: videoState.isLiked ? 'Unlike, ${_formatCount(likeCount)} likes' : 'Like, ${_formatCount(likeCount)} likes',
               button: true,
+              selected: videoState.isLiked,
               child: ProtoPressButton(
                 onTap: () {
                   setState(() => videoState.isLiked = !videoState.isLiked);
@@ -618,6 +635,7 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
               const SizedBox(height: 20),
               // Comment button
               Semantics(
+                identifier: ScreensIds.videoFeedComment,
                 label: 'Comments, ${_formatCount(video.comments)}',
                 button: true,
                 child: ProtoPressButton(
@@ -676,6 +694,7 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
               const SizedBox(height: 20),
               // Share button
               Semantics(
+                identifier: ScreensIds.videoFeedShare,
                 label: 'Share, ${_formatCount(video.shares)} shares',
                 button: true,
                 child: ProtoPressButton(

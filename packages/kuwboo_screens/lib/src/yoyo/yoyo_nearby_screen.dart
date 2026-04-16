@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import '../screens_test_ids.dart';
 import 'yoyo_providers.dart';
 
 // ─── Logarithmic range slider helpers ─────────────────────────────────
@@ -1014,21 +1015,30 @@ class _BottomControlStrip extends StatelessWidget {
               ),
             ),
             // Filter button (inline)
-            ProtoPressButton(
-              onTap: () => state.push(ProtoRoutes.yoyoFilters),
-              child: Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: (state.yoyoFriendsOnly || state.yoyoSelectedInterests.isNotEmpty)
-                      ? theme.primary.withValues(alpha: 0.15)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: Icon(
-                  theme.icons.tune, size: 14,
-                  color: (state.yoyoFriendsOnly || state.yoyoSelectedInterests.isNotEmpty)
-                      ? theme.primary : theme.textTertiary,
+            Semantics(
+              identifier: ScreensIds.yoyoNearbyFilter,
+              button: true,
+              label: 'Filter',
+              child: ProtoPressButton(
+                onTap: () => state.push(ProtoRoutes.yoyoFilters),
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: (state.yoyoFriendsOnly ||
+                            state.yoyoSelectedInterests.isNotEmpty)
+                        ? theme.primary.withValues(alpha: 0.15)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  child: Icon(
+                    theme.icons.tune,
+                    size: 14,
+                    color: (state.yoyoFriendsOnly ||
+                            state.yoyoSelectedInterests.isNotEmpty)
+                        ? theme.primary
+                        : theme.textTertiary,
+                  ),
                 ),
               ),
             ),
@@ -2019,49 +2029,68 @@ class _EncounterCardRow extends StatelessWidget {
           itemBuilder: (context, index) {
             final enc = sorted[index];
             final isRevealed = enc.consentStatus == ConsentStatus.shared;
+            final displayName = isRevealed ? enc.name : 'User';
+            final distanceLabel = _distanceCategoryLabel(enc.distanceCategory);
 
-            return ProtoPressButton(
-              onTap: () {
-                if (isRevealed) {
-                  state.push(ProtoRoutes.yoyoProfile);
-                } else {
-                  _showConsentSheet(context, enc);
-                }
-              },
-              child: Container(
-                width: 80,
-                margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                decoration: BoxDecoration(
-                  color: theme.surface.withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (isRevealed)
-                      _OrganicAvatar(size: 40, imageUrl: enc.imageUrl)
-                    else
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: theme.textTertiary.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(Icons.person_rounded, size: 22, color: theme.textTertiary.withValues(alpha: 0.5)),
+            return Semantics(
+              identifier: ScreensIds.yoyoNearbyCard(index),
+              button: true,
+              label: '$displayName, $distanceLabel',
+              child: ProtoPressButton(
+                onTap: () {
+                  if (isRevealed) {
+                    state.push(ProtoRoutes.yoyoProfile);
+                  } else {
+                    _showConsentSheet(context, enc);
+                  }
+                },
+                child: Container(
+                  width: 80,
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  decoration: BoxDecoration(
+                    color: theme.surface.withValues(alpha: 0.8),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Semantics(
+                        identifier: ScreensIds.yoyoNearbyAvatar(index),
+                        image: true,
+                        label: '$displayName avatar',
+                        child: isRevealed
+                            ? _OrganicAvatar(size: 40, imageUrl: enc.imageUrl)
+                            : Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: theme.textTertiary
+                                      .withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(Icons.person_rounded,
+                                    size: 22,
+                                    color: theme.textTertiary
+                                        .withValues(alpha: 0.5)),
+                              ),
                       ),
-                    const SizedBox(height: 4),
-                    Text(
-                      isRevealed ? enc.name : 'User',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: theme.text),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      _distanceCategoryLabel(enc.distanceCategory),
-                      style: TextStyle(fontSize: 9, color: theme.textTertiary),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        displayName,
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: theme.text),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        distanceLabel,
+                        style: TextStyle(
+                            fontSize: 9, color: theme.textTertiary),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
