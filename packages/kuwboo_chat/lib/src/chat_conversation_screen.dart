@@ -4,6 +4,7 @@ import 'package:kuwboo_models/kuwboo_models.dart' as api;
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import 'chat_providers.dart';
+import 'chat_test_ids.dart';
 
 // ── Data Model ─────────────────────────────────────────────────────────────
 
@@ -394,6 +395,7 @@ class _LiveMessageList extends ConsumerWidget {
             itemBuilder: (context, i) => _LiveMessageBubble(
               theme: theme,
               message: items[i],
+              index: i,
             ),
           ),
         );
@@ -405,27 +407,37 @@ class _LiveMessageList extends ConsumerWidget {
 class _LiveMessageBubble extends StatelessWidget {
   final ProtoTheme theme;
   final api.Message message;
+  final int index;
 
-  const _LiveMessageBubble({required this.theme, required this.message});
+  const _LiveMessageBubble({
+    required this.theme,
+    required this.message,
+    required this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Align(
       alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: theme.surface,
-          borderRadius: BorderRadius.circular(16),
+      child: Semantics(
+        identifier: ChatIds.conversationMsgOther(index),
+        label: 'Message',
+        value: message.text,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: theme.surface,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Text(message.text, style: theme.body),
         ),
-        child: Text(message.text, style: theme.body),
       ),
     );
   }
 }
 
-class _LiveInputBar extends StatelessWidget {
+class _LiveInputBar extends StatefulWidget {
   final ProtoTheme theme;
   final TextEditingController controller;
   final bool sending;
@@ -439,39 +451,74 @@ class _LiveInputBar extends StatelessWidget {
   });
 
   @override
+  State<_LiveInputBar> createState() => _LiveInputBarState();
+}
+
+class _LiveInputBarState extends State<_LiveInputBar> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onTextChanged);
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final theme = widget.theme;
+    final hasText = widget.controller.text.trim().isNotEmpty;
+    final canSend = hasText && !widget.sending;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: [
           Expanded(
-            child: TextField(
-              controller: controller,
-              enabled: !sending,
-              decoration: InputDecoration(
-                hintText: 'Message…',
-                filled: true,
-                fillColor: theme.surface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
+            child: Semantics(
+              identifier: ChatIds.conversationInput,
+              textField: true,
+              label: 'Message',
+              child: TextField(
+                controller: widget.controller,
+                enabled: !widget.sending,
+                decoration: InputDecoration(
+                  hintText: 'Message…',
+                  filled: true,
+                  fillColor: theme.surface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 10),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 10),
+                onSubmitted: (_) => widget.onSend(),
               ),
-              onSubmitted: (_) => onSend(),
             ),
           ),
           const SizedBox(width: 8),
-          IconButton(
-            onPressed: sending ? null : onSend,
-            icon: sending
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(Icons.send_rounded, color: theme.primary),
+          Semantics(
+            identifier: ChatIds.conversationSend,
+            button: true,
+            enabled: canSend,
+            label: 'Send',
+            child: IconButton(
+              onPressed: canSend ? widget.onSend : null,
+              icon: widget.sending
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(Icons.send_rounded, color: theme.primary),
+            ),
           ),
         ],
       ),
@@ -821,6 +868,14 @@ class _MessageBubble extends StatelessWidget {
       isLastReadOutgoing = outgoingNum == totalOutgoing - 2;
     }
 
+    // outgoingNum/incomingNum are 1-based running counters; convert to
+    // the 0-based positional index Maestro flows expect.
+    final bubbleIndex =
+        item.isMine ? (outgoingNum - 1) : (incomingNum - 1);
+    final bubbleId = item.isMine
+        ? ChatIds.conversationMsgOwn(bubbleIndex)
+        : ChatIds.conversationMsgOther(bubbleIndex);
+
     return Column(
       crossAxisAlignment:
           item.isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
@@ -828,63 +883,69 @@ class _MessageBubble extends StatelessWidget {
         Align(
           alignment:
               item.isMine ? Alignment.centerRight : Alignment.centerLeft,
-          child: GestureDetector(
-            onLongPress: () => _showReactionPicker(context),
-            onDoubleTap: () {
-              final preview = item.text!.length > 25
-                  ? '${item.text!.substring(0, 25)}...'
-                  : item.text!;
-              ProtoToast.show(
-                context,
-                Icons.reply_rounded,
-                'Reply to "$preview"',
-              );
-            },
-            child: Container(
-              margin: EdgeInsets.only(bottom: showReaction ? 2 : 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              constraints: const BoxConstraints(maxWidth: 240),
-              decoration: BoxDecoration(
-                color: item.isMine ? theme.primary : theme.surface,
-                borderRadius: BorderRadius.circular(16).copyWith(
-                  bottomRight:
-                      item.isMine ? const Radius.circular(4) : null,
-                  bottomLeft:
-                      !item.isMine ? const Radius.circular(4) : null,
+          child: Semantics(
+            identifier: bubbleId,
+            label: item.isMine ? 'Sent message' : 'Received message',
+            value: item.text,
+            child: GestureDetector(
+              onLongPress: () => _showReactionPicker(context),
+              onDoubleTap: () {
+                final preview = item.text!.length > 25
+                    ? '${item.text!.substring(0, 25)}...'
+                    : item.text!;
+                ProtoToast.show(
+                  context,
+                  Icons.reply_rounded,
+                  'Reply to "$preview"',
+                );
+              },
+              child: Container(
+                margin: EdgeInsets.only(bottom: showReaction ? 2 : 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                constraints: const BoxConstraints(maxWidth: 240),
+                decoration: BoxDecoration(
+                  color: item.isMine ? theme.primary : theme.surface,
+                  borderRadius: BorderRadius.circular(16).copyWith(
+                    bottomRight:
+                        item.isMine ? const Radius.circular(4) : null,
+                    bottomLeft:
+                        !item.isMine ? const Radius.circular(4) : null,
+                  ),
+                  boxShadow: item.isMine ? null : theme.softShadow,
                 ),
-                boxShadow: item.isMine ? null : theme.softShadow,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    item.text!,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: item.isMine ? Colors.white : theme.text,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        item.timeAgo,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: item.isMine
-                              ? Colors.white.withValues(alpha: 0.6)
-                              : theme.textTertiary,
-                        ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      item.text!,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: item.isMine ? Colors.white : theme.text,
+                        height: 1.4,
                       ),
-                      if (item.isMine) ...[
-                        const SizedBox(width: 3),
-                        _readReceiptIcon(),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          item.timeAgo,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: item.isMine
+                                ? Colors.white.withValues(alpha: 0.6)
+                                : theme.textTertiary,
+                          ),
+                        ),
+                        if (item.isMine) ...[
+                          const SizedBox(width: 3),
+                          _readReceiptIcon(),
+                        ],
                       ],
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1616,26 +1677,38 @@ class _RichInputBar extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: theme.background,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                'Type a message...',
-                style: theme.body.copyWith(color: theme.textTertiary),
+            child: Semantics(
+              identifier: ChatIds.conversationInput,
+              textField: true,
+              label: 'Message',
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: theme.background,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Type a message...',
+                  style: theme.body.copyWith(color: theme.textTertiary),
+                ),
               ),
             ),
           ),
           const SizedBox(width: 10),
-          ProtoPressButton(
-            onTap: () => ProtoToast.show(
-              context,
-              theme.icons.send,
-              'Message would send',
+          Semantics(
+            identifier: ChatIds.conversationSend,
+            button: true,
+            enabled: false,
+            label: 'Send',
+            child: ProtoPressButton(
+              onTap: () => ProtoToast.show(
+                context,
+                theme.icons.send,
+                'Message would send',
+              ),
+              child: Icon(theme.icons.send, size: 24, color: theme.primary),
             ),
-            child: Icon(theme.icons.send, size: 24, color: theme.primary),
           ),
         ],
       ),
