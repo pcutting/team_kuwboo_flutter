@@ -4,6 +4,8 @@ import 'package:kuwboo_auth/kuwboo_auth.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import '../features/auth/auth_callbacks.dart';
+import '../providers/auth_provider.dart';
+import '../providers/fcm_provider.dart';
 import 'router.dart';
 import 'theme.dart';
 
@@ -13,11 +15,40 @@ import 'theme.dart';
 /// [_ProtoStateBridge] below — scoping the Riverpod watch to a subtree
 /// prevents the entire MaterialApp.router (and its nested Navigator with
 /// GlobalKey) from rebuilding on every yoyo state change.
-class KuwbooApp extends ConsumerWidget {
+class KuwbooApp extends ConsumerStatefulWidget {
   const KuwbooApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<KuwbooApp> createState() => _KuwbooAppState();
+}
+
+class _KuwbooAppState extends ConsumerState<KuwbooApp> {
+  @override
+  void initState() {
+    super.initState();
+
+    // Push lifecycle: register with backend on the sign-in transition,
+    // deactivate on sign-out. Guarded on isAuthenticated edges so the
+    // listener is idempotent across _init(), verifyOtp, SSO, and logout
+    // events. The companion [fcmTokenListenerProvider] (read inside
+    // [registerForPush]) owns the long-lived onTokenRefresh subscription.
+    ref.listenManual<AuthState>(
+      authProvider,
+      (previous, next) {
+        final wasAuthed = previous?.isAuthenticated ?? false;
+        final isAuthed = next.isAuthenticated;
+        if (!wasAuthed && isAuthed) {
+          registerForPush(ref);
+        } else if (wasAuthed && !isAuthed) {
+          deactivateDevice(ref);
+        }
+      },
+      fireImmediately: true,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
 
     return ProtoThemeProvider(
