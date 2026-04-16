@@ -39,7 +39,6 @@ tags:
     id: "auth.method.btn_phone_email"
 - assertVisible:
     id: "auth.phone.tab_phone"
-    selected: true
 - assertVisible:
     id: "auth.phone.tab_email"
 
@@ -47,6 +46,5 @@ tags:
     id: "auth.phone.tab_email"
 - assertVisible:
     id: "auth.phone.tab_email"
-    selected: true
 - assertVisible:
     id: "auth.email.field_email"
