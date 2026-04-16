@@ -4,6 +4,7 @@ import 'package:kuwboo_auth/kuwboo_auth.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import '../features/auth/auth_callbacks.dart';
+import '../providers/fcm_provider.dart';
 import 'router.dart';
 import 'theme.dart';
 
@@ -13,11 +14,26 @@ import 'theme.dart';
 /// [_ProtoStateBridge] below — scoping the Riverpod watch to a subtree
 /// prevents the entire MaterialApp.router (and its nested Navigator with
 /// GlobalKey) from rebuilding on every yoyo state change.
-class KuwbooApp extends ConsumerWidget {
+class KuwbooApp extends ConsumerStatefulWidget {
   const KuwbooApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<KuwbooApp> createState() => _KuwbooAppState();
+}
+
+class _KuwbooAppState extends ConsumerState<KuwbooApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Instantiate the FCM push lifecycle listener: registers the device
+    // on sign-in, deactivates on logout, and re-registers if FCM rotates
+    // the token mid-session. The provider owns its own ref.listen on
+    // authProvider and its own StreamSubscription cleanup.
+    ref.read(fcmLifecycleListenerProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
 
     return ProtoThemeProvider(
