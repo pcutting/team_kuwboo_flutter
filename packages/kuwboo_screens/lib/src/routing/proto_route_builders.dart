@@ -346,5 +346,17 @@ List<RouteBase> buildProtoModalRoutes({
       parentNavigatorKey: rootNavigatorKey,
       builder: (c, s) => const AuthAgeBlockScreen(),
     ),
+    // Legal placeholders — linked from the auth method screen. Final copy
+    // pending from Neil; see legal_*_screen.dart TODO(legal) markers.
+    GoRoute(
+      path: ProtoRoutes.legalTerms,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const LegalTermsScreen(),
+    ),
+    GoRoute(
+      path: ProtoRoutes.legalPrivacy,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const LegalPrivacyScreen(),
+    ),
   ];
 }

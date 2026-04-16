@@ -10,9 +10,22 @@ enum AuthOtpChannel { phone, email }
 /// Arguments passed to [AuthOtpScreen] via route-push extra when the
 /// method/phone screen has triggered a real OTP send.
 class AuthOtpArgs {
-  const AuthOtpArgs({required this.identifier, required this.channel});
+  const AuthOtpArgs({
+    required this.identifier,
+    required this.channel,
+    this.displayIdentifier,
+  });
+
+  /// Canonical identifier used for verification calls (E.164 phone or
+  /// lower-cased email). Server sees this value.
   final String identifier;
+
   final AuthOtpChannel channel;
+
+  /// Optional formatted variant shown to the user on the OTP screen —
+  /// e.g. `+44 7XXX XXX XX3` vs the canonical `+447xxxxxxxx3`. Falls
+  /// back to [identifier] when null.
+  final String? displayIdentifier;
 }
 
 /// Callbacks the host app (mobile) supplies to drive real auth API calls

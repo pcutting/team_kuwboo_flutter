@@ -16,3 +16,5 @@ export 'src/auth_otp_screen.dart';
 export 'src/auth_birthday_screen.dart';
 export 'src/auth_profile_screen.dart';
 export 'src/auth_age_block_screen.dart';
+export 'src/legal_terms_screen.dart';
+export 'src/legal_privacy_screen.dart';

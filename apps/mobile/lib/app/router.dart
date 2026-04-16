@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 import 'package:kuwboo_screens/kuwboo_screens.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
@@ -84,9 +85,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (auth.isNewUser) {
         // Authenticated but mid-onboarding — let them roam inside /auth/*
         // so they can finish the flow. If they try to escape, push them
-        // back to the method screen (the standard onboarding entry point
-        // post-sign-in).
-        return onAuthRoute ? null : ProtoRoutes.authMethod;
+        // back to the step they were on (resume onboarding rather than
+        // restarting at the method picker).
+        if (onAuthRoute) return null;
+        return _onboardingResumeRoute(auth.user?.onboardingProgress);
       }
 
       // Fully onboarded — route out of /auth/* into the main shell.
@@ -112,3 +114,27 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+/// Maps the authenticated user's [OnboardingProgress] to the auth route
+/// that resumes them at the right step. Called from the router redirect
+/// when an onboarding-in-progress user lands on a non-/auth path.
+String _onboardingResumeRoute(OnboardingProgress? progress) {
+  switch (progress) {
+    case OnboardingProgress.complete:
+      // Defensive — isNewUser should be false here. Fall back to the shell.
+      return ProtoRoutes.yoyoNearby;
+    case OnboardingProgress.tutorial:
+      return ProtoRoutes.authTutorial;
+    case OnboardingProgress.profile:
+      return ProtoRoutes.authProfile;
+    case OnboardingProgress.birthday:
+      return ProtoRoutes.authBirthday;
+    case OnboardingProgress.welcome:
+    case OnboardingProgress.method:
+    case OnboardingProgress.phone:
+    case OnboardingProgress.otp:
+    case OnboardingProgress.interests:
+    case null:
+      return ProtoRoutes.authMethod;
+  }
+}

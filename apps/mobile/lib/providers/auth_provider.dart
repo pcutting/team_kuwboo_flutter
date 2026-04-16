@@ -95,7 +95,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> sendPhoneOtp(String phone) async {
-    if (Environment.devAuthBypass) return;
     try {
       await _authApi.sendPhoneOtp(phone: phone);
     } on DioException catch (e) {
@@ -104,7 +103,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> sendEmailOtp(String email) async {
-    if (Environment.devAuthBypass) return;
     try {
       await _authApi.sendEmailOtp(email: email);
     } on DioException catch (e) {

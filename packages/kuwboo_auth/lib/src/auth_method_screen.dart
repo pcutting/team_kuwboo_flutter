@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kuwboo_api_client/kuwboo_api_client.dart';
@@ -5,8 +6,32 @@ import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import 'auth_callbacks.dart';
 
-class AuthMethodScreen extends StatelessWidget {
+class AuthMethodScreen extends StatefulWidget {
   const AuthMethodScreen({super.key});
+
+  @override
+  State<AuthMethodScreen> createState() => _AuthMethodScreenState();
+}
+
+class _AuthMethodScreenState extends State<AuthMethodScreen> {
+  late final TapGestureRecognizer _termsRecognizer;
+  late final TapGestureRecognizer _privacyRecognizer;
+
+  @override
+  void initState() {
+    super.initState();
+    _termsRecognizer = TapGestureRecognizer()
+      ..onTap = () => context.push(ProtoRoutes.legalTerms);
+    _privacyRecognizer = TapGestureRecognizer()
+      ..onTap = () => context.push(ProtoRoutes.legalPrivacy);
+  }
+
+  @override
+  void dispose() {
+    _termsRecognizer.dispose();
+    _privacyRecognizer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -102,18 +127,20 @@ class AuthMethodScreen extends StatelessWidget {
                         children: [
                           TextSpan(
                             text: 'Terms of Service',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               decoration: TextDecoration.underline,
                             ),
+                            recognizer: _termsRecognizer,
                           ),
                           const TextSpan(text: ' and '),
                           TextSpan(
                             text: 'Privacy Policy',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               decoration: TextDecoration.underline,
                             ),
+                            recognizer: _privacyRecognizer,
                           ),
                         ],
                       ),
