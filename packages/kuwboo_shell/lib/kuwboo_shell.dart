@@ -18,6 +18,7 @@ export 'src/shared/proto_dialogs.dart';
 export 'src/shared/proto_press_button.dart';
 export 'src/shared/proto_image.dart';
 export 'src/shared/proto_states.dart';
+export 'src/shared/feature_flags.dart';
 
 // State
 export 'src/state/proto_state_provider.dart';
