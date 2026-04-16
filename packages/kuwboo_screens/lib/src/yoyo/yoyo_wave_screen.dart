@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_models/kuwboo_models.dart' as api;
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import '../screens_test_ids.dart';
 import 'yoyo_providers.dart';
 
 /// Broadcast wave — wave confirmation + recent waves list
@@ -179,32 +180,47 @@ class _YoyoWaveScreenState extends ConsumerState<YoyoWaveScreen> {
                   style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.8)),
                 ),
                 const SizedBox(height: 16),
-                ProtoPressButton(
-                  onTap: _waveSent ? null : () => _handleSendWave(),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: _waveSent ? theme.secondary : Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      child: _waveSent
-                          ? Row(
-                              key: const ValueKey('sent'),
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(theme.icons.check, size: 16, color: Colors.white),
-                                const SizedBox(width: 6),
-                                const Text('Sent!', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
-                              ],
-                            )
-                          : Text(
-                              'Send Wave',
-                              key: const ValueKey('send'),
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: theme.primary),
-                            ),
+                Semantics(
+                  identifier: ScreensIds.yoyoWaveSend,
+                  button: true,
+                  enabled: !_waveSent,
+                  label: _waveSent ? 'Wave sent' : 'Send Wave',
+                  child: ProtoPressButton(
+                    onTap: _waveSent ? null : () => _handleSendWave(),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _waveSent ? theme.secondary : Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: _waveSent
+                            ? Row(
+                                key: const ValueKey('sent'),
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(theme.icons.check,
+                                      size: 16, color: Colors.white),
+                                  const SizedBox(width: 6),
+                                  const Text('Sent!',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white)),
+                                ],
+                              )
+                            : Text(
+                                'Send Wave',
+                                key: const ValueKey('send'),
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: theme.primary),
+                              ),
+                      ),
                     ),
                   ),
                 ),

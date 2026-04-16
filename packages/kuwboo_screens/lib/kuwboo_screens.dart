@@ -61,3 +61,6 @@ export 'src/sponsored/sponsored_campaign_detail.dart';
 
 // Routing helpers
 export 'src/routing/proto_route_builders.dart';
+
+// Testing
+export 'src/screens_test_ids.dart';

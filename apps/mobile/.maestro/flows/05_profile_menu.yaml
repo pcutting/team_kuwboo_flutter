@@ -1,0 +1,30 @@
+appId: com.kuwboo.mobile
+name: B12-B13 — profile menu → view profile
+---
+# B12: tap top-right avatar → ProtoProfileMenu opens.
+- tapOn:
+    id: "shell.topbar.btn_profile_menu"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+- assertVisible:
+    id: "shell.profile_menu.item_view_profile"
+- assertVisible:
+    id: "shell.profile_menu.item_settings"
+- assertVisible:
+    id: "shell.profile_menu.toggle_dark_mode"
+- takeScreenshot: /tmp/walkthrough_b12_menu
+
+# B13: View Profile → confirm name + avatar render with the value we entered.
+- tapOn:
+    id: "shell.profile_menu.item_view_profile"
+- waitForAnimationToEnd:
+    timeout: 4000
+
+- assertVisible:
+    id: "profile.my.avatar"
+- assertVisible:
+    id: "profile.my.text_name"
+- assertVisible:
+    id: "profile.my.btn_edit_profile"
+- takeScreenshot: /tmp/walkthrough_b13_profile

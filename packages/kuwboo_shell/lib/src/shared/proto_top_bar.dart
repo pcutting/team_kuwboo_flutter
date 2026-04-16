@@ -3,6 +3,7 @@ import '../theme/proto_theme.dart';
 import '../data/proto_demo_data.dart';
 import '../state/proto_state_provider.dart';
 import '../routes/proto_routes.dart';
+import '../testing/shell_test_ids.dart';
 import 'dev_hooks.dart';
 import 'proto_dialogs.dart';
 
@@ -133,6 +134,7 @@ class ProtoTopBar extends StatelessWidget {
 
         // Chat icon with badge
         Semantics(
+          identifier: ShellIds.topbarChatIcon,
           label: 'Chat inbox, 3 unread messages',
           button: true,
           child: GestureDetector(
@@ -181,6 +183,7 @@ class ProtoTopBar extends StatelessWidget {
 
         // Profile avatar with notification dot — goes directly to profile
         Semantics(
+          identifier: ShellIds.topbarProfileMenu,
           label: 'My profile, has notifications',
           button: true,
           child: GestureDetector(
@@ -306,6 +309,7 @@ class _YoyoIconToggleState extends State<_YoyoIconToggle>
     final theme = widget.theme;
 
     return Semantics(
+      identifier: ShellIds.topbarYoyoToggle,
       label: isYoyo
           ? (isListMode ? 'Switch to area view' : 'Switch to list view')
           : 'Go to YoYo',

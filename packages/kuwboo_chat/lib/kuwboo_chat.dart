@@ -7,4 +7,5 @@ library kuwboo_chat;
 export 'src/chat_inbox_screen.dart';
 export 'src/chat_conversation_screen.dart';
 export 'src/chat_ornaments.dart';
+export 'src/chat_test_ids.dart';
 export 'src/proto_conversation_card.dart';

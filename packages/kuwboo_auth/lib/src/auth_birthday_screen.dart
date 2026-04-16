@@ -6,6 +6,7 @@ import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import '_step_chip.dart';
 import 'auth_callbacks.dart';
+import 'auth_test_ids.dart';
 
 class AuthBirthdayScreen extends StatefulWidget {
   const AuthBirthdayScreen({super.key});
@@ -116,6 +117,8 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
                             Expanded(
                               flex: 2,
                               child: _WheelColumn(
+                                identifier: AuthIds.birthdayWheelDay,
+                                currentValue: '${_selectedDay + 1}',
                                 controller: _dayController,
                                 itemCount: 31,
                                 labelBuilder: (i) => '${i + 1}',
@@ -127,6 +130,8 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
                             Expanded(
                               flex: 3,
                               child: _WheelColumn(
+                                identifier: AuthIds.birthdayWheelMonth,
+                                currentValue: _months[_selectedMonth],
                                 controller: _monthController,
                                 itemCount: 12,
                                 labelBuilder: (i) => _months[i],
@@ -138,6 +143,8 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
                             Expanded(
                               flex: 2,
                               child: _WheelColumn(
+                                identifier: AuthIds.birthdayWheelYear,
+                                currentValue: '${_currentYear - _selectedYear}',
                                 controller: _yearController,
                                 itemCount: 100,
                                 labelBuilder: (i) => '${_currentYear - i}',
@@ -154,21 +161,26 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
                       // Continue button
                       Padding(
                         padding: const EdgeInsets.only(bottom: 40),
-                        child: GestureDetector(
-                          onTap: () => _onContinue(context),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            decoration: BoxDecoration(
-                              color: theme.primary,
-                              borderRadius: BorderRadius.circular(
-                                theme.radiusFull,
+                        child: Semantics(
+                          identifier: AuthIds.birthdayContinue,
+                          button: true,
+                          label: 'Continue',
+                          child: GestureDetector(
+                            onTap: () => _onContinue(context),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              decoration: BoxDecoration(
+                                color: theme.primary,
+                                borderRadius: BorderRadius.circular(
+                                  theme.radiusFull,
+                                ),
                               ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'Continue',
-                                style: theme.button.copyWith(fontSize: 16),
+                              child: Center(
+                                child: Text(
+                                  'Continue',
+                                  style: theme.button.copyWith(fontSize: 16),
+                                ),
                               ),
                             ),
                           ),
@@ -212,12 +224,16 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
 }
 
 class _WheelColumn extends StatelessWidget {
+  final String identifier;
+  final String currentValue;
   final FixedExtentScrollController controller;
   final int itemCount;
   final String Function(int) labelBuilder;
   final ValueChanged<int> onChanged;
 
   const _WheelColumn({
+    required this.identifier,
+    required this.currentValue,
     required this.controller,
     required this.itemCount,
     required this.labelBuilder,
@@ -228,43 +244,47 @@ class _WheelColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
 
-    return Stack(
-      children: [
-        // Selection highlight
-        Center(
-          child: Container(
-            height: 40,
-            decoration: BoxDecoration(
-              color: theme.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
+    return Semantics(
+      identifier: identifier,
+      value: currentValue,
+      child: Stack(
+        children: [
+          // Selection highlight
+          Center(
+            child: Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: theme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
-        ),
-        // Wheel
-        ListWheelScrollView.useDelegate(
-          controller: controller,
-          itemExtent: 40,
-          perspective: 0.003,
-          diameterRatio: 1.5,
-          physics: const FixedExtentScrollPhysics(),
-          onSelectedItemChanged: onChanged,
-          childDelegate: ListWheelChildBuilderDelegate(
-            childCount: itemCount,
-            builder: (context, index) {
-              return Center(
-                child: Text(
-                  labelBuilder(index),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: theme.text,
+          // Wheel
+          ListWheelScrollView.useDelegate(
+            controller: controller,
+            itemExtent: 40,
+            perspective: 0.003,
+            diameterRatio: 1.5,
+            physics: const FixedExtentScrollPhysics(),
+            onSelectedItemChanged: onChanged,
+            childDelegate: ListWheelChildBuilderDelegate(
+              childCount: itemCount,
+              builder: (context, index) {
+                return Center(
+                  child: Text(
+                    labelBuilder(index),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: theme.text,
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_models/kuwboo_models.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import '../screens_test_ids.dart';
 import '../sponsored/sponsored_inline.dart';
 import 'social_providers.dart';
 
@@ -49,19 +50,34 @@ class SocialFeedScreen extends ConsumerWidget {
                           children: [
                             _TabChip(label: 'Feed', isActive: true),
                             const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: () => state.push(ProtoRoutes.socialStumble),
-                              child: _TabChip(label: 'Stumble', isActive: false),
+                            Semantics(
+                              identifier: ScreensIds.socialFeedTabStumble,
+                              button: true,
+                              label: 'Stumble',
+                              child: GestureDetector(
+                                onTap: () => state.push(ProtoRoutes.socialStumble),
+                                child: _TabChip(label: 'Stumble', isActive: false),
+                              ),
                             ),
                             const Spacer(),
-                            GestureDetector(
-                              onTap: () => state.push(ProtoRoutes.socialFriends),
-                              child: Icon(theme.icons.peopleOutline, size: 22, color: theme.textSecondary),
+                            Semantics(
+                              identifier: ScreensIds.socialFeedIconFriends,
+                              button: true,
+                              label: 'Friends',
+                              child: GestureDetector(
+                                onTap: () => state.push(ProtoRoutes.socialFriends),
+                                child: Icon(theme.icons.peopleOutline, size: 22, color: theme.textSecondary),
+                              ),
                             ),
                             const SizedBox(width: 16),
-                            GestureDetector(
-                              onTap: () => state.push(ProtoRoutes.socialEvents),
-                              child: Icon(Icons.event_outlined, size: 22, color: theme.textSecondary),
+                            Semantics(
+                              identifier: ScreensIds.socialFeedIconEvents,
+                              button: true,
+                              label: 'Events',
+                              child: GestureDetector(
+                                onTap: () => state.push(ProtoRoutes.socialEvents),
+                                child: Icon(Icons.event_outlined, size: 22, color: theme.textSecondary),
+                              ),
                             ),
                           ],
                         ),
@@ -80,7 +96,10 @@ class SocialFeedScreen extends ConsumerWidget {
                         }
                         final postIndex = i < 2 ? i : i - 1;
                         if (postIndex >= posts.length) return const SizedBox.shrink();
-                        return _PostCard(content: posts[postIndex]);
+                        return _PostCard(
+                          content: posts[postIndex],
+                          index: postIndex,
+                        );
                       }),
                       const SizedBox(height: 80),
                     ],
@@ -367,7 +386,8 @@ class _TabChip extends StatelessWidget {
 
 class _PostCard extends ConsumerStatefulWidget {
   final Content content;
-  const _PostCard({required this.content});
+  final int index;
+  const _PostCard({required this.content, required this.index});
 
   @override
   ConsumerState<_PostCard> createState() => _PostCardState();
@@ -418,88 +438,122 @@ class _PostCardState extends ConsumerState<_PostCard> {
     final avatarUrl = post.creator?.avatarUrl ?? '';
     final bodyText = post.text ?? post.caption ?? '';
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      padding: const EdgeInsets.all(14),
-      decoration: theme.cardDecoration,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              ProtoAvatar(radius: 18, imageUrl: avatarUrl),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(creatorName, style: theme.title.copyWith(fontSize: 14)),
-                    Text(_relativeTime(post.createdAt), style: theme.caption),
-                  ],
+    final i = widget.index;
+    final preview = bodyText.length > 80 ? bodyText.substring(0, 80) : bodyText;
+    return Semantics(
+      identifier: ScreensIds.socialFeedCard(i),
+      label: 'Post by $creatorName',
+      value: '$creatorName: $preview',
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.all(14),
+        decoration: theme.cardDecoration,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                ProtoAvatar(radius: 18, imageUrl: avatarUrl),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(creatorName,
+                          style: theme.title.copyWith(fontSize: 14)),
+                      Text(_relativeTime(post.createdAt),
+                          style: theme.caption),
+                    ],
+                  ),
                 ),
-              ),
-              Icon(theme.icons.moreHoriz, size: 20, color: theme.textTertiary),
+                Icon(theme.icons.moreHoriz, size: 20, color: theme.textTertiary),
+              ],
+            ),
+            if (bodyText.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text(bodyText, style: theme.body),
             ],
-          ),
-          if (bodyText.isNotEmpty) ...[
+            if (post.thumbnailUrl != null) ...[
+              const SizedBox(height: 10),
+              ProtoNetworkImage(
+                imageUrl: post.thumbnailUrl!,
+                height: 160,
+                width: double.infinity,
+                borderRadius: BorderRadius.circular(theme.radiusMd),
+              ),
+            ],
             const SizedBox(height: 10),
-            Text(bodyText, style: theme.body),
-          ],
-          if (post.thumbnailUrl != null) ...[
-            const SizedBox(height: 10),
-            ProtoNetworkImage(
-              imageUrl: post.thumbnailUrl!,
-              height: 160,
-              width: double.infinity,
-              borderRadius: BorderRadius.circular(theme.radiusMd),
+            Row(
+              children: [
+                Semantics(
+                  identifier: ScreensIds.socialFeedLike(i),
+                  button: true,
+                  selected: liked,
+                  label: 'Like',
+                  value: '$likeCount',
+                  child: ProtoPressButton(
+                    onTap: _onLike,
+                    child: Row(
+                      children: [
+                        Icon(
+                          liked
+                              ? theme.icons.favoriteFilled
+                              : theme.icons.favoriteOutline,
+                          size: 20,
+                          color: liked ? theme.accent : theme.textTertiary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '$likeCount',
+                          style: theme.caption.copyWith(
+                            color: liked ? theme.accent : theme.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Semantics(
+                  identifier: ScreensIds.socialFeedComment(i),
+                  button: true,
+                  label: 'Comment',
+                  value: '${post.commentCount}',
+                  child: ProtoPressButton(
+                    onTap: () => ProtoToast.show(
+                        context, theme.icons.chatBubbleOutline, 'Comments'),
+                    child: Row(
+                      children: [
+                        Icon(theme.icons.chatBubbleOutline,
+                            size: 18, color: theme.textTertiary),
+                        const SizedBox(width: 6),
+                        Text('${post.commentCount}', style: theme.caption),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                ProtoPressButton(
+                  onTap: () =>
+                      ProtoToast.show(context, Icons.repeat_rounded, 'Reposted'),
+                  child:
+                      Icon(Icons.repeat_rounded, size: 18, color: theme.textTertiary),
+                ),
+                const Spacer(),
+                Semantics(
+                  identifier: ScreensIds.socialFeedShare(i),
+                  button: true,
+                  label: 'Share',
+                  child: ProtoPressButton(
+                    onTap: () => ProtoShareSheet.show(context),
+                    child: Icon(theme.icons.share,
+                        size: 18, color: theme.textTertiary),
+                  ),
+                ),
+              ],
             ),
           ],
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              ProtoPressButton(
-                onTap: _onLike,
-                child: Row(
-                  children: [
-                    Icon(
-                      liked ? theme.icons.favoriteFilled : theme.icons.favoriteOutline,
-                      size: 20,
-                      color: liked ? theme.accent : theme.textTertiary,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '$likeCount',
-                      style: theme.caption.copyWith(
-                        color: liked ? theme.accent : theme.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 20),
-              ProtoPressButton(
-                onTap: () => ProtoToast.show(context, theme.icons.chatBubbleOutline, 'Comments'),
-                child: Row(
-                  children: [
-                    Icon(theme.icons.chatBubbleOutline, size: 18, color: theme.textTertiary),
-                    const SizedBox(width: 6),
-                    Text('${post.commentCount}', style: theme.caption),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 20),
-              ProtoPressButton(
-                onTap: () => ProtoToast.show(context, Icons.repeat_rounded, 'Reposted'),
-                child: Icon(Icons.repeat_rounded, size: 18, color: theme.textTertiary),
-              ),
-              const Spacer(),
-              ProtoPressButton(
-                onTap: () => ProtoShareSheet.show(context),
-                child: Icon(theme.icons.share, size: 18, color: theme.textTertiary),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }

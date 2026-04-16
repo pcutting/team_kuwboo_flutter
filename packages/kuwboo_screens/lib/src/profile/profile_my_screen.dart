@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kuwboo_models/kuwboo_models.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import '../screens_test_ids.dart';
 import 'profile_providers.dart';
 
 class ProfileMyScreen extends ConsumerWidget {
@@ -33,35 +34,46 @@ class ProfileMyScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
                   // Avatar
                   Center(
-                    child: Stack(
-                      children: [
-                        ProtoAvatar(
-                          radius: 48,
-                          imageUrl: meAsync.valueOrNull?.avatarUrl ??
-                              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
-                        ),
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: Container(
-                            width: 28,
-                            height: 28,
-                            decoration: BoxDecoration(
-                              color: theme.primary,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: theme.background, width: 3),
-                            ),
-                            child: Icon(theme.icons.cameraAlt, size: 14, color: Colors.white),
+                    child: Semantics(
+                      identifier: ScreensIds.profileMyAvatar,
+                      image: true,
+                      label: 'Profile photo',
+                      child: Stack(
+                        children: [
+                          ProtoAvatar(
+                            radius: 48,
+                            imageUrl: meAsync.valueOrNull?.avatarUrl ??
+                                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
                           ),
-                        ),
-                      ],
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: theme.primary,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                    color: theme.background, width: 3),
+                              ),
+                              child: Icon(theme.icons.cameraAlt,
+                                  size: 14, color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
                   Center(
-                    child: Text(
-                      _displayName(meAsync.valueOrNull),
-                      style: theme.headline.copyWith(fontSize: 24),
+                    child: Semantics(
+                      identifier: ScreensIds.profileMyName,
+                      label: 'Display name',
+                      child: Text(
+                        _displayName(meAsync.valueOrNull),
+                        style: theme.headline.copyWith(fontSize: 24),
+                      ),
                     ),
                   ),
                   Center(
@@ -79,28 +91,61 @@ class ProfileMyScreen extends ConsumerWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _Stat(count: '—', label: 'Posts'),
+                        Semantics(
+                          identifier: ScreensIds.profileMyStat('posts'),
+                          value: '—',
+                          label: 'Posts',
+                          child: _Stat(count: '—', label: 'Posts'),
+                        ),
                         Container(width: 1, height: 30, color: theme.text.withValues(alpha: 0.08)),
-                        _Stat(count: '—', label: 'Followers'),
+                        Semantics(
+                          identifier: ScreensIds.profileMyStat('followers'),
+                          value: '—',
+                          label: 'Followers',
+                          child: _Stat(count: '—', label: 'Followers'),
+                        ),
                         Container(width: 1, height: 30, color: theme.text.withValues(alpha: 0.08)),
-                        _Stat(count: '—', label: 'Following'),
+                        Semantics(
+                          identifier: ScreensIds.profileMyStat('following'),
+                          value: '—',
+                          label: 'Following',
+                          child: _Stat(count: '—', label: 'Following'),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   // Menu items
-                  _MenuItem(icon: theme.icons.editOutline, label: 'Edit Profile', onTap: () => context.go(ProtoRoutes.profileEdit)),
-                  _MenuItemWithBadge(
-                    icon: theme.icons.notificationsOutline,
-                    label: 'Notifications',
-                    badgeCount: unreadAsync.when(
+                  Semantics(
+                    identifier: ScreensIds.profileMyEdit,
+                    button: true,
+                    label: 'Edit Profile',
+                    child: _MenuItem(
+                      icon: theme.icons.editOutline,
+                      label: 'Edit Profile',
+                      onTap: () => context.go(ProtoRoutes.profileEdit),
+                    ),
+                  ),
+                  Builder(builder: (context) {
+                    final unreadCount = unreadAsync.when(
                       data: (count) => count,
                       loading: () => 0,
                       error: (_, __) => 0,
-                    ),
-                    onTap: () => context.go(ProtoRoutes.profileNotifications),
-                  ),
+                    );
+                    return Semantics(
+                      identifier: ScreensIds.profileMyNotifications,
+                      button: true,
+                      label: 'Notifications',
+                      value: unreadCount > 0 ? '$unreadCount unread' : null,
+                      child: _MenuItemWithBadge(
+                        icon: theme.icons.notificationsOutline,
+                        label: 'Notifications',
+                        badgeCount: unreadCount,
+                        onTap: () => context.go(ProtoRoutes.profileNotifications),
+                      ),
+                    );
+                  }),
                   _MenuItem(icon: theme.icons.chatBubbleOutline, label: 'Messages', onTap: () => context.go(ProtoRoutes.chatInbox)),
                   // TODO: enable when Listings + Saved features ship
                   // _MenuItem(icon: theme.icons.storefrontOutline, label: 'My Listings', onTap: () {}),

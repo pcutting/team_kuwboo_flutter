@@ -7,6 +7,7 @@ import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import '_step_chip.dart';
 import 'auth_callbacks.dart';
+import 'auth_test_ids.dart';
 
 class AuthProfileScreen extends StatefulWidget {
   const AuthProfileScreen({super.key});
@@ -70,43 +71,48 @@ class _AuthProfileScreenState extends State<AuthProfileScreen> {
 
                     // Avatar placeholder
                     Center(
-                      child: Stack(
-                        children: [
-                          Container(
-                            width: 96,
-                            height: 96,
-                            decoration: BoxDecoration(
-                              color: theme.primary.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.person_rounded,
-                              size: 48,
-                              color: theme.primary.withValues(alpha: 0.4),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              width: 32,
-                              height: 32,
+                      child: Semantics(
+                        identifier: AuthIds.profileAddPhoto,
+                        button: true,
+                        label: 'Add photo',
+                        child: Stack(
+                          children: [
+                            Container(
+                              width: 96,
+                              height: 96,
                               decoration: BoxDecoration(
-                                color: theme.primary,
+                                color: theme.primary.withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: theme.surface,
-                                  width: 2,
+                              ),
+                              child: Icon(
+                                Icons.person_rounded,
+                                size: 48,
+                                color: theme.primary.withValues(alpha: 0.4),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: theme.primary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: theme.surface,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt_rounded,
+                                  size: 16,
+                                  color: Colors.white,
                                 ),
                               ),
-                              child: const Icon(
-                                Icons.camera_alt_rounded,
-                                size: 16,
-                                color: Colors.white,
-                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -151,19 +157,23 @@ class _AuthProfileScreenState extends State<AuthProfileScreen> {
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: TextField(
-                              controller: _displayNameController,
-                              textCapitalization: TextCapitalization.words,
-                              style: theme.body.copyWith(color: theme.text),
-                              decoration: InputDecoration(
-                                isDense: true,
-                                border: InputBorder.none,
-                                hintText: 'Your name',
-                                hintStyle: theme.body.copyWith(
-                                  color: theme.textTertiary,
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 14,
+                            child: Semantics(
+                              identifier: AuthIds.profileDisplayName,
+                              textField: true,
+                              child: TextField(
+                                controller: _displayNameController,
+                                textCapitalization: TextCapitalization.words,
+                                style: theme.body.copyWith(color: theme.text),
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  border: InputBorder.none,
+                                  hintText: 'Your name',
+                                  hintStyle: theme.body.copyWith(
+                                    color: theme.textTertiary,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
                                 ),
                               ),
                             ),
@@ -207,24 +217,28 @@ class _AuthProfileScreenState extends State<AuthProfileScreen> {
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: TextField(
-                              controller: _usernameController,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                  RegExp(r'[a-zA-Z0-9_]'),
-                                ),
-                                LengthLimitingTextInputFormatter(20),
-                              ],
-                              style: theme.body.copyWith(color: theme.text),
-                              decoration: InputDecoration(
-                                isDense: true,
-                                border: InputBorder.none,
-                                hintText: 'username',
-                                hintStyle: theme.body.copyWith(
-                                  color: theme.textTertiary,
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 14,
+                            child: Semantics(
+                              identifier: AuthIds.profileUsername,
+                              textField: true,
+                              child: TextField(
+                                controller: _usernameController,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                    RegExp(r'[a-zA-Z0-9_]'),
+                                  ),
+                                  LengthLimitingTextInputFormatter(20),
+                                ],
+                                style: theme.body.copyWith(color: theme.text),
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  border: InputBorder.none,
+                                  hintText: 'username',
+                                  hintStyle: theme.body.copyWith(
+                                    color: theme.textTertiary,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
                                 ),
                               ),
                             ),
@@ -233,13 +247,17 @@ class _AuthProfileScreenState extends State<AuthProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text(
-                      _usernameError ?? 'This is how others will find you',
-                      style: theme.caption.copyWith(
-                        color: _usernameError != null
-                            ? Colors.red.shade700
-                            : theme.textTertiary,
-                        fontSize: 12,
+                    Semantics(
+                      identifier: AuthIds.profileUsernameError,
+                      liveRegion: _usernameError != null,
+                      child: Text(
+                        _usernameError ?? 'This is how others will find you',
+                        style: theme.caption.copyWith(
+                          color: _usernameError != null
+                              ? Colors.red.shade700
+                              : theme.textTertiary,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ],
@@ -248,33 +266,40 @@ class _AuthProfileScreenState extends State<AuthProfileScreen> {
               // Continue button
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
-                child: GestureDetector(
-                  onTap: _saving ? null : () => _onContinue(context),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(
-                      color: _saving
-                          ? theme.primary.withValues(alpha: 0.6)
-                          : theme.primary,
-                      borderRadius: BorderRadius.circular(theme.radiusFull),
-                    ),
-                    child: Center(
-                      child: _saving
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation(
-                                  Colors.white,
+                child: Semantics(
+                  identifier: AuthIds.profileContinue,
+                  button: true,
+                  label: _saving ? 'Saving' : 'Continue',
+                  enabled: !_saving,
+                  liveRegion: _saving,
+                  child: GestureDetector(
+                    onTap: _saving ? null : () => _onContinue(context),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: _saving
+                            ? theme.primary.withValues(alpha: 0.6)
+                            : theme.primary,
+                        borderRadius: BorderRadius.circular(theme.radiusFull),
+                      ),
+                      child: Center(
+                        child: _saving
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation(
+                                    Colors.white,
+                                  ),
                                 ),
+                              )
+                            : Text(
+                                'Continue',
+                                style: theme.button.copyWith(fontSize: 16),
                               ),
-                            )
-                          : Text(
-                              'Continue',
-                              style: theme.button.copyWith(fontSize: 16),
-                            ),
+                      ),
                     ),
                   ),
                 ),

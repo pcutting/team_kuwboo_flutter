@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_models/kuwboo_models.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import '../screens_test_ids.dart';
 import '../sponsored/sponsored_inline.dart';
 import 'shop_format.dart';
 import 'shop_providers.dart';
@@ -40,28 +41,35 @@ class _ShopBrowseScreenState extends ConsumerState<ShopBrowseScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.all(12),
-          child: GestureDetector(
-            onTap: () => ProtoToast.show(
-              context,
-              theme.icons.search,
-              'Search keyboard would open',
-            ),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: theme.background,
-                borderRadius: BorderRadius.circular(theme.radiusFull),
-                border: Border.all(color: theme.text.withValues(alpha: 0.08)),
+          child: Semantics(
+            identifier: ScreensIds.shopBrowseSearch,
+            textField: true,
+            label: 'Search marketplace',
+            child: GestureDetector(
+              onTap: () => ProtoToast.show(
+                context,
+                theme.icons.search,
+                'Search keyboard would open',
               ),
-              child: Row(
-                children: [
-                  Icon(theme.icons.search, size: 20, color: theme.textTertiary),
-                  const SizedBox(width: 10),
-                  Text(
-                    'Search marketplace...',
-                    style: theme.body.copyWith(color: theme.textTertiary),
-                  ),
-                ],
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: theme.background,
+                  borderRadius: BorderRadius.circular(theme.radiusFull),
+                  border: Border.all(color: theme.text.withValues(alpha: 0.08)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(theme.icons.search,
+                        size: 20, color: theme.textTertiary),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Search marketplace...',
+                      style: theme.body.copyWith(color: theme.textTertiary),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -75,30 +83,36 @@ class _ShopBrowseScreenState extends ConsumerState<ShopBrowseScreen> {
               final isActive = cat == _selectedCategory;
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: ProtoPressButton(
-                  duration: const Duration(milliseconds: 100),
-                  onTap: () => setState(() => _selectedCategory = cat),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isActive ? theme.primary : theme.background,
-                      borderRadius: BorderRadius.circular(20),
-                      border: isActive
-                          ? null
-                          : Border.all(
-                              color: theme.text.withValues(alpha: 0.1),
-                            ),
-                    ),
-                    child: Text(
-                      cat,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isActive ? Colors.white : theme.textSecondary,
+                child: Semantics(
+                  identifier: ScreensIds.shopBrowseCategoryChip(cat),
+                  button: true,
+                  selected: isActive,
+                  label: cat,
+                  child: ProtoPressButton(
+                    duration: const Duration(milliseconds: 100),
+                    onTap: () => setState(() => _selectedCategory = cat),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isActive ? theme.primary : theme.background,
+                        borderRadius: BorderRadius.circular(20),
+                        border: isActive
+                            ? null
+                            : Border.all(
+                                color: theme.text.withValues(alpha: 0.1),
+                              ),
+                      ),
+                      child: Text(
+                        cat,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isActive ? Colors.white : theme.textSecondary,
+                        ),
                       ),
                     ),
                   ),
@@ -211,83 +225,100 @@ class _ProductGrid extends StatelessWidget {
           final idx = sponsoredSlot >= 0 && i > sponsoredSlot ? i - 1 : i;
           final product = products[idx];
           final isWishlisted = wishlistedIds.contains(product.id);
-          return ProtoPressButton(
-            onTap: () => state.pushWithArgs(
-              ProtoRoutes.shopProduct,
-              {'productId': product.id},
-            ),
-            child: Container(
-              decoration: theme.cardDecoration,
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: ProtoNetworkImage(
-                      imageUrl: product.thumbnailUrl ?? _placeholderImage,
-                      width: double.infinity,
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
+          final priceText = formatPriceCents(
+            product.priceCents,
+            product.currency,
+          );
+          return Semantics(
+            identifier: ScreensIds.shopBrowseProduct(idx),
+            button: true,
+            label: product.title,
+            value: '${product.title} $priceText',
+            child: ProtoPressButton(
+              onTap: () => state.pushWithArgs(
+                ProtoRoutes.shopProduct,
+                {'productId': product.id},
+              ),
+              child: Container(
+                decoration: theme.cardDecoration,
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: ProtoNetworkImage(
+                        imageUrl: product.thumbnailUrl ?? _placeholderImage,
+                        width: double.infinity,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            product.title,
-                            style: theme.title.copyWith(fontSize: 13),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(product.condition, style: theme.caption),
-                          const Spacer(),
-                          Row(
-                            children: [
-                              Text(
-                                formatPriceCents(
-                                  product.priceCents,
-                                  product.currency,
-                                ),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: theme.primary,
-                                  fontFamily: theme.displayFont,
-                                ),
-                              ),
-                              const Spacer(),
-                              GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTap: () =>
-                                    onWishlistToggle(product.id, isWishlisted),
-                                child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 200),
-                                  child: Icon(
-                                    isWishlisted
-                                        ? theme.icons.favoriteFilled
-                                        : theme.icons.favoriteOutline,
-                                    key: ValueKey(isWishlisted),
-                                    size: 16,
-                                    color: isWishlisted
-                                        ? theme.accent
-                                        : theme.textTertiary,
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              product.title,
+                              style: theme.title.copyWith(fontSize: 13),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(product.condition, style: theme.caption),
+                            const Spacer(),
+                            Row(
+                              children: [
+                                Text(
+                                  priceText,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: theme.primary,
+                                    fontFamily: theme.displayFont,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                const Spacer(),
+                                Semantics(
+                                  identifier:
+                                      ScreensIds.shopBrowseWishlist(idx),
+                                  button: true,
+                                  selected: isWishlisted,
+                                  label: isWishlisted
+                                      ? 'Remove from wishlist'
+                                      : 'Add to wishlist',
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () => onWishlistToggle(
+                                        product.id, isWishlisted),
+                                    child: AnimatedSwitcher(
+                                      duration:
+                                          const Duration(milliseconds: 200),
+                                      child: Icon(
+                                        isWishlisted
+                                            ? theme.icons.favoriteFilled
+                                            : theme.icons.favoriteOutline,
+                                        key: ValueKey(isWishlisted),
+                                        size: 16,
+                                        color: isWishlisted
+                                            ? theme.accent
+                                            : theme.textTertiary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );

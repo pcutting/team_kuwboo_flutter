@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import 'chat_ornaments.dart';
+import 'chat_test_ids.dart';
 
 /// Shared conversation list tile used by [ChatInboxScreen].
 ///
@@ -34,20 +35,26 @@ class ProtoConversationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
 
-    return ProtoPressButton(
-      duration: const Duration(milliseconds: 100),
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: theme.cardDecoration,
-        child: Row(
-          children: [
-            _buildAvatar(theme),
-            const SizedBox(width: 12),
-            Expanded(child: _buildContent(theme)),
-            _buildTrailing(theme),
-          ],
+    return Semantics(
+      identifier: ChatIds.inboxCard(index),
+      button: true,
+      label: 'Conversation with ${conversation.name}',
+      value: '${conversation.name}: ${conversation.lastMessage}',
+      child: ProtoPressButton(
+        duration: const Duration(milliseconds: 100),
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: theme.cardDecoration,
+          child: Row(
+            children: [
+              _buildAvatar(theme),
+              const SizedBox(width: 12),
+              Expanded(child: _buildContent(theme)),
+              _buildTrailing(theme),
+            ],
+          ),
         ),
       ),
     );
@@ -81,21 +88,26 @@ class ProtoConversationCard extends StatelessWidget {
           Positioned(
             right: 0,
             top: 0,
-            child: Container(
-              width: 16,
-              height: 16,
-              decoration: BoxDecoration(
-                color: theme.accent,
-                shape: BoxShape.circle,
-                border: Border.all(color: theme.surface, width: 2),
-              ),
-              child: Center(
-                child: Text(
-                  '${conversation.unreadCount}',
-                  style: const TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+            child: Semantics(
+              identifier: ChatIds.inboxBadgeUnread(index),
+              label: 'Unread',
+              value: '${conversation.unreadCount}',
+              child: Container(
+                width: 16,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: theme.accent,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: theme.surface, width: 2),
+                ),
+                child: Center(
+                  child: Text(
+                    '${conversation.unreadCount}',
+                    style: const TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -135,18 +147,25 @@ class ProtoConversationCard extends StatelessWidget {
             // Module context badge (shown in unfiltered inbox)
             if (showModuleBadge) ...[
               const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: theme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
+              Semantics(
+                identifier: ChatIds.inboxBadgeModule(
+                  conversation.moduleContext.toLowerCase(),
                 ),
-                child: Text(
-                  conversation.moduleContext,
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w600,
-                    color: theme.primary,
+                label: '${conversation.moduleContext} module',
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: theme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    conversation.moduleContext,
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: theme.primary,
+                    ),
                   ),
                 ),
               ),

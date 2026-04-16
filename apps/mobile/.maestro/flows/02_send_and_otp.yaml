@@ -1,0 +1,48 @@
+appId: com.kuwboo.mobile
+name: B5-B7 — Send Code → OTP banner → enter code → verify
+---
+# B5: tap Send Code, navigate to OTP screen.
+- tapOn:
+    id: "auth.phone.send_code"
+- waitForAnimationToEnd:
+    timeout: 6000
+
+# OTP screen rendered. Identifier text shows the phone number.
+- assertVisible:
+    id: "auth.otp.text_identifier"
+
+# B6: dev banner is visible (backend is in Twilio-less mode; returns devCode).
+- assertVisible:
+    id: "auth.otp.banner_dev_code"
+- takeScreenshot: /tmp/walkthrough_b6_otp_banner
+
+# B7: read the rolling devCode out of the banner via JS helper, then type it.
+# The helper exposes maestroOutput.devCode as a 6-character string.
+- runScript:
+    file: ../helpers/read_dev_code.js
+
+- tapOn:
+    id: "auth.otp.digit_0"
+- inputText: ${output.devCode[0]}
+- tapOn:
+    id: "auth.otp.digit_1"
+- inputText: ${output.devCode[1]}
+- tapOn:
+    id: "auth.otp.digit_2"
+- inputText: ${output.devCode[2]}
+- tapOn:
+    id: "auth.otp.digit_3"
+- inputText: ${output.devCode[3]}
+- tapOn:
+    id: "auth.otp.digit_4"
+- inputText: ${output.devCode[4]}
+- tapOn:
+    id: "auth.otp.digit_5"
+- inputText: ${output.devCode[5]}
+
+# Auto-submits on 6th digit. Birthday Continue button is the proof of nav.
+- waitForAnimationToEnd:
+    timeout: 6000
+- assertVisible:
+    id: "auth.birthday.btn_continue"
+- takeScreenshot: /tmp/walkthrough_b7_birthday

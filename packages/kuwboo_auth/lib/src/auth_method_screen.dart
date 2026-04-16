@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kuwboo_api_client/kuwboo_api_client.dart';
@@ -6,6 +5,7 @@ import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import '_step_chip.dart';
 import 'auth_callbacks.dart';
+import 'auth_test_ids.dart';
 
 class AuthMethodScreen extends StatefulWidget {
   const AuthMethodScreen({super.key});
@@ -15,25 +15,6 @@ class AuthMethodScreen extends StatefulWidget {
 }
 
 class _AuthMethodScreenState extends State<AuthMethodScreen> {
-  late final TapGestureRecognizer _termsRecognizer;
-  late final TapGestureRecognizer _privacyRecognizer;
-
-  @override
-  void initState() {
-    super.initState();
-    _termsRecognizer = TapGestureRecognizer()
-      ..onTap = () => context.push(ProtoRoutes.legalTerms);
-    _privacyRecognizer = TapGestureRecognizer()
-      ..onTap = () => context.push(ProtoRoutes.legalPrivacy);
-  }
-
-  @override
-  void dispose() {
-    _termsRecognizer.dispose();
-    _privacyRecognizer.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
@@ -96,6 +77,7 @@ class _AuthMethodScreenState extends State<AuthMethodScreen> {
 
                   // Use phone or email
                   _MethodButton(
+                    identifier: AuthIds.methodPhoneEmail,
                     icon: Icons.email_outlined,
                     label: 'Use phone or email',
                     onTap: () => context.go(ProtoRoutes.authPhone),
@@ -105,6 +87,7 @@ class _AuthMethodScreenState extends State<AuthMethodScreen> {
 
                   // Continue with Google
                   _MethodButton(
+                    identifier: AuthIds.methodGoogle,
                     icon: Icons.g_mobiledata_rounded,
                     label: 'Continue with Google',
                     onTap: () => handleSso(callbacks?.onSignInWithGoogle, 'Google'),
@@ -113,6 +96,7 @@ class _AuthMethodScreenState extends State<AuthMethodScreen> {
 
                   // Continue with Apple
                   _MethodButton(
+                    identifier: AuthIds.methodApple,
                     icon: Icons.apple_rounded,
                     label: 'Continue with Apple',
                     onTap: () => handleSso(callbacks?.onSignInWithApple, 'Apple'),
@@ -127,22 +111,48 @@ class _AuthMethodScreenState extends State<AuthMethodScreen> {
                       TextSpan(
                         text: 'By continuing, you agree to our ',
                         children: [
-                          TextSpan(
-                            text: 'Terms of Service',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            child: Semantics(
+                              identifier: AuthIds.methodTerms,
+                              link: true,
+                              button: true,
+                              label: 'Terms of Service',
+                              child: GestureDetector(
+                                onTap: () =>
+                                    context.push(ProtoRoutes.legalTerms),
+                                child: Text(
+                                  'Terms of Service',
+                                  style: theme.caption.copyWith(
+                                    color: theme.textTertiary,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
                             ),
-                            recognizer: _termsRecognizer,
                           ),
                           const TextSpan(text: ' and '),
-                          TextSpan(
-                            text: 'Privacy Policy',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            child: Semantics(
+                              identifier: AuthIds.methodPrivacy,
+                              link: true,
+                              button: true,
+                              label: 'Privacy Policy',
+                              child: GestureDetector(
+                                onTap: () =>
+                                    context.push(ProtoRoutes.legalPrivacy),
+                                child: Text(
+                                  'Privacy Policy',
+                                  style: theme.caption.copyWith(
+                                    color: theme.textTertiary,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
                             ),
-                            recognizer: _privacyRecognizer,
                           ),
                         ],
                       ),
@@ -163,12 +173,14 @@ class _AuthMethodScreenState extends State<AuthMethodScreen> {
 }
 
 class _MethodButton extends StatelessWidget {
+  final String identifier;
   final IconData icon;
   final String label;
   final VoidCallback onTap;
   final bool filled;
 
   const _MethodButton({
+    required this.identifier,
     required this.icon,
     required this.label,
     required this.onTap,
@@ -179,31 +191,38 @@ class _MethodButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-        decoration: BoxDecoration(
-          color: filled ? theme.primary : null,
-          border: filled ? null : Border.all(color: theme.text.withValues(alpha: 0.12)),
-          borderRadius: BorderRadius.circular(theme.radiusFull),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 24, color: filled ? Colors.white : theme.text),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: filled ? Colors.white : theme.text,
+    return Semantics(
+      identifier: identifier,
+      button: true,
+      label: label,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          decoration: BoxDecoration(
+            color: filled ? theme.primary : null,
+            border: filled
+                ? null
+                : Border.all(color: theme.text.withValues(alpha: 0.12)),
+            borderRadius: BorderRadius.circular(theme.radiusFull),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 24, color: filled ? Colors.white : theme.text),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: filled ? Colors.white : theme.text,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

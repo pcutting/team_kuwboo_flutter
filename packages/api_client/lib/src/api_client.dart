@@ -31,6 +31,17 @@ class KuwbooApiClient {
   final Dio _dio;
   final FlutterSecureStorage _secureStorage;
 
+  // In-memory fallback for environments where secure storage is broken
+  // (notably the iOS Simulator, where flutter_secure_storage throws
+  // PlatformException -34018 because the simulator process lacks a
+  // Keychain entitlement). Without this fallback a successful verifyOtp
+  // throws on saveTokens — the user sees "Invalid code: PlatformException"
+  // even though the backend already minted valid tokens. With this
+  // fallback, the session stays authenticated until app termination;
+  // tokens are gone after a cold start, but the demo can proceed.
+  String? _memAccessToken;
+  String? _memRefreshToken;
+
   /// Single-flight token refresh guard.
   ///
   /// When two concurrent requests both receive 401, only the first one
@@ -47,29 +58,56 @@ class KuwbooApiClient {
   /// Exposed for sub-API classes to access token storage.
   FlutterSecureStorage get secureStorage => _secureStorage;
 
-  /// Save tokens after login or refresh.
+  /// Save tokens after login or refresh. Always populates the in-memory
+  /// cache; secure-storage failures are swallowed so a Keychain bug
+  /// can't fail an otherwise-successful auth flow.
   Future<void> saveTokens(TokenPair tokens) async {
-    await Future.wait([
-      _secureStorage.write(key: _kAccessTokenKey, value: tokens.accessToken),
-      _secureStorage.write(key: _kRefreshTokenKey, value: tokens.refreshToken),
-    ]);
+    _memAccessToken = tokens.accessToken;
+    _memRefreshToken = tokens.refreshToken;
+    try {
+      await Future.wait([
+        _secureStorage.write(key: _kAccessTokenKey, value: tokens.accessToken),
+        _secureStorage.write(key: _kRefreshTokenKey, value: tokens.refreshToken),
+      ]);
+    } catch (_) {
+      // In-memory copies above keep the session usable.
+    }
   }
 
   /// Clear tokens on logout.
   Future<void> clearTokens() async {
-    await Future.wait([
-      _secureStorage.delete(key: _kAccessTokenKey),
-      _secureStorage.delete(key: _kRefreshTokenKey),
-    ]);
+    _memAccessToken = null;
+    _memRefreshToken = null;
+    try {
+      await Future.wait([
+        _secureStorage.delete(key: _kAccessTokenKey),
+        _secureStorage.delete(key: _kRefreshTokenKey),
+      ]);
+    } catch (_) {/* see saveTokens — storage may be unavailable */}
   }
 
-  /// Read the current access token (if any).
-  Future<String?> getAccessToken() =>
-      _secureStorage.read(key: _kAccessTokenKey);
+  /// Read the current access token. Prefers in-memory (set by the most
+  /// recent saveTokens) before hitting secure storage; if storage throws,
+  /// falls back to in-memory (which may be null on a cold start).
+  Future<String?> getAccessToken() async {
+    if (_memAccessToken != null) return _memAccessToken;
+    try {
+      return await _secureStorage.read(key: _kAccessTokenKey);
+    } catch (_) {
+      return _memAccessToken;
+    }
+  }
 
-  /// Read the current refresh token (if any).
-  Future<String?> getRefreshToken() =>
-      _secureStorage.read(key: _kRefreshTokenKey);
+  /// Read the current refresh token. Same fallback logic as
+  /// [getAccessToken].
+  Future<String?> getRefreshToken() async {
+    if (_memRefreshToken != null) return _memRefreshToken;
+    try {
+      return await _secureStorage.read(key: _kRefreshTokenKey);
+    } catch (_) {
+      return _memRefreshToken;
+    }
+  }
 
   /// Perform a single-flight token refresh. The first concurrent caller
   /// does the actual HTTP call; subsequent callers await the same future.
@@ -118,8 +156,12 @@ class KuwbooApiClient {
         completer.complete(newTokens);
       } catch (error, stack) {
         // Clear tokens so every 401 waiter drops to logged-out state
-        // consistently instead of some retrying and some not.
-        await clearTokens();
+        // consistently instead of some retrying and some not. A storage
+        // failure here must not prevent completer.completeError from
+        // firing — otherwise every awaiter hangs forever.
+        try {
+          await clearTokens();
+        } catch (_) {/* secure storage unavailable */}
         completer.completeError(error, stack);
       } finally {
         _refreshing = null;
@@ -133,6 +175,9 @@ class KuwbooApiClient {
   Interceptor _authInterceptor() {
     return InterceptorsWrapper(
       onRequest: (options, handler) async {
+        // getAccessToken() is now self-protecting against secure-storage
+        // failures (returns null instead of throwing). We still must
+        // always call handler.next/reject so Dio doesn't deadlock.
         final token = await getAccessToken();
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
@@ -146,11 +191,18 @@ class KuwbooApiClient {
 
         // Don't retry the refresh call itself.
         if (error.requestOptions.path.endsWith('/auth/refresh')) {
-          await clearTokens();
+          try {
+            await clearTokens();
+          } catch (_) {/* storage failure — nothing useful to do */}
           return handler.next(error);
         }
 
-        final refreshToken = await getRefreshToken();
+        String? refreshToken;
+        try {
+          refreshToken = await getRefreshToken();
+        } catch (_) {
+          // Same -34018 risk as above — fall through as if no token.
+        }
         if (refreshToken == null) {
           return handler.next(error);
         }

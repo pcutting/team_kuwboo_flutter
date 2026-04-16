@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_models/kuwboo_models.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import '../screens_test_ids.dart';
 import 'dating_match_overlay.dart';
 import 'dating_providers.dart';
 
@@ -74,20 +75,38 @@ class _DatingCardStackState extends ConsumerState<DatingCardStack> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              Expanded(child: _card(context, theme, current)),
+              Expanded(
+                child: Semantics(
+                  identifier: ScreensIds.datingDiscoverCard(_index),
+                  label: current.creator?.name ?? 'Profile',
+                  child: _card(context, theme, current),
+                ),
+              ),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _circleAction(
-                    icon: Icons.close_rounded,
-                    color: theme.textSecondary,
-                    onTap: _acting ? null : _skip,
+                  Semantics(
+                    identifier: ScreensIds.datingDiscoverPass,
+                    button: true,
+                    label: 'Pass',
+                    enabled: !_acting,
+                    child: _circleAction(
+                      icon: Icons.close_rounded,
+                      color: theme.textSecondary,
+                      onTap: _acting ? null : _skip,
+                    ),
                   ),
-                  _circleAction(
-                    icon: Icons.favorite_rounded,
-                    color: theme.primary,
-                    onTap: _acting ? null : () => _like(current),
+                  Semantics(
+                    identifier: ScreensIds.datingDiscoverLike,
+                    button: true,
+                    label: 'Like',
+                    enabled: !_acting,
+                    child: _circleAction(
+                      icon: Icons.favorite_rounded,
+                      color: theme.primary,
+                      onTap: _acting ? null : () => _like(current),
+                    ),
                   ),
                 ],
               ),
