@@ -71,6 +71,19 @@
 		<dict>
 			<key>NSAllowsArbitraryLoads</key>
 			<false/>
+			<!-- TEMP: dev backend is http:// while TLS is being provisioned.
+			     Remove this whole NSExceptionDomains block once the EC2 host
+			     is behind an HTTPS cert (api.kuwboo.com). -->
+			<key>NSExceptionDomains</key>
+			<dict>
+				<key>35.177.230.139</key>
+				<dict>
+					<key>NSExceptionAllowsInsecureHTTPLoads</key>
+					<true/>
+					<key>NSIncludesSubdomains</key>
+					<true/>
+				</dict>
+			</dict>
 		</dict>
 		<!-- Export compliance: app uses only standard HTTPS encryption -->
 		<key>ITSAppUsesNonExemptEncryption</key>
