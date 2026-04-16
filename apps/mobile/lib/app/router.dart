@@ -67,7 +67,16 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
-    initialLocation: ProtoRoutes.yoyoNearby,
+    // Start at the auth sub-tree, not the shell. The `redirect` below has an
+    // early-out while `auth.isLoading` is true (tokens still being read from
+    // secure storage on cold start). If we point initialLocation at a shell
+    // route, GoRouter mounts that screen during the loading window — its
+    // providers fire their fetches against the API, get 401 (no token yet),
+    // and cache an error state. Starting on /auth/welcome keeps the shell
+    // unmounted until auth is resolved; authenticated users are bounced to
+    // yoyo by the redirect at line ~95, so they only see welcome for one
+    // frame at most.
+    initialLocation: ProtoRoutes.authWelcome,
     refreshListenable: refresh,
     redirect: (context, state) {
       final auth = ref.read(authProvider);

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kuwboo_models/kuwboo_models.dart';
 
@@ -64,6 +65,10 @@ class KuwbooApiClient {
   Future<void> saveTokens(TokenPair tokens) async {
     _memAccessToken = tokens.accessToken;
     _memRefreshToken = tokens.refreshToken;
+    if (kDebugMode) {
+      final suffix = tokens.accessToken.substring(tokens.accessToken.length - 8);
+      debugPrint('[api] saveTokens access=…$suffix');
+    }
     try {
       await Future.wait([
         _secureStorage.write(key: _kAccessTokenKey, value: tokens.accessToken),
@@ -76,6 +81,11 @@ class KuwbooApiClient {
 
   /// Clear tokens on logout.
   Future<void> clearTokens() async {
+    if (kDebugMode) {
+      // Stack trace here is invaluable — 90% of "why did I log out?"
+      // bugs come from unexpected clearTokens callers.
+      debugPrint('[api] clearTokens called\n${StackTrace.current}');
+    }
     _memAccessToken = null;
     _memRefreshToken = null;
     try {
@@ -182,15 +192,32 @@ class KuwbooApiClient {
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
+        if (kDebugMode) {
+          // Last 8 chars of the token are enough to distinguish sessions
+          // while staying out of logs. `-` means no Authorization attached.
+          final suffix = token == null ? '-' : token.substring(token.length - 8);
+          debugPrint(
+            '[api] ${options.method} ${options.path} tok=$suffix',
+          );
+        }
         handler.next(options);
       },
       onError: (error, handler) async {
         if (error.response?.statusCode != 401) {
           return handler.next(error);
         }
+        if (kDebugMode) {
+          debugPrint(
+            '[api] 401 on ${error.requestOptions.method} ${error.requestOptions.path} '
+            'mem.access=${_memAccessToken != null} mem.refresh=${_memRefreshToken != null}',
+          );
+        }
 
         // Don't retry the refresh call itself.
         if (error.requestOptions.path.endsWith('/auth/refresh')) {
+          if (kDebugMode) {
+            debugPrint('[api] 401 on /auth/refresh — clearing tokens');
+          }
           try {
             await clearTokens();
           } catch (_) {/* storage failure — nothing useful to do */}
@@ -204,20 +231,29 @@ class KuwbooApiClient {
           // Same -34018 risk as above — fall through as if no token.
         }
         if (refreshToken == null) {
+          if (kDebugMode) {
+            debugPrint('[api] no refresh token — 401 propagated');
+          }
           return handler.next(error);
         }
 
         try {
           final newTokens = await _refreshTokens();
+          if (kDebugMode) {
+            debugPrint('[api] refreshed successfully — retrying request');
+          }
           // Retry the original request with the new token.
           final retryOptions = error.requestOptions;
           retryOptions.headers['Authorization'] =
               'Bearer ${newTokens.accessToken}';
           final retryResponse = await _dio.fetch(retryOptions);
           return handler.resolve(retryResponse);
-        } catch (_) {
+        } catch (e) {
           // Refresh failed — tokens have already been cleared by
           // _refreshTokens(). Propagate the original 401.
+          if (kDebugMode) {
+            debugPrint('[api] refresh failed: $e — 401 propagated');
+          }
           return handler.next(error);
         }
       },
