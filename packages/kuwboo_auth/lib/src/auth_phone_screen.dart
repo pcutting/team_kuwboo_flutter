@@ -400,11 +400,15 @@ class _BottomAction extends StatelessWidget {
       duration: const Duration(milliseconds: 150),
       curve: Curves.easeOut,
       padding: EdgeInsets.only(bottom: lift),
-      child: GestureDetector(
-        onTap: enabled ? onTap : null,
-        child: Opacity(
-          opacity: enabled ? 1 : 0.45,
-          child: Container(
+      child: Semantics(
+        label: label,
+        button: true,
+        enabled: enabled,
+        child: GestureDetector(
+          onTap: enabled ? onTap : null,
+          child: Opacity(
+            opacity: enabled ? 1 : 0.45,
+            child: Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
@@ -416,6 +420,7 @@ class _BottomAction extends StatelessWidget {
                 label,
                 style: theme.button.copyWith(fontSize: 16),
               ),
+            ),
             ),
           ),
         ),
