@@ -58,13 +58,13 @@ Future<void> registerForPush(Ref ref) async {
     await ref.read(devicesApiProvider).register(
           RegisterDeviceDto(fcmToken: token, platform: platform),
         );
-    debugPrint('[fcm] device registered (platform=${platform.name})');
+    debugPrint('[fcm] device registered');
   } catch (error, stack) {
     // Non-fatal: push notifications will simply not arrive until the
     // next registration attempt succeeds. Surface to Crashlytics so the
     // silent-failure mode that shipped to the first TestFlight build
     // never recurs without a breadcrumb.
-    debugPrint('[fcm] device register failed: $error');
+    debugPrint('[fcm] device register failed');
     FlutterError.reportError(FlutterErrorDetails(
       exception: error,
       stack: stack,
@@ -89,7 +89,7 @@ Future<void> deactivateDevice(Ref ref) async {
     debugPrint('[fcm] device deactivated');
   } catch (error) {
     // Best-effort: the server will eventually GC stale tokens.
-    debugPrint('[fcm] device deactivate failed: $error');
+    debugPrint('[fcm] device deactivate failed');
   }
 }
 
@@ -115,7 +115,7 @@ final fcmTokenListenerProvider = Provider<StreamSubscription<String>>((ref) {
           );
       debugPrint('[fcm] token refresh re-register succeeded');
     } catch (error, stack) {
-      debugPrint('[fcm] re-register after refresh failed: $error');
+      debugPrint('[fcm] re-register after refresh failed');
       FlutterError.reportError(FlutterErrorDetails(
         exception: error,
         stack: stack,
@@ -131,7 +131,7 @@ final fcmTokenListenerProvider = Provider<StreamSubscription<String>>((ref) {
       unawaited(reregister(newToken));
     },
     onError: (Object error, StackTrace stack) {
-      debugPrint('[fcm] onTokenRefresh stream error: $error');
+      debugPrint('[fcm] onTokenRefresh stream error');
       FlutterError.reportError(FlutterErrorDetails(
         exception: error,
         stack: stack,
@@ -143,3 +143,32 @@ final fcmTokenListenerProvider = Provider<StreamSubscription<String>>((ref) {
   ref.onDispose(subscription.cancel);
   return subscription;
 });
+
+/// Wires [registerForPush] / [deactivateDevice] to auth-state edge
+/// transitions.
+///
+/// Instantiate once from the app root by reading this provider — it
+/// listens to [authProvider] internally and fires on sign-in / sign-out.
+/// Idempotent across rebuilds: the provider caches a single subscription
+/// whose lifecycle is tied to the [ProviderContainer].
+final fcmLifecycleListenerProvider = Provider<ProviderSubscription<AuthState>>(
+  (ref) {
+    AuthState? previous;
+    final subscription = ref.listen<AuthState>(
+      authProvider,
+      (prev, next) {
+        final wasAuthed = (prev ?? previous)?.isAuthenticated ?? false;
+        final isAuthed = next.isAuthenticated;
+        if (!wasAuthed && isAuthed) {
+          unawaited(registerForPush(ref));
+        } else if (wasAuthed && !isAuthed) {
+          unawaited(deactivateDevice(ref));
+        }
+        previous = next;
+      },
+      fireImmediately: true,
+    );
+    ref.onDispose(subscription.close);
+    return subscription;
+  },
+);
