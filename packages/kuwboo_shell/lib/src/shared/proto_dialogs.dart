@@ -5,6 +5,7 @@ import '../theme/proto_theme.dart';
 import '../theme/brand_colors.dart';
 import '../state/proto_state_provider.dart';
 import '../routes/proto_routes.dart';
+import '../testing/shell_test_ids.dart';
 
 /// Modal bottom sheet presenting share options with platform icons.
 /// Each option shows a SnackBar confirming the simulated share action.
@@ -72,6 +73,7 @@ class _ShareOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
+      identifier: ShellIds.shareOption(label),
       label: 'Share via $label',
       button: true,
       child: GestureDetector(
@@ -239,6 +241,7 @@ class ProtoConfirmDialog {
                 children: [
                   Expanded(
                     child: Semantics(
+                      identifier: ShellIds.dialogConfirmCancel,
                       label: 'Cancel',
                       button: true,
                       child: GestureDetector(
@@ -261,6 +264,7 @@ class ProtoConfirmDialog {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Semantics(
+                      identifier: ShellIds.dialogConfirmConfirm,
                       label: 'Confirm',
                       button: true,
                       child: GestureDetector(
@@ -369,6 +373,7 @@ class _ProfileMenuContentState extends State<_ProfileMenuContent> {
             const SizedBox(height: 20),
             // View Profile
             _ProfileMenuItem(
+              identifier: ShellIds.profileMenuViewProfile,
               icon: theme.icons.personOutline,
               label: 'View Profile',
               theme: theme,
@@ -379,6 +384,7 @@ class _ProfileMenuContentState extends State<_ProfileMenuContent> {
             ),
             // Settings
             _ProfileMenuItem(
+              identifier: ShellIds.profileMenuSettings,
               icon: theme.icons.settings,
               label: 'Settings',
               theme: theme,
@@ -388,27 +394,32 @@ class _ProfileMenuContentState extends State<_ProfileMenuContent> {
               },
             ),
             // Dark Mode toggle
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: theme.text.withValues(alpha: 0.04))),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.dark_mode_outlined, size: 20, color: _isDarkMode ? theme.secondary : theme.textSecondary),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Text('Dark Mode', style: theme.body.copyWith(color: theme.text, fontSize: 14)),
-                  ),
-                  Switch(
-                    value: _isDarkMode,
-                    onChanged: (value) {
-                      state.onDarkModeChanged(value);
-                      setState(() => _isDarkMode = value);
-                    },
-                    activeThumbColor: theme.secondary,
-                  ),
-                ],
+            Semantics(
+              identifier: ShellIds.profileMenuDarkMode,
+              label: 'Dark Mode',
+              toggled: _isDarkMode,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: theme.text.withValues(alpha: 0.04))),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.dark_mode_outlined, size: 20, color: _isDarkMode ? theme.secondary : theme.textSecondary),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text('Dark Mode', style: theme.body.copyWith(color: theme.text, fontSize: 14)),
+                    ),
+                    Switch(
+                      value: _isDarkMode,
+                      onChanged: (value) {
+                        state.onDarkModeChanged(value);
+                        setState(() => _isDarkMode = value);
+                      },
+                      activeThumbColor: theme.secondary,
+                    ),
+                  ],
+                ),
               ),
             ),
             // Dev-only: reset onboarding. Double-gated on kDebugMode and a
@@ -437,17 +448,20 @@ class _ProfileMenuItem extends StatelessWidget {
   final String label;
   final ProtoTheme theme;
   final VoidCallback onTap;
+  final String? identifier;
 
   const _ProfileMenuItem({
     required this.icon,
     required this.label,
     required this.theme,
     required this.onTap,
+    this.identifier,
   });
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
+      identifier: identifier,
       label: label,
       button: true,
       child: GestureDetector(

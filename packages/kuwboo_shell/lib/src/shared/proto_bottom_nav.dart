@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../state/proto_state_provider.dart';
+import '../testing/shell_test_ids.dart';
 import '../theme/proto_theme.dart';
 
 /// Sub-feature tab definition for Set C bottom nav.
@@ -247,8 +248,10 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
 
               return Expanded(
                 child: Semantics(
+                  identifier: ShellIds.bottomnavTab(tab.label),
                   label: '${tab.label} tab${isActive ? ', selected' : ''}${badgeCount != null && badgeCount > 0 ? ', $badgeCount notifications' : ''}',
                   button: true,
+                  selected: isActive,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => widget.onTabTapped?.call(i),
@@ -321,6 +324,7 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
 
   Widget _buildFab(ProtoTheme theme) {
     return Semantics(
+      identifier: ShellIds.bottomnavFab,
       label: _isExpanded ? 'Close service menu' : 'Open service menu, current: ${_serviceLabels[widget.activeModule]}',
       button: true,
       child: GestureDetector(
@@ -414,8 +418,10 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
               );
             },
             child: Semantics(
+              identifier: ShellIds.bottomnavService(service.name),
               label: '${_serviceLabels[service]} service${isCurrent ? ', currently active' : ''}',
               button: true,
+              selected: isCurrent,
               child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () {

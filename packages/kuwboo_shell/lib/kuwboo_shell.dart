@@ -32,3 +32,6 @@ export 'src/routes/proto_transitions.dart';
 // Data
 export 'src/data/demo_data.dart';
 export 'src/data/proto_demo_data.dart';
+
+// Testing
+export 'src/testing/shell_test_ids.dart';

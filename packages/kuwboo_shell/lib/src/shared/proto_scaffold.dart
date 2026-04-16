@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/proto_theme.dart';
 import '../state/proto_state_provider.dart';
+import '../testing/shell_test_ids.dart';
 import 'proto_top_bar.dart';
 import 'proto_bottom_nav.dart';
 
@@ -158,19 +159,24 @@ class ProtoSubBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => state.pop(),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: theme.background,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                theme.icons.arrowBack,
-                size: 16,
-                color: theme.text,
+          Semantics(
+            identifier: ShellIds.subbarBack,
+            label: 'Back',
+            button: true,
+            child: GestureDetector(
+              onTap: () => state.pop(),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: theme.background,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  theme.icons.arrowBack,
+                  size: 16,
+                  color: theme.text,
+                ),
               ),
             ),
           ),
