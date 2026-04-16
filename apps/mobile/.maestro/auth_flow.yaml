@@ -1,0 +1,40 @@
+appId: com.kuwboo.mobile
+name: Auth — welcome + method smoke
+tags:
+  - auth
+  - smoke
+---
+# Smoke test the auth entry flow. Proves:
+# - app launches
+# - welcome screen renders the redesigned layout (logo, tagline, buttons)
+# - TEST BUILD banner is absent from welcome (moved to OTP)
+# - Create Account navigates to the method screen
+# - method screen offers the production option list (phone/email + SSO)
+#
+# The deeper flow (Send Code → OTP → Birthday) needs a whitelisted phone and
+# a reachable backend; extend this file when the seed whitelist is widened.
+
+- launchApp:
+    stopApp: true
+    permissions:
+      all: allow
+
+# Welcome screen.
+- assertVisible: "Connect. Discover. Be You."
+- assertVisible: "Create Account"
+- assertVisible: "Log In"
+- assertNotVisible: "TEST BUILD"
+
+# Nav into method.
+- tapOn: "Create Account"
+- assertVisible: "Use phone or email"
+- assertVisible: "Continue with Google"
+- assertVisible: "Continue with Apple"
+
+# Nav into phone/email screen.
+- tapOn: "Use phone or email"
+- assertVisible: "Phone"
+- assertVisible: "Email"
+
+- tapOn: "Email"
+- assertVisible: "you@example.com"

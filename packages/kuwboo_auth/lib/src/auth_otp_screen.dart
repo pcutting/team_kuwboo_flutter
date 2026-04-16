@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import 'auth_callbacks.dart';
@@ -127,8 +128,10 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
       try {
         await callbacks!.onVerifyOtp!(args.identifier, code, args.channel);
         if (!mounted) return;
-        // Host's auth state change drives the next screen via router
-        // redirect; no manual push needed.
+        // Auth state has flipped to authenticated. The router's redirect
+        // keeps new users inside /auth/* but won't choose a step for us —
+        // explicitly advance to the next onboarding screen.
+        context.go(ProtoRoutes.authBirthday);
       } catch (e) {
         if (!mounted) return;
         setState(() {
@@ -147,7 +150,7 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
     // Mock prototype flow — advance after a brief delay.
     await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
-    PrototypeStateProvider.of(context).push(ProtoRoutes.authBirthday);
+    context.go(ProtoRoutes.authBirthday);
   }
 
   Future<void> _resend() async {
@@ -186,6 +189,7 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
         child: Column(
           children: [
             ProtoSubBar(title: 'Verification'),
+            const _TestBuildBanner(),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -320,6 +324,39 @@ class _OtpBox extends StatelessWidget {
             onChanged: onChanged,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _TestBuildBanner extends StatelessWidget {
+  const _TestBuildBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade700,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.amber.shade900),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.science_outlined, size: 16, color: Colors.white),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'TEST BUILD — use OTP 000000 to sign in',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
