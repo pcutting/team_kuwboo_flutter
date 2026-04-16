@@ -156,14 +156,21 @@ class _PhoneTab extends StatefulWidget {
   State<_PhoneTab> createState() => _PhoneTabState();
 }
 
-// Countries we ship as demo defaults. If the device locale's region is one
-// US is the demo market. We were previously trusting the system locale for
-// US/GB/CA/AU/IE, but during the live walkthrough that bit us on a UK-locale
-// device: the picker silently sat on +44 and digits like 614… were parsed
-// as a UK number, sending +44614… to the backend. The user can still pick
-// any country from the dropdown — but the default is always US so the most
-// common test case works without thinking about it.
-String _initialCountryCode() => 'US';
+// Default to the device locale's region when it's a country we've QA'd the
+// flag/format for; otherwise fall back to US. This trusted set exists because
+// IntlPhoneField will silently render any locale's flag and re-parse digits
+// against that country's grammar — a US-typed `614…` on a GB-locale device
+// would be silently parsed as +44 614…, which is a real number that breaks
+// the demo.
+const _trustedCountryCodes = {'US', 'GB', 'CA', 'AU', 'IE'};
+
+String _initialCountryCode() {
+  final locale = WidgetsBinding.instance.platformDispatcher.locale.countryCode;
+  if (locale != null && _trustedCountryCodes.contains(locale.toUpperCase())) {
+    return locale.toUpperCase();
+  }
+  return 'US';
+}
 
 // Pin the common English-speaking markets at the top of the country picker,
 // then the rest in the package's original (alphabetical) order.
