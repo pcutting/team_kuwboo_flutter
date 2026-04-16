@@ -56,6 +56,7 @@ const SAMPLE_VIDEOS = [
 ];
 
 const SAMPLE_USERS = [
+  // UK (+44)
   { name: 'Alice Walker', phone: '+447911000001', isBot: false },
   { name: 'Ben Carter', phone: '+447911000002', isBot: false },
   { name: 'Chloe Evans', phone: '+447911000003', isBot: false },
@@ -66,6 +67,19 @@ const SAMPLE_USERS = [
   { name: 'Henry Johansson', phone: '+447911000008', isBot: false },
   { name: 'Bot Marley', phone: '+447911900001', isBot: true },
   { name: 'Bot Dylan', phone: '+447911900002', isBot: true },
+  // US (+1 415)
+  { name: 'Ivy Martinez', phone: '+14155550101', isBot: false },
+  { name: 'Jack Nguyen', phone: '+14155550102', isBot: false },
+  { name: 'Kira O\'Connor', phone: '+14155550103', isBot: false },
+  // Canada (+1 416)
+  { name: 'Liam Patel', phone: '+14165550101', isBot: false },
+  { name: 'Mia Qureshi', phone: '+14165550102', isBot: false },
+  // Australia (+61)
+  { name: 'Noah Rossi', phone: '+61491570001', isBot: false },
+  { name: 'Olivia Singh', phone: '+61491570002', isBot: false },
+  // Ireland (+353)
+  { name: 'Paul Thompson', phone: '+353851234001', isBot: false },
+  { name: 'Quinn Ua Briain', phone: '+353851234002', isBot: false },
 ];
 
 const SAMPLE_POSTS = [
@@ -107,18 +121,20 @@ async function bootstrap() {
   const em = app.get(EntityManager).fork();
 
   const force = process.argv.includes('--force');
-  const SEED_PHONE_PREFIX = '+44791'; // all SAMPLE_USERS match this prefix
+  // Seed users span multiple locales; match by the exact phones we seed so we
+  // don't accidentally touch real users sharing a country code.
+  const SEED_PHONES = SAMPLE_USERS.map((u) => u.phone);
 
   if (force) {
-    // Re-seed path. Delete our previously-seeded users by phone prefix;
+    // Re-seed path. Delete our previously-seeded users by exact phone match;
     // cascading FK constraints remove their Videos/Posts/Products/Waves.
     const deleted = await em.nativeDelete(User, {
-      phone: { $like: `${SEED_PHONE_PREFIX}%` },
+      phone: { $in: SEED_PHONES },
     });
     console.log(`[seed] --force: deleted ${deleted} previously-seeded users (cascades to their content).`);
   } else {
     const existingSeedUsers = await em.count(User, {
-      phone: { $like: `${SEED_PHONE_PREFIX}%` },
+      phone: { $in: SEED_PHONES },
     });
     if (existingSeedUsers > 0) {
       console.log(

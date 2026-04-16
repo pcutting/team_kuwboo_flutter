@@ -87,20 +87,19 @@ export class VerificationService {
       throw new UnauthorizedException('Too many attempts. Request a new code.');
     }
 
-    verification.attempts++;
-
+    // Run bcrypt compare FIRST. Only increment attempts on failure so a
+    // network blip or 5xx during verify doesn't consume an attempt for a code
+    // the user actually entered correctly (or never got to validate).
     const isValid = await bcrypt.compare(code, verification.codeHash);
     if (isValid) {
       verification.verifiedAt = new Date();
+      await this.em.flush();
+      return true;
     }
 
+    verification.attempts += 1;
     await this.em.flush();
-
-    if (!isValid) {
-      throw new UnauthorizedException('Invalid code');
-    }
-
-    return true;
+    throw new UnauthorizedException('Invalid code');
   }
 
   /**
@@ -159,18 +158,20 @@ export class VerificationService {
       });
     }
 
-    verification.attempts++;
+    // Same fix as verifyPhoneOtp: only bump attempts on actual failure.
     const isValid = await bcrypt.compare(code, verification.codeHash);
-    if (isValid) verification.verifiedAt = new Date();
-    await this.em.flush();
-
-    if (!isValid) {
-      throw new UnauthorizedException({
-        code: 'invalid_otp',
-        message: 'Invalid code',
-      });
+    if (isValid) {
+      verification.verifiedAt = new Date();
+      await this.em.flush();
+      return true;
     }
-    return true;
+
+    verification.attempts += 1;
+    await this.em.flush();
+    throw new UnauthorizedException({
+      code: 'invalid_otp',
+      message: 'Invalid code',
+    });
   }
 
   private generateCode(): string {

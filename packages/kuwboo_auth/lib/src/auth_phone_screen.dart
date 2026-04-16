@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl_phone_field/countries.dart' as countries_pkg;
 import 'package:intl_phone_field/country_picker_dialog.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/phone_number.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
+import 'package:phone_numbers_parser/phone_numbers_parser.dart' as pnp;
 
 import 'auth_callbacks.dart';
 
@@ -164,14 +166,18 @@ class _PhoneTabState extends State<_PhoneTab> {
             style: theme.caption.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 6),
-          // TODO(D2): derive initialCountryCode from device locale.
           IntlPhoneField(
-            initialCountryCode: 'US',
+            initialCountryCode: WidgetsBinding
+                    .instance.platformDispatcher.locale.countryCode ??
+                'GB',
             countries: _orderedCountries,
             disableLengthCheck: false,
             style: theme.body,
             dropdownTextStyle: theme.body,
             showCountryFlag: true,
+            inputFormatters: [
+              _PhoneNumberFormatter(country: _phone?.countryCode ?? '1'),
+            ],
             pickerDialogStyle: PickerDialogStyle(
               searchFieldInputDecoration: InputDecoration(
                 hintText: 'Search country',
@@ -426,5 +432,40 @@ class _BottomAction extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Live-formats the user's input per the selected country's national format
+/// using `phone_numbers_parser`. Falls back to the raw digits on parse
+/// failure (partial entry, unsupported country, etc.) so the field never
+/// eats keystrokes.
+class _PhoneNumberFormatter extends TextInputFormatter {
+  _PhoneNumberFormatter({required this.country});
+
+  /// Current country calling code (no leading `+`), e.g. `'1'` for US, `'44'`
+  /// for GB. Supplied by the enclosing widget from `IntlPhoneField`'s
+  /// currently-selected country.
+  final String country;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+    try {
+      final parsed = pnp.PhoneNumber.parse('+$country$digits');
+      final formatted = parsed.getFormattedNsn();
+      if (formatted.isEmpty) return newValue;
+      return TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+      );
+    } catch (_) {
+      return newValue;
+    }
   }
 }
