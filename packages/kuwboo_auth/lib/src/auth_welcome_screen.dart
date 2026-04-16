@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import 'auth_callbacks.dart';
+import 'auth_test_ids.dart';
 
 class AuthWelcomeScreen extends StatelessWidget {
   const AuthWelcomeScreen({super.key});
@@ -72,11 +73,13 @@ class AuthWelcomeScreen extends StatelessWidget {
                     child: Column(
                       children: [
                         _PrimaryButton(
+                          identifier: AuthIds.welcomeCreateAccount,
                           label: 'Create Account',
                           onTap: () => context.go(ProtoRoutes.authMethod),
                         ),
                         const SizedBox(height: 12),
                         _OutlineButton(
+                          identifier: AuthIds.welcomeLogin,
                           label: 'Log In',
                           onTap: () => context.go(ProtoRoutes.authLogin),
                         ),
@@ -87,6 +90,7 @@ class AuthWelcomeScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             _SsoIconButton(
+                              identifier: AuthIds.welcomeApple,
                               icon: _AppleGlyph(),
                               background: Colors.black,
                               tooltip: 'Continue with Apple',
@@ -106,6 +110,7 @@ class AuthWelcomeScreen extends StatelessWidget {
                             ),
                             const SizedBox(width: 20),
                             _SsoIconButton(
+                              identifier: AuthIds.welcomeGoogle,
                               icon: const _GoogleGlyph(),
                               background: Colors.white,
                               border: Colors.black12,
@@ -140,28 +145,38 @@ class AuthWelcomeScreen extends StatelessWidget {
 }
 
 class _PrimaryButton extends StatelessWidget {
+  final String identifier;
   final String label;
   final VoidCallback onTap;
-  const _PrimaryButton({required this.label, required this.onTap});
+  const _PrimaryButton({
+    required this.identifier,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(theme.radiusFull),
-        ),
-        child: Center(
-          child: Text(label,
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: theme.primary)),
+    return Semantics(
+      identifier: identifier,
+      button: true,
+      label: label,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(theme.radiusFull),
+          ),
+          child: Center(
+            child: Text(label,
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: theme.primary)),
+          ),
         ),
       ),
     );
@@ -169,28 +184,38 @@ class _PrimaryButton extends StatelessWidget {
 }
 
 class _OutlineButton extends StatelessWidget {
+  final String identifier;
   final String label;
   final VoidCallback onTap;
-  const _OutlineButton({required this.label, required this.onTap});
+  const _OutlineButton({
+    required this.identifier,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
-          borderRadius: BorderRadius.circular(theme.radiusFull),
-        ),
-        child: Center(
-          child: Text(label,
-              style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white)),
+    return Semantics(
+      identifier: identifier,
+      button: true,
+      label: label,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
+            borderRadius: BorderRadius.circular(theme.radiusFull),
+          ),
+          child: Center(
+            child: Text(label,
+                style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white)),
+          ),
         ),
       ),
     );
@@ -224,12 +249,14 @@ class _OrDivider extends StatelessWidget {
 }
 
 class _SsoIconButton extends StatelessWidget {
+  final String identifier;
   final Widget icon;
   final Color background;
   final Color? border;
   final String tooltip;
   final VoidCallback? onTap;
   const _SsoIconButton({
+    required this.identifier,
     required this.icon,
     required this.background,
     required this.tooltip,
@@ -241,8 +268,10 @@ class _SsoIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final disabled = onTap == null;
     return Semantics(
+      identifier: identifier,
       label: tooltip,
       button: true,
+      enabled: !disabled,
       child: GestureDetector(
         onTap: onTap,
         child: Opacity(

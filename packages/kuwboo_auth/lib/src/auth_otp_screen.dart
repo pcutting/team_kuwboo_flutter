@@ -9,6 +9,7 @@ import 'package:kuwboo_shell/kuwboo_shell.dart';
 import '_auth_error_ui.dart';
 import '_step_chip.dart';
 import 'auth_callbacks.dart';
+import 'auth_test_ids.dart';
 
 const int _otpLength = 6;
 
@@ -101,6 +102,12 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
     _controllers[index].selection = TextSelection.fromPosition(
       TextPosition(offset: _controllers[index].text.length),
     );
+
+    // Trigger a rebuild so the `_OtpBox` Semantics widget re-reads each
+    // controller's text into its `value:` parameter. Without this the
+    // outer Semantics annotation stays at the initial empty string and
+    // assistive tech / Maestro can't read what's actually in the box.
+    setState(() {});
 
     if (index < _otpLength - 1) {
       FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
@@ -217,7 +224,10 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
               // (dev / demo mode). In production the backend omits `devCode`
               // from the response so this renders nothing.
               if (!kReleaseMode && widget.args?.devCode != null)
-                _TestBuildBanner(devCode: widget.args!.devCode!)
+                Semantics(
+                  identifier: AuthIds.otpBanner,
+                  child: _TestBuildBanner(devCode: widget.args!.devCode!),
+                )
               else
                 const SizedBox.shrink(),
               Expanded(
@@ -232,13 +242,16 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        widget.args?.displayIdentifier ??
-                            widget.args?.identifier ??
-                            '+44 7XXX XXX XX3',
-                        style: theme.body.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: theme.primary,
+                      Semantics(
+                        identifier: AuthIds.otpIdentifier,
+                        child: Text(
+                          widget.args?.displayIdentifier ??
+                              widget.args?.identifier ??
+                              '+44 7XXX XXX XX3',
+                          style: theme.body.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: theme.primary,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 40),
@@ -250,7 +263,9 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
                           return Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 5),
                             child: _OtpBox(
+                              identifier: AuthIds.otpDigit(i),
                               index: i,
+                              value: _controllers[i].text,
                               controller: _controllers[i],
                               focusNode: _focusNodes[i],
                               onChanged: (v) => _onChanged(i, v),
@@ -270,13 +285,19 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
                           ),
                         )
                       else
-                        GestureDetector(
-                          onTap: _resend,
-                          child: Text(
-                            "Didn't get a code? Resend",
-                            style: theme.caption.copyWith(
-                              color: theme.primary,
-                              fontWeight: FontWeight.w600,
+                        Semantics(
+                          identifier: AuthIds.otpResend,
+                          button: true,
+                          label: 'Resend code',
+                          enabled: _canResend,
+                          child: GestureDetector(
+                            onTap: _resend,
+                            child: Text(
+                              "Didn't get a code? Resend",
+                              style: theme.caption.copyWith(
+                                color: theme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
@@ -296,7 +317,9 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
 }
 
 class _OtpBox extends StatelessWidget {
+  final String identifier;
   final int index;
+  final String value;
   final TextEditingController controller;
   final FocusNode focusNode;
   final ValueChanged<String> onChanged;
@@ -304,7 +327,9 @@ class _OtpBox extends StatelessWidget {
   final ProtoTheme theme;
 
   const _OtpBox({
+    required this.identifier,
     required this.index,
+    required this.value,
     required this.controller,
     required this.focusNode,
     required this.onChanged,
@@ -320,8 +345,10 @@ class _OtpBox extends StatelessWidget {
       width: 48,
       height: 64,
       child: Semantics(
+        identifier: identifier,
         label: 'OTP digit ${index + 1} of $_otpLength',
         textField: true,
+        value: value,
         child: Focus(
           onKeyEvent: (_, event) => onKey(event),
           child: TextField(

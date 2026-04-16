@@ -4,6 +4,7 @@ import 'package:kuwboo_shell/kuwboo_shell.dart';
 import '_auth_error_ui.dart';
 import '_step_chip.dart';
 import 'auth_callbacks.dart';
+import 'auth_test_ids.dart';
 
 /// 4-page swipeable interaction tutorial shown after interest picking.
 /// Teaches core gestures: tap, long-press, FAB switcher, and swiping.
@@ -102,15 +103,20 @@ class _AuthTutorialScreenState extends State<AuthTutorialScreen> {
                 // Skip button — top right
                 Align(
                   alignment: Alignment.centerRight,
-                  child: GestureDetector(
-                    onTap: _enterApp,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 16, right: 24),
-                      child: Text(
-                        'Skip',
-                        style: theme.body.copyWith(
-                          color: theme.textTertiary,
-                          fontWeight: FontWeight.w600,
+                  child: Semantics(
+                    identifier: AuthIds.tutorialSkip,
+                    button: true,
+                    label: 'Skip',
+                    child: GestureDetector(
+                      onTap: _enterApp,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 16, right: 24),
+                        child: Text(
+                          'Skip',
+                          style: theme.body.copyWith(
+                            color: theme.textTertiary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -174,16 +180,20 @@ class _AuthTutorialScreenState extends State<AuthTutorialScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(_pages.length, (i) {
                     final isActive = i == _currentPage;
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      width: isActive ? 24 : 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                        color: isActive
-                            ? theme.primary
-                            : theme.text.withValues(alpha: 0.15),
+                    return Semantics(
+                      identifier: AuthIds.tutorialDot(i),
+                      selected: isActive,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: isActive ? 24 : 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: isActive
+                              ? theme.primary
+                              : theme.text.withValues(alpha: 0.15),
+                        ),
                       ),
                     );
                   }),
@@ -193,21 +203,28 @@ class _AuthTutorialScreenState extends State<AuthTutorialScreen> {
                 // Next / Get Started button
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: GestureDetector(
-                    onTap: _nextPage,
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      decoration: BoxDecoration(
-                        color: theme.primary,
-                        borderRadius: BorderRadius.circular(theme.radiusFull),
-                      ),
-                      child: Center(
-                        child: Text(
-                          _currentPage == _pages.length - 1
-                              ? 'Get Started'
-                              : 'Next',
-                          style: theme.button.copyWith(fontSize: 16),
+                  child: Semantics(
+                    identifier: AuthIds.tutorialNext,
+                    button: true,
+                    label: _currentPage == _pages.length - 1
+                        ? 'Get Started'
+                        : 'Next',
+                    child: GestureDetector(
+                      onTap: _nextPage,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: theme.primary,
+                          borderRadius: BorderRadius.circular(theme.radiusFull),
+                        ),
+                        child: Center(
+                          child: Text(
+                            _currentPage == _pages.length - 1
+                                ? 'Get Started'
+                                : 'Next',
+                            style: theme.button.copyWith(fontSize: 16),
+                          ),
                         ),
                       ),
                     ),

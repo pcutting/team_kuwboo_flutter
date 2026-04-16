@@ -11,6 +11,7 @@ import 'package:phone_numbers_parser/phone_numbers_parser.dart' as pnp;
 import '_auth_error_ui.dart';
 import '_step_chip.dart';
 import 'auth_callbacks.dart';
+import 'auth_test_ids.dart';
 
 class AuthPhoneScreen extends StatefulWidget {
   const AuthPhoneScreen({super.key});
@@ -66,11 +67,13 @@ class _AuthPhoneScreenState extends State<AuthPhoneScreen>
                   child: Row(
                     children: [
                       _TabPill(
+                        identifier: AuthIds.phoneTabPhone,
                         label: 'Phone',
                         active: _tabController.index == 0,
                         onTap: () => _tabController.animateTo(0),
                       ),
                       _TabPill(
+                        identifier: AuthIds.phoneTabEmail,
                         label: 'Email',
                         active: _tabController.index == 1,
                         onTap: () => _tabController.animateTo(1),
@@ -99,10 +102,12 @@ class _AuthPhoneScreenState extends State<AuthPhoneScreen>
 }
 
 class _TabPill extends StatelessWidget {
+  final String identifier;
   final String label;
   final bool active;
   final VoidCallback onTap;
   const _TabPill({
+    required this.identifier,
     required this.label,
     required this.active,
     required this.onTap,
@@ -112,22 +117,28 @@ class _TabPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
     return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          margin: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: active ? theme.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: active ? Colors.white : theme.textSecondary,
+      child: Semantics(
+        identifier: identifier,
+        button: true,
+        selected: active,
+        label: label,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            margin: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: active ? theme.primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: active ? Colors.white : theme.textSecondary,
+                ),
               ),
             ),
           ),
@@ -143,6 +154,21 @@ class _PhoneTab extends StatefulWidget {
 
   @override
   State<_PhoneTab> createState() => _PhoneTabState();
+}
+
+// Countries we ship as demo defaults. If the device locale's region is one
+// of these we trust it; otherwise we fall back to US. Trusting the locale
+// unconditionally bit us on a fresh iOS 26 sim whose default `AppleLocale`
+// is `en_BG` — the phone field appeared stuck on +359 Bulgaria.
+const _trustedCountryCodes = {'US', 'GB', 'CA', 'AU', 'IE'};
+
+String _initialCountryCode() {
+  final locale =
+      WidgetsBinding.instance.platformDispatcher.locale.countryCode;
+  if (locale != null && _trustedCountryCodes.contains(locale.toUpperCase())) {
+    return locale.toUpperCase();
+  }
+  return 'US';
 }
 
 // Pin the common English-speaking markets at the top of the country picker,
@@ -173,15 +199,19 @@ class _PhoneTabState extends State<_PhoneTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Phone',
-            style: theme.caption.copyWith(fontWeight: FontWeight.w600),
+          Semantics(
+            identifier: AuthIds.phoneHeaderLabel,
+            child: Text(
+              'Phone',
+              style: theme.caption.copyWith(fontWeight: FontWeight.w600),
+            ),
           ),
           const SizedBox(height: 6),
-          IntlPhoneField(
-            initialCountryCode:
-                WidgetsBinding.instance.platformDispatcher.locale.countryCode ??
-                'GB',
+          Semantics(
+            identifier: AuthIds.phoneField,
+            textField: true,
+            child: IntlPhoneField(
+            initialCountryCode: _initialCountryCode(),
             countries: _orderedCountries,
             // Our `_PhoneNumberFormatter` inserts separators into the input
             // (e.g. `(614) 285-6789`), which breaks the package's built-in
@@ -194,14 +224,7 @@ class _PhoneTabState extends State<_PhoneTab> {
             showCountryFlag: true,
             inputFormatters: [
               _PhoneNumberFormatter(
-                isoCode:
-                    _phone?.countryISOCode ??
-                    WidgetsBinding
-                        .instance
-                        .platformDispatcher
-                        .locale
-                        .countryCode ??
-                    'GB',
+                isoCode: _phone?.countryISOCode ?? _initialCountryCode(),
               ),
             ],
             pickerDialogStyle: PickerDialogStyle(
@@ -257,11 +280,14 @@ class _PhoneTabState extends State<_PhoneTab> {
                 _e164 = _valid ? phone.completeNumber : '';
               });
             },
+            ),
           ),
           const Spacer(),
           _BottomAction(
+            identifier: AuthIds.phoneSendCode,
             label: _submitting ? 'Sending…' : 'Send Code',
             enabled: _valid && !_submitting,
+            busy: _submitting,
             onTap: () => _submit(context),
             theme: theme,
           ),
@@ -350,51 +376,57 @@ class _EmailTabState extends State<_EmailTab> {
             style: theme.caption.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 6),
-          TextField(
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            autocorrect: false,
-            enableSuggestions: false,
-            textCapitalization: TextCapitalization.none,
-            style: theme.body,
-            onChanged: _onChanged,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: theme.background,
-              hintText: 'you@example.com',
-              hintStyle: theme.body.copyWith(color: theme.textTertiary),
-              prefixIcon: Icon(
-                Icons.email_outlined,
-                size: 20,
-                color: theme.textTertiary,
-              ),
-              errorText: _error,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 14,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: theme.text.withValues(alpha: 0.08),
+          Semantics(
+            identifier: AuthIds.emailField,
+            textField: true,
+            child: TextField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              autocorrect: false,
+              enableSuggestions: false,
+              textCapitalization: TextCapitalization.none,
+              style: theme.body,
+              onChanged: _onChanged,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: theme.background,
+                hintText: 'you@example.com',
+                hintStyle: theme.body.copyWith(color: theme.textTertiary),
+                prefixIcon: Icon(
+                  Icons.email_outlined,
+                  size: 20,
+                  color: theme.textTertiary,
                 ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: theme.text.withValues(alpha: 0.08),
+                errorText: _error,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
                 ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: theme.primary, width: 2),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: theme.text.withValues(alpha: 0.08),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: theme.text.withValues(alpha: 0.08),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: theme.primary, width: 2),
+                ),
               ),
             ),
           ),
           const Spacer(),
           _BottomAction(
+            identifier: AuthIds.emailNext,
             label: _submitting ? 'Sending…' : 'Next',
             enabled: _valid && !_submitting,
+            busy: _submitting,
             onTap: () => _submit(context),
             theme: theme,
           ),
@@ -440,15 +472,19 @@ class _EmailTabState extends State<_EmailTab> {
 /// Bottom CTA that rides above the keyboard. Uses MediaQuery.viewInsetsOf
 /// so the button stays visible as the on-screen keyboard opens/closes.
 class _BottomAction extends StatelessWidget {
+  final String identifier;
   final String label;
   final bool enabled;
+  final bool busy;
   final VoidCallback onTap;
   final ProtoTheme theme;
   const _BottomAction({
+    required this.identifier,
     required this.label,
     required this.enabled,
     required this.onTap,
     required this.theme,
+    this.busy = false,
   });
 
   @override
@@ -464,9 +500,11 @@ class _BottomAction extends StatelessWidget {
       curve: Curves.easeOut,
       padding: EdgeInsets.only(bottom: lift),
       child: Semantics(
-        label: label,
+        identifier: identifier,
+        label: busy ? 'Sending code' : label,
         button: true,
         enabled: enabled,
+        liveRegion: busy,
         child: GestureDetector(
           onTap: enabled ? onTap : null,
           child: Opacity(

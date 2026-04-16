@@ -6,6 +6,7 @@
 library kuwboo_auth;
 
 export 'src/auth_callbacks.dart';
+export 'src/auth_test_ids.dart';
 export 'src/auth_welcome_screen.dart';
 export 'src/auth_onboarding_screen.dart';
 export 'src/auth_tutorial_screen.dart';
