@@ -157,19 +157,13 @@ class _PhoneTab extends StatefulWidget {
 }
 
 // Countries we ship as demo defaults. If the device locale's region is one
-// of these we trust it; otherwise we fall back to US. Trusting the locale
-// unconditionally bit us on a fresh iOS 26 sim whose default `AppleLocale`
-// is `en_BG` — the phone field appeared stuck on +359 Bulgaria.
-const _trustedCountryCodes = {'US', 'GB', 'CA', 'AU', 'IE'};
-
-String _initialCountryCode() {
-  final locale =
-      WidgetsBinding.instance.platformDispatcher.locale.countryCode;
-  if (locale != null && _trustedCountryCodes.contains(locale.toUpperCase())) {
-    return locale.toUpperCase();
-  }
-  return 'US';
-}
+// US is the demo market. We were previously trusting the system locale for
+// US/GB/CA/AU/IE, but during the live walkthrough that bit us on a UK-locale
+// device: the picker silently sat on +44 and digits like 614… were parsed
+// as a UK number, sending +44614… to the backend. The user can still pick
+// any country from the dropdown — but the default is always US so the most
+// common test case works without thinking about it.
+String _initialCountryCode() => 'US';
 
 // Pin the common English-speaking markets at the top of the country picker,
 // then the rest in the package's original (alphabetical) order.
@@ -299,7 +293,13 @@ class _PhoneTabState extends State<_PhoneTab> {
   Future<void> _submit(BuildContext context) async {
     FocusScope.of(context).unfocus();
     setState(() => _submitting = true);
-    final e164 = _phone!.completeNumber;
+    // IntlPhoneField.number keeps the user-visible formatting characters
+    // (e.g. '(614) 285-6112'), so completeNumber yields '+1(614) 285-6112'
+    // — backend rejects that because verifications were stored against
+    // bare E.164 ('+16142856112'). Strip non-digits from the national
+    // part before reassembling.
+    final nationalDigits = _phone!.number.replaceAll(RegExp(r'\D'), '');
+    final e164 = '${_phone!.countryCode}$nationalDigits';
     final callbacks = AuthCallbacksScope.maybeOf(context);
     String? devCode;
     if (callbacks?.onSendPhoneOtp != null) {
@@ -495,16 +495,22 @@ class _BottomAction extends StatelessWidget {
     // visual gap. Otherwise sit above the home indicator with a resting
     // margin so it's not crammed against the bottom bezel.
     final lift = keyboard > 0 ? keyboard + 8 : safeBottom + 24;
-    return AnimatedPadding(
-      duration: const Duration(milliseconds: 150),
-      curve: Curves.easeOut,
-      padding: EdgeInsets.only(bottom: lift),
-      child: Semantics(
-        identifier: identifier,
-        label: busy ? 'Sending code' : label,
-        button: true,
-        enabled: enabled,
-        liveRegion: busy,
+    // Semantics MUST sit above AnimatedPadding here. When nested inside,
+    // the parent column's auto-merging logic drops the `identifier` from
+    // the platform a11y tree on iOS, even though VoiceOver still sees the
+    // label. `container: true` forces an isolated Semantics node so the
+    // identifier reaches UIAccessibilityIdentifier (and therefore Maestro).
+    return Semantics(
+      identifier: identifier,
+      container: true,
+      label: busy ? 'Sending code' : label,
+      button: true,
+      enabled: enabled,
+      liveRegion: busy,
+      child: AnimatedPadding(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+        padding: EdgeInsets.only(bottom: lift),
         child: GestureDetector(
           onTap: enabled ? onTap : null,
           child: Opacity(
