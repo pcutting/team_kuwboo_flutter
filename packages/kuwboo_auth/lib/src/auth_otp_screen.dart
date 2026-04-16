@@ -209,7 +209,13 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
         child: Column(
           children: [
             ProtoSubBar(title: 'Verification'),
-            if (!kReleaseMode) const _TestBuildBanner() else const SizedBox.shrink(),
+            // Only surface the banner when we actually have a code to show
+            // (dev / demo mode). In production the backend omits `devCode`
+            // from the response so this renders nothing.
+            if (!kReleaseMode && widget.args?.devCode != null)
+              _TestBuildBanner(devCode: widget.args!.devCode!)
+            else
+              const SizedBox.shrink(),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -352,7 +358,11 @@ class _OtpBox extends StatelessWidget {
 }
 
 class _TestBuildBanner extends StatelessWidget {
-  const _TestBuildBanner();
+  const _TestBuildBanner({required this.devCode});
+
+  /// Plaintext 6-digit code the backend returned on `send-otp` in local-dev
+  /// mode. Rendered bold in the banner so the user can type it verbatim.
+  final String devCode;
 
   @override
   Widget build(BuildContext context) {
@@ -368,13 +378,21 @@ class _TestBuildBanner extends StatelessWidget {
         children: [
           const Icon(Icons.science_outlined, size: 16, color: Colors.white),
           const SizedBox(width: 8),
-          const Expanded(
-            child: Text(
-              'TEST BUILD — use OTP 000000 to sign in',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+                children: [
+                  const TextSpan(text: 'TEST BUILD — your code is '),
+                  TextSpan(
+                    text: devCode,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ],
               ),
             ),
           ),

@@ -32,8 +32,14 @@ export class AuthController {
   @Post('phone/send-otp')
   @HttpCode(HttpStatus.OK)
   async sendPhoneOtp(@Body() dto: SendOtpDto) {
-    await this.authService.sendPhoneOtp(dto.phone);
-    return { sent: true };
+    // Response body (after TransformInterceptor wraps it) is:
+    //   { data: { devCode?: string } }
+    // `devCode` is only populated when the backend is in the local dev
+    // fallback path (Twilio env vars empty) AND `NODE_ENV != 'production'`.
+    // The mobile client renders it in the OTP banner so the demoer can read
+    // the rolling code on-screen. In production or with Twilio live,
+    // `data` is an empty object.
+    return this.authService.sendPhoneOtp(dto.phone);
   }
 
   @Public()
@@ -49,8 +55,8 @@ export class AuthController {
   @Post('email/send-otp')
   @HttpCode(HttpStatus.OK)
   async sendEmailOtp(@Body() dto: SendEmailOtpDto) {
-    await this.authService.sendEmailOtp(dto.email);
-    return { sent: true };
+    // Same response shape as phone/send-otp — see that handler for details.
+    return this.authService.sendEmailOtp(dto.email);
   }
 
   @Public()

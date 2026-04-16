@@ -94,17 +94,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> sendPhoneOtp(String phone) async {
+  Future<SendOtpResult> sendPhoneOtp(String phone) async {
     try {
-      await _authApi.sendPhoneOtp(phone: phone);
+      return await _authApi.sendPhoneOtp(phone: phone);
     } on DioException catch (e) {
       throw _translate(e, fallback: 'Could not send code');
     }
   }
 
-  Future<void> sendEmailOtp(String email) async {
+  Future<SendOtpResult> sendEmailOtp(String email) async {
     try {
-      await _authApi.sendEmailOtp(email: email);
+      return await _authApi.sendEmailOtp(email: email);
     } on DioException catch (e) {
       throw _translate(e, fallback: 'Could not send code');
     }

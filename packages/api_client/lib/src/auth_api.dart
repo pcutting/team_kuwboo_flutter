@@ -21,6 +21,18 @@ class SsoLoginChallenge extends SsoLoginResult {
   final PendingSsoChallenge challenge;
 }
 
+/// Result of `POST /auth/phone/send-otp` or `/auth/email/send-otp`.
+///
+/// When the backend is running without a configured Twilio service (local
+/// dev / EC2 demo) AND `NODE_ENV != 'production'`, it returns the freshly
+/// generated 6-digit plaintext code in the response so the mobile OTP
+/// banner can render it on-screen. In production or with Twilio live,
+/// [devCode] is always null.
+class SendOtpResult {
+  const SendOtpResult({this.devCode});
+  final String? devCode;
+}
+
 /// Authentication endpoints — identity contract §11.
 ///
 /// Unlike the other API classes this one deliberately avoids using the
@@ -37,8 +49,12 @@ class AuthApi {
   // Phone OTP
   // ---------------------------------------------------------------------
 
-  Future<void> sendPhoneOtp({required String phone}) async {
-    await _client.dio.post('/auth/phone/send-otp', data: {'phone': phone});
+  Future<SendOtpResult> sendPhoneOtp({required String phone}) async {
+    final response = await _client.dio.post(
+      '/auth/phone/send-otp',
+      data: {'phone': phone},
+    );
+    return _parseSendOtpResult(response);
   }
 
   Future<AuthResponse> verifyPhoneOtp({
@@ -60,8 +76,12 @@ class AuthApi {
   // Email OTP
   // ---------------------------------------------------------------------
 
-  Future<void> sendEmailOtp({required String email}) async {
-    await _client.dio.post('/auth/email/send-otp', data: {'email': email});
+  Future<SendOtpResult> sendEmailOtp({required String email}) async {
+    final response = await _client.dio.post(
+      '/auth/email/send-otp',
+      data: {'email': email},
+    );
+    return _parseSendOtpResult(response);
   }
 
   Future<AuthResponse> verifyEmailOtp({
@@ -247,6 +267,18 @@ class AuthApi {
   // ---------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------
+
+  /// Read the wrapped `{ data: { devCode? } }` body into a [SendOtpResult].
+  /// Tolerant of missing / unwrapped bodies (older backend, proxy quirks) —
+  /// in that case [devCode] is null and the banner simply renders nothing.
+  SendOtpResult _parseSendOtpResult(Response response) {
+    final body = response.data;
+    if (body is! Map<String, dynamic>) return const SendOtpResult();
+    final data = body['data'];
+    if (data is! Map<String, dynamic>) return const SendOtpResult();
+    final raw = data['devCode'];
+    return SendOtpResult(devCode: raw is String && raw.isNotEmpty ? raw : null);
+  }
 
   /// The `unwrapChallenge` backend helper emits 409 with body
   /// `{ code, challenge_id, email, require_verify_email }`. Our global

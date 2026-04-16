@@ -55,8 +55,17 @@ AuthCallbacks buildMobileAuthCallbacks(Ref ref) {
     onConfirmSsoChallenge: authNotifier.confirmSsoChallenge,
 
     // ── Phone / Email OTP ─────────────────────────────────────────────
-    onSendPhoneOtp: authNotifier.sendPhoneOtp,
-    onSendEmailOtp: authNotifier.sendEmailOtp,
+    //
+    // The screen-facing callback returns just the devCode string (if any);
+    // the full SendOtpResult stays inside the provider.
+    onSendPhoneOtp: (phone) async {
+      final result = await authNotifier.sendPhoneOtp(phone);
+      return result.devCode;
+    },
+    onSendEmailOtp: (email) async {
+      final result = await authNotifier.sendEmailOtp(email);
+      return result.devCode;
+    },
 
     onVerifyOtp: (identifier, code, channel) async {
       return authNotifier.verifyOtp(

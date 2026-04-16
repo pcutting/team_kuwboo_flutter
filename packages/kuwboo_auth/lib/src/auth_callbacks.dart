@@ -14,6 +14,7 @@ class AuthOtpArgs {
     required this.identifier,
     required this.channel,
     this.displayIdentifier,
+    this.devCode,
   });
 
   /// Canonical identifier used for verification calls (E.164 phone or
@@ -26,6 +27,12 @@ class AuthOtpArgs {
   /// e.g. `+44 7XXX XXX XX3` vs the canonical `+447xxxxxxxx3`. Falls
   /// back to [identifier] when null.
   final String? displayIdentifier;
+
+  /// Plaintext OTP code returned by the backend in local-dev / demo mode
+  /// (Twilio not configured AND `NODE_ENV != 'production'`). When
+  /// non-null, the OTP screen renders it in the test-build banner so the
+  /// user can read the rolling code on-screen. Null in production.
+  final String? devCode;
 }
 
 /// Callbacks the host app (mobile) supplies to drive real auth API calls
@@ -74,10 +81,15 @@ class AuthCallbacks {
   // ─── Phone / Email OTP ───────────────────────────────────────────────
 
   /// Request a phone OTP. Throws on rate-limit or invalid phone.
-  final Future<void> Function(String phone)? onSendPhoneOtp;
+  ///
+  /// Returns the plaintext OTP code in local-dev / demo mode (Twilio not
+  /// configured AND `NODE_ENV != 'production'`), or null in production.
+  /// The phone screen threads this value into [AuthOtpArgs.devCode] so
+  /// the OTP banner can display the rolling code.
+  final Future<String?> Function(String phone)? onSendPhoneOtp;
 
-  /// Request an email OTP.
-  final Future<void> Function(String email)? onSendEmailOtp;
+  /// Request an email OTP. Same dev-code contract as [onSendPhoneOtp].
+  final Future<String?> Function(String email)? onSendEmailOtp;
 
   /// Verify an OTP on either channel. Returns tokens + user on success;
   /// throws on invalid/expired code.
