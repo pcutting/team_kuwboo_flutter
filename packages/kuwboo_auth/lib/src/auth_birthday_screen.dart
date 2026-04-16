@@ -24,8 +24,18 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
   late final FixedExtentScrollController _yearController;
 
   static const _months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
 
   @override
@@ -69,96 +79,108 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
 
-    return Material(
-      type: MaterialType.transparency,
-      child: Container(
-      color: theme.surface,
-      child: Column(
-        children: [
-          ProtoSubBar(title: ''),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                children: [
-                  const SizedBox(height: 40),
-                  Text(
-                    "When's your birthday?",
-                    style: theme.headline.copyWith(fontSize: 26),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Your birthday won't be shown publicly.",
-                    style: theme.body.copyWith(color: theme.textSecondary),
-                  ),
-                  const SizedBox(height: 36),
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Material(
+        type: MaterialType.transparency,
+        child: Container(
+          color: theme.surface,
+          child: Column(
+            children: [
+              ProtoSubBar(title: ''),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 40),
+                      Text(
+                        "When's your birthday?",
+                        style: theme.headline.copyWith(fontSize: 26),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        "Your birthday won't be shown publicly.",
+                        style: theme.body.copyWith(color: theme.textSecondary),
+                      ),
+                      const SizedBox(height: 36),
 
-                  // Date picker wheels
-                  SizedBox(
-                    height: 200,
-                    child: Row(
-                      children: [
-                        // Day
-                        Expanded(
-                          flex: 2,
-                          child: _WheelColumn(
-                            controller: _dayController,
-                            itemCount: 31,
-                            labelBuilder: (i) => '${i + 1}',
-                            onChanged: (i) => setState(() => _selectedDay = i),
-                          ),
-                        ),
-                        // Month
-                        Expanded(
-                          flex: 3,
-                          child: _WheelColumn(
-                            controller: _monthController,
-                            itemCount: 12,
-                            labelBuilder: (i) => _months[i],
-                            onChanged: (i) => setState(() => _selectedMonth = i),
-                          ),
-                        ),
-                        // Year
-                        Expanded(
-                          flex: 2,
-                          child: _WheelColumn(
-                            controller: _yearController,
-                            itemCount: 100,
-                            labelBuilder: (i) => '${_currentYear - i}',
-                            onChanged: (i) => setState(() => _selectedYear = i),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const Spacer(),
-
-                  // Continue button
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 40),
-                    child: GestureDetector(
-                      onTap: () => _onContinue(context),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        decoration: BoxDecoration(
-                          color: theme.primary,
-                          borderRadius: BorderRadius.circular(theme.radiusFull),
-                        ),
-                        child: Center(
-                          child: Text('Continue', style: theme.button.copyWith(fontSize: 16)),
+                      // Date picker wheels
+                      SizedBox(
+                        height: 200,
+                        child: Row(
+                          children: [
+                            // Day
+                            Expanded(
+                              flex: 2,
+                              child: _WheelColumn(
+                                controller: _dayController,
+                                itemCount: 31,
+                                labelBuilder: (i) => '${i + 1}',
+                                onChanged: (i) =>
+                                    setState(() => _selectedDay = i),
+                              ),
+                            ),
+                            // Month
+                            Expanded(
+                              flex: 3,
+                              child: _WheelColumn(
+                                controller: _monthController,
+                                itemCount: 12,
+                                labelBuilder: (i) => _months[i],
+                                onChanged: (i) =>
+                                    setState(() => _selectedMonth = i),
+                              ),
+                            ),
+                            // Year
+                            Expanded(
+                              flex: 2,
+                              child: _WheelColumn(
+                                controller: _yearController,
+                                itemCount: 100,
+                                labelBuilder: (i) => '${_currentYear - i}',
+                                onChanged: (i) =>
+                                    setState(() => _selectedYear = i),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
+
+                      const Spacer(),
+
+                      // Continue button
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 40),
+                        child: GestureDetector(
+                          onTap: () => _onContinue(context),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              color: theme.primary,
+                              borderRadius: BorderRadius.circular(
+                                theme.radiusFull,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Continue',
+                                style: theme.button.copyWith(fontSize: 16),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
-        ));
+    );
   }
 
   Future<void> _onContinue(BuildContext context) async {
@@ -176,9 +198,11 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
     // Profile is editable later; the local _isUnder13 gate above is what
     // actually matters for compliance.
     if (callbacks?.onSaveBirthday != null) {
-      unawaited(callbacks!.onSaveBirthday!(dob).catchError((Object e) {
-        debugPrint('[birthday] save failed (will retry on next patch): $e');
-      }));
+      unawaited(
+        callbacks!.onSaveBirthday!(dob).catchError((Object e) {
+          debugPrint('[birthday] save failed (will retry on next patch): $e');
+        }),
+      );
     }
     if (!context.mounted) return;
     context.go(ProtoRoutes.authProfile);

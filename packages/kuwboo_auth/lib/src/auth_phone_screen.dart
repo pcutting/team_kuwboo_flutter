@@ -8,6 +8,7 @@ import 'package:intl_phone_field/phone_number.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 import 'package:phone_numbers_parser/phone_numbers_parser.dart' as pnp;
 
+import '_auth_error_ui.dart';
 import 'auth_callbacks.dart';
 
 class AuthPhoneScreen extends StatefulWidget {
@@ -38,50 +39,57 @@ class _AuthPhoneScreenState extends State<AuthPhoneScreen>
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
 
-    return Material(
-      type: MaterialType.transparency,
-      child: Container(
-        color: theme.surface,
-        child: Column(
-          children: [
-            ProtoSubBar(title: 'Sign Up'),
-            // Tab bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Container(
-                margin: const EdgeInsets.only(top: 16),
-                decoration: BoxDecoration(
-                  color: theme.background,
-                  borderRadius: BorderRadius.circular(12),
+    // Scaffold (with a transparent background and no AppBar) is required so
+    // `ScaffoldMessenger.of(context)` resolves from inside `_submit`. Without
+    // it, showing a snackbar throws `NoSuchWidgetError` and the error
+    // propagates past our catch block invisibly — the button just resets.
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Material(
+        type: MaterialType.transparency,
+        child: Container(
+          color: theme.surface,
+          child: Column(
+            children: [
+              ProtoSubBar(title: 'Sign Up'),
+              // Tab bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Container(
+                  margin: const EdgeInsets.only(top: 16),
+                  decoration: BoxDecoration(
+                    color: theme.background,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      _TabPill(
+                        label: 'Phone',
+                        active: _tabController.index == 0,
+                        onTap: () => _tabController.animateTo(0),
+                      ),
+                      _TabPill(
+                        label: 'Email',
+                        active: _tabController.index == 1,
+                        onTap: () => _tabController.animateTo(1),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(
+              ),
+              const SizedBox(height: 24),
+              // Tab content
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
                   children: [
-                    _TabPill(
-                      label: 'Phone',
-                      active: _tabController.index == 0,
-                      onTap: () => _tabController.animateTo(0),
-                    ),
-                    _TabPill(
-                      label: 'Email',
-                      active: _tabController.index == 1,
-                      onTap: () => _tabController.animateTo(1),
-                    ),
+                    _PhoneTab(theme: theme),
+                    _EmailTab(theme: theme),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-            // Tab content
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _PhoneTab(theme: theme),
-                  _EmailTab(theme: theme),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -92,8 +100,11 @@ class _TabPill extends StatelessWidget {
   final String label;
   final bool active;
   final VoidCallback onTap;
-  const _TabPill(
-      {required this.label, required this.active, required this.onTap});
+  const _TabPill({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -138,8 +149,7 @@ final List<countries_pkg.Country> _orderedCountries = () {
   const pinned = ['US', 'GB', 'CA', 'AU', 'IE'];
   final all = countries_pkg.countries;
   final top = [
-    for (final code in pinned)
-      all.firstWhere((c) => c.code == code),
+    for (final code in pinned) all.firstWhere((c) => c.code == code),
   ];
   final rest = all.where((c) => !pinned.contains(c.code)).toList();
   return [...top, ...rest];
@@ -167,27 +177,39 @@ class _PhoneTabState extends State<_PhoneTab> {
           ),
           const SizedBox(height: 6),
           IntlPhoneField(
-            initialCountryCode: WidgetsBinding
-                    .instance.platformDispatcher.locale.countryCode ??
+            initialCountryCode:
+                WidgetsBinding.instance.platformDispatcher.locale.countryCode ??
                 'GB',
             countries: _orderedCountries,
-            disableLengthCheck: false,
+            // Our `_PhoneNumberFormatter` inserts separators into the input
+            // (e.g. `(614) 285-6789`), which breaks the package's built-in
+            // length enforcement — it compares the formatted-string length
+            // against maxLength and cuts the user off early. Turn the
+            // internal check off and validate digit count ourselves below.
+            disableLengthCheck: true,
             style: theme.body,
             dropdownTextStyle: theme.body,
             showCountryFlag: true,
             inputFormatters: [
               _PhoneNumberFormatter(
-                isoCode: _phone?.countryISOCode ??
+                isoCode:
+                    _phone?.countryISOCode ??
                     WidgetsBinding
-                            .instance.platformDispatcher.locale.countryCode ??
-                        'GB',
+                        .instance
+                        .platformDispatcher
+                        .locale
+                        .countryCode ??
+                    'GB',
               ),
             ],
             pickerDialogStyle: PickerDialogStyle(
               searchFieldInputDecoration: InputDecoration(
                 hintText: 'Search country',
-                prefixIcon:
-                    Icon(Icons.search, size: 18, color: theme.textTertiary),
+                prefixIcon: Icon(
+                  Icons.search,
+                  size: 18,
+                  color: theme.textTertiary,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -198,17 +220,24 @@ class _PhoneTabState extends State<_PhoneTab> {
               fillColor: theme.background,
               hintText: '555 123 4567',
               hintStyle: theme.body.copyWith(color: theme.textTertiary),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              // Hide the digit counter — without maxLength enforcement it
+              // would otherwise render as `10/∞` which reads as noise.
+              counterText: '',
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 14,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    BorderSide(color: theme.text.withValues(alpha: 0.08)),
+                borderSide: BorderSide(
+                  color: theme.text.withValues(alpha: 0.08),
+                ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    BorderSide(color: theme.text.withValues(alpha: 0.08)),
+                borderSide: BorderSide(
+                  color: theme.text.withValues(alpha: 0.08),
+                ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -246,14 +275,16 @@ class _PhoneTabState extends State<_PhoneTab> {
     final callbacks = AuthCallbacksScope.maybeOf(context);
     String? devCode;
     if (callbacks?.onSendPhoneOtp != null) {
+      // Catch `Object` (not bare `catch`) so Dart `Error` subclasses like
+      // `NoSuchWidgetError` (previously raised inside a Scaffold-less tree)
+      // are surfaced instead of slipping past silently.
       try {
         devCode = await callbacks!.onSendPhoneOtp!(e164);
-      } catch (e) {
+      } catch (e, st) {
+        debugLogAuthError('auth/phone-send', e, st);
         if (!context.mounted) return;
         setState(() => _submitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not send code: $e')),
-        );
+        showAuthError(context, 'Could not send code: $e');
         return;
       }
     }
@@ -289,8 +320,7 @@ class _EmailTabState extends State<_EmailTab> {
   bool _submitting = false;
 
   // Pragmatic email regex — same shape backend's class-validator uses.
-  static final RegExp _emailRe =
-      RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+  static final RegExp _emailRe = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
   @override
   void dispose() {
@@ -331,20 +361,27 @@ class _EmailTabState extends State<_EmailTab> {
               fillColor: theme.background,
               hintText: 'you@example.com',
               hintStyle: theme.body.copyWith(color: theme.textTertiary),
-              prefixIcon:
-                  Icon(Icons.email_outlined, size: 20, color: theme.textTertiary),
+              prefixIcon: Icon(
+                Icons.email_outlined,
+                size: 20,
+                color: theme.textTertiary,
+              ),
               errorText: _error,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 14,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    BorderSide(color: theme.text.withValues(alpha: 0.08)),
+                borderSide: BorderSide(
+                  color: theme.text.withValues(alpha: 0.08),
+                ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    BorderSide(color: theme.text.withValues(alpha: 0.08)),
+                borderSide: BorderSide(
+                  color: theme.text.withValues(alpha: 0.08),
+                ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -377,12 +414,11 @@ class _EmailTabState extends State<_EmailTab> {
     if (callbacks?.onSendEmailOtp != null) {
       try {
         devCode = await callbacks!.onSendEmailOtp!(email);
-      } catch (e) {
+      } catch (e, st) {
+        debugLogAuthError('auth/email-send', e, st);
         if (!context.mounted) return;
         setState(() => _submitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not send code: $e')),
-        );
+        showAuthError(context, 'Could not send code: $e');
         return;
       }
     }
@@ -434,18 +470,15 @@ class _BottomAction extends StatelessWidget {
           child: Opacity(
             opacity: enabled ? 1 : 0.45,
             child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              color: theme.primary,
-              borderRadius: BorderRadius.circular(theme.radiusFull),
-            ),
-            child: Center(
-              child: Text(
-                label,
-                style: theme.button.copyWith(fontSize: 16),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: theme.primary,
+                borderRadius: BorderRadius.circular(theme.radiusFull),
               ),
-            ),
+              child: Center(
+                child: Text(label, style: theme.button.copyWith(fontSize: 16)),
+              ),
             ),
           ),
         ),
@@ -479,17 +512,24 @@ class _PhoneNumberFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    var digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+
+    // Backspace on a separator: Flutter only removed the non-digit, leaving
+    // the same digit-count. Without this, the next format pass re-inserts
+    // the separator and the user appears stuck on it. Detect a deletion
+    // that didn't shrink the digit set and drop the trailing digit too.
+    final oldDigits = oldValue.text.replaceAll(RegExp(r'\D'), '');
+    final isDelete = newValue.text.length < oldValue.text.length;
+    if (isDelete && digits.length == oldDigits.length && digits.isNotEmpty) {
+      digits = digits.substring(0, digits.length - 1);
+    }
     if (digits.isEmpty) return newValue.copyWith(text: '');
     final iso = _iso;
     if (iso == null) return newValue;
     try {
-      final parsed = pnp.PhoneNumber.parse(
-        digits,
-        destinationCountry: iso,
-      );
+      final parsed = pnp.PhoneNumber.parse(digits, destinationCountry: iso);
       final formatted = parsed.formatNsn();
-      if (formatted.isEmpty || formatted == digits) return newValue;
+      if (formatted.isEmpty) return newValue;
       return TextEditingValue(
         text: formatted,
         selection: TextSelection.collapsed(offset: formatted.length),

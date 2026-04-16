@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import '_auth_error_ui.dart';
 import 'auth_callbacks.dart';
 
 const int _otpLength = 6;
@@ -80,8 +81,9 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
           _controllers[i].clear();
         }
       }
-      final nextFocus =
-          digits.length >= _otpLength ? _otpLength - 1 : digits.length;
+      final nextFocus = digits.length >= _otpLength
+          ? _otpLength - 1
+          : digits.length;
       FocusScope.of(context).requestFocus(_focusNodes[nextFocus]);
       _maybeAutoSubmit();
       return;
@@ -143,7 +145,8 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
           // keeps new users inside /auth/* but won't choose a step for us —
           // explicitly advance to the next onboarding screen.
           context.go(ProtoRoutes.authBirthday);
-        } catch (e) {
+        } catch (e, st) {
+          debugLogAuthError('auth/otp-verify', e, st);
           if (!mounted) return;
           if (!_isVerifying) return; // cancelled by a concurrent resend
           setState(() {
@@ -152,9 +155,7 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
             }
           });
           FocusScope.of(context).requestFocus(_focusNodes[0]);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Invalid code: $e')),
-          );
+          showAuthError(context, 'Invalid code: $e');
         }
         return;
       }
@@ -189,11 +190,10 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
     if (callbacks?.onResendOtp != null && args != null) {
       try {
         await callbacks!.onResendOtp!(args.identifier, args.channel);
-      } catch (e) {
+      } catch (e, st) {
+        debugLogAuthError('auth/otp-resend', e, st);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not resend: $e')),
-        );
+        showAuthError(context, 'Could not resend: $e');
       }
     }
   }
@@ -202,87 +202,91 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
 
-    return Material(
-      type: MaterialType.transparency,
-      child: Container(
-        color: theme.surface,
-        child: Column(
-          children: [
-            ProtoSubBar(title: 'Verification'),
-            // Only surface the banner when we actually have a code to show
-            // (dev / demo mode). In production the backend omits `devCode`
-            // from the response so this renders nothing.
-            if (!kReleaseMode && widget.args?.devCode != null)
-              _TestBuildBanner(devCode: widget.args!.devCode!)
-            else
-              const SizedBox.shrink(),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 40),
-                    Text(
-                      'Enter the code we sent to',
-                      style: theme.headline.copyWith(fontSize: 22),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      widget.args?.displayIdentifier ??
-                          widget.args?.identifier ??
-                          '+44 7XXX XXX XX3',
-                      style: theme.body.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: theme.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-
-                    // Six OTP digit boxes
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(_otpLength, (i) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 5),
-                          child: _OtpBox(
-                            index: i,
-                            controller: _controllers[i],
-                            focusNode: _focusNodes[i],
-                            onChanged: (v) => _onChanged(i, v),
-                            onKey: (event) => _onKey(i, event),
-                            theme: theme,
-                          ),
-                        );
-                      }),
-                    ),
-                    const SizedBox(height: 28),
-
-                    if (!_canResend)
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Material(
+        type: MaterialType.transparency,
+        child: Container(
+          color: theme.surface,
+          child: Column(
+            children: [
+              ProtoSubBar(title: 'Verification'),
+              // Only surface the banner when we actually have a code to show
+              // (dev / demo mode). In production the backend omits `devCode`
+              // from the response so this renders nothing.
+              if (!kReleaseMode && widget.args?.devCode != null)
+                _TestBuildBanner(devCode: widget.args!.devCode!)
+              else
+                const SizedBox.shrink(),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 40),
                       Text(
-                        'Resend code in 0:${_countdown.toString().padLeft(2, '0')}',
-                        style:
-                            theme.caption.copyWith(color: theme.textTertiary),
-                      )
-                    else
-                      GestureDetector(
-                        onTap: _resend,
-                        child: Text(
-                          "Didn't get a code? Resend",
-                          style: theme.caption.copyWith(
-                            color: theme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        'Enter the code we sent to',
+                        style: theme.headline.copyWith(fontSize: 22),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        widget.args?.displayIdentifier ??
+                            widget.args?.identifier ??
+                            '+44 7XXX XXX XX3',
+                        style: theme.body.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.primary,
                         ),
                       ),
+                      const SizedBox(height: 40),
 
-                    const Spacer(),
-                    const SizedBox(height: 20),
-                  ],
+                      // Six OTP digit boxes
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(_otpLength, (i) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 5),
+                            child: _OtpBox(
+                              index: i,
+                              controller: _controllers[i],
+                              focusNode: _focusNodes[i],
+                              onChanged: (v) => _onChanged(i, v),
+                              onKey: (event) => _onKey(i, event),
+                              theme: theme,
+                            ),
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: 28),
+
+                      if (!_canResend)
+                        Text(
+                          'Resend code in 0:${_countdown.toString().padLeft(2, '0')}',
+                          style: theme.caption.copyWith(
+                            color: theme.textTertiary,
+                          ),
+                        )
+                      else
+                        GestureDetector(
+                          onTap: _resend,
+                          child: Text(
+                            "Didn't get a code? Resend",
+                            style: theme.caption.copyWith(
+                              color: theme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+
+                      const Spacer(),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
