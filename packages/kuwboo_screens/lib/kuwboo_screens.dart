@@ -51,6 +51,7 @@ export 'src/profile/profile_my_screen.dart';
 export 'src/profile/profile_edit_screen.dart';
 export 'src/profile/profile_settings_screen.dart';
 export 'src/profile/profile_notifications_screen.dart';
+export 'src/profile/profile_providers.dart';
 
 // Sponsored
 export 'src/sponsored/sponsored_inline.dart';

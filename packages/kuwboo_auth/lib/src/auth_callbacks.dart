@@ -36,6 +36,7 @@ class AuthCallbacks {
     this.onResendOtp,
     this.onSaveBirthday,
     this.onSaveProfile,
+    this.onSaveInterests,
     this.onCompleteTutorial,
     this.onCompleteOnboarding,
     this.onLogout,
@@ -89,6 +90,10 @@ class AuthCallbacks {
     String? avatarUrl,
     String? bio,
   })? onSaveProfile;
+
+  /// Persist onboarding interest selections (`POST /users/me/interests`).
+  /// [interestIds] replaces the caller's declared interest set.
+  final Future<void> Function(List<String> interestIds)? onSaveInterests;
 
   /// Mark tutorial complete.
   final Future<void> Function()? onCompleteTutorial;

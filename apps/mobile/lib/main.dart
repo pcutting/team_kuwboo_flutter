@@ -3,9 +3,11 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kuwboo_screens/kuwboo_screens.dart' as screens;
 
 import 'app/app.dart';
 import 'firebase_options.dart';
+import 'providers/api_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,5 +25,19 @@ void main() async {
     return true;
   };
 
-  runApp(const ProviderScope(child: KuwbooApp()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        // Bridge kuwboo_screens' package-local `apiClientProvider` (declared
+        // with `throw UnimplementedError` so the host app must override it)
+        // to the real mobile `apiClientProvider`. Without this, profile
+        // screens that depend on `meProvider` / `unreadNotificationCountProvider`
+        // crash on first read.
+        screens.apiClientProvider.overrideWith(
+          (ref) => ref.watch(apiClientProvider),
+        ),
+      ],
+      child: const KuwbooApp(),
+    ),
+  );
 }
