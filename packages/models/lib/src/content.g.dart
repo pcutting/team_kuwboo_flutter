@@ -22,9 +22,9 @@ Map<String, dynamic> _$FeedCreatorToJson(_FeedCreator instance) =>
     };
 
 _Content _$ContentFromJson(Map<String, dynamic> json) => _Content(
-  id: json['id'] as String,
+  id: json['id'] as String?,
   type: $enumDecode(_$ContentTypeEnumMap, json['type']),
-  creatorId: json['creatorId'] as String,
+  creatorId: json['creatorId'] as String?,
   creator: json['creator'] == null
       ? null
       : FeedCreator.fromJson(json['creator'] as Map<String, dynamic>),
@@ -42,7 +42,9 @@ _Content _$ContentFromJson(Map<String, dynamic> json) => _Content(
   viewCount: (json['viewCount'] as num?)?.toInt() ?? 0,
   shareCount: (json['shareCount'] as num?)?.toInt() ?? 0,
   saveCount: (json['saveCount'] as num?)?.toInt() ?? 0,
-  createdAt: DateTime.parse(json['createdAt'] as String),
+  createdAt: json['createdAt'] == null
+      ? null
+      : DateTime.parse(json['createdAt'] as String),
   videoUrl: json['videoUrl'] as String?,
   thumbnailUrl: json['thumbnailUrl'] as String?,
   durationSeconds: (json['durationSeconds'] as num?)?.toInt(),
@@ -68,7 +70,7 @@ Map<String, dynamic> _$ContentToJson(_Content instance) => <String, dynamic>{
   'viewCount': instance.viewCount,
   'shareCount': instance.shareCount,
   'saveCount': instance.saveCount,
-  'createdAt': instance.createdAt.toIso8601String(),
+  'createdAt': instance.createdAt?.toIso8601String(),
   'videoUrl': instance.videoUrl,
   'thumbnailUrl': instance.thumbnailUrl,
   'durationSeconds': instance.durationSeconds,
