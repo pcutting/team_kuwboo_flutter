@@ -1,201 +1,301 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
-import '../sponsored/sponsored_inline.dart';
 
-class ShopBrowseScreen extends StatefulWidget {
+import '../sponsored/sponsored_inline.dart';
+import 'shop_format.dart';
+import 'shop_providers.dart';
+
+class ShopBrowseScreen extends ConsumerStatefulWidget {
   const ShopBrowseScreen({super.key});
 
   @override
-  State<ShopBrowseScreen> createState() => _ShopBrowseScreenState();
+  ConsumerState<ShopBrowseScreen> createState() => _ShopBrowseScreenState();
 }
 
-class _ShopBrowseScreenState extends State<ShopBrowseScreen> {
+class _ShopBrowseScreenState extends ConsumerState<ShopBrowseScreen> {
   String _selectedCategory = 'All';
-  final Set<int> _wishlistedIndices = {};
+  final Set<String> _wishlistedIds = {};
 
-  static const _categories = ['All', 'Electronics', 'Fashion', 'Home', 'Sports', 'Vintage'];
+  static const _categories = [
+    'All',
+    'Electronics',
+    'Fashion',
+    'Home',
+    'Sports',
+    'Vintage',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ProtoTheme.of(context);
+    final filters = ShopFilters(
+      category: _selectedCategory == 'All' ? null : _selectedCategory,
+    );
+    final async = ref.watch(shopBrowseProvider(filters));
+
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: GestureDetector(
+            onTap: () => ProtoToast.show(
+              context,
+              theme.icons.search,
+              'Search keyboard would open',
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: theme.background,
+                borderRadius: BorderRadius.circular(theme.radiusFull),
+                border: Border.all(color: theme.text.withValues(alpha: 0.08)),
+              ),
+              child: Row(
+                children: [
+                  Icon(theme.icons.search, size: 20, color: theme.textTertiary),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Search marketplace...',
+                    style: theme.body.copyWith(color: theme.textTertiary),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 36,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            children: _categories.map((cat) {
+              final isActive = cat == _selectedCategory;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ProtoPressButton(
+                  duration: const Duration(milliseconds: 100),
+                  onTap: () => setState(() => _selectedCategory = cat),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isActive ? theme.primary : theme.background,
+                      borderRadius: BorderRadius.circular(20),
+                      border: isActive
+                          ? null
+                          : Border.all(
+                              color: theme.text.withValues(alpha: 0.1),
+                            ),
+                    ),
+                    child: Text(
+                      cat,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isActive ? Colors.white : theme.textSecondary,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 12),
+        async.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 48),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (err, _) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: ProtoErrorState(
+              message: 'Could not load listings',
+              onRetry: () => ref.invalidate(shopBrowseProvider(filters)),
+            ),
+          ),
+          data: (page) {
+            final products = page.items;
+            if (products.isEmpty) {
+              return const ProtoEmptyState(
+                icon: Icons.storefront_outlined,
+                title: 'No listings nearby',
+                subtitle: 'Check back soon or expand your search area',
+                actionLabel: 'Sell Something',
+              );
+            }
+            return _ProductGrid(
+              products: products,
+              theme: theme,
+              wishlistedIds: _wishlistedIds,
+              onWishlistToggle: (id, wasWishlisted) {
+                setState(() {
+                  if (wasWishlisted) {
+                    _wishlistedIds.remove(id);
+                  } else {
+                    _wishlistedIds.add(id);
+                  }
+                });
+                ProtoToast.show(
+                  context,
+                  wasWishlisted
+                      ? theme.icons.favoriteOutline
+                      : theme.icons.favoriteFilled,
+                  wasWishlisted
+                      ? 'Removed from wishlist'
+                      : 'Added to wishlist',
+                );
+              },
+            );
+          },
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+}
+
+class _ProductGrid extends StatelessWidget {
+  const _ProductGrid({
+    required this.products,
+    required this.theme,
+    required this.wishlistedIds,
+    required this.onWishlistToggle,
+  });
+
+  final List<Product> products;
+  final ProtoTheme theme;
+  final Set<String> wishlistedIds;
+  final void Function(String id, bool wasWishlisted) onWishlistToggle;
 
   @override
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
-    final theme = ProtoTheme.of(context);
+    final sponsoredSlot = products.length >= 3 ? 3 : -1;
+    final itemCount =
+        sponsoredSlot >= 0 ? products.length + 1 : products.length;
 
-    return DemoDataExtended.products.isEmpty
-        ? const ProtoEmptyState(
-              icon: Icons.storefront_outlined,
-              title: 'No listings nearby',
-              subtitle: 'Check back soon or expand your search area',
-              actionLabel: 'Sell Something',
-            )
-          : ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: GestureDetector(
-              onTap: () => ProtoToast.show(context, theme.icons.search, 'Search keyboard would open'),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: theme.background,
-                  borderRadius: BorderRadius.circular(theme.radiusFull),
-                  border: Border.all(color: theme.text.withValues(alpha: 0.08)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(theme.icons.search, size: 20, color: theme.textTertiary),
-                    const SizedBox(width: 10),
-                    Text('Search marketplace...', style: theme.body.copyWith(color: theme.textTertiary)),
-                  ],
-                ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 0.72,
+        ),
+        itemCount: itemCount,
+        itemBuilder: (context, i) {
+          if (i == sponsoredSlot) {
+            return ProtoPressButton(
+              onTap: () => ProtoToast.show(
+                context,
+                theme.icons.campaign,
+                'Promoted listing tapped',
               ),
+              child: SponsoredProductCard(
+                brandName: 'TechGear UK',
+                title: 'Pro Wireless Earbuds',
+                price: '£49',
+              ),
+            );
+          }
+          final idx = sponsoredSlot >= 0 && i > sponsoredSlot ? i - 1 : i;
+          final product = products[idx];
+          final isWishlisted = wishlistedIds.contains(product.id);
+          return ProtoPressButton(
+            onTap: () => state.pushWithArgs(
+              ProtoRoutes.shopProduct,
+              {'productId': product.id},
             ),
-          ),
-
-          // Category chips
-          SizedBox(
-            height: 36,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              children: _categories.map((cat) {
-                final isActive = cat == _selectedCategory;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ProtoPressButton(
-                    duration: const Duration(milliseconds: 100),
-                    onTap: () => setState(() => _selectedCategory = cat),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isActive ? theme.primary : theme.background,
-                        borderRadius: BorderRadius.circular(20),
-                        border: isActive ? null : Border.all(color: theme.text.withValues(alpha: 0.1)),
-                      ),
-                      child: Text(
-                        cat,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: isActive ? Colors.white : theme.textSecondary,
-                        ),
-                      ),
+            child: Container(
+              decoration: theme.cardDecoration,
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: ProtoNetworkImage(
+                      imageUrl: product.thumbnailUrl ?? _placeholderImage,
+                      width: double.infinity,
                     ),
                   ),
-                );
-              }).toList(),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Product grid (2 columns) with sponsored cards
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 0.72,
-              ),
-              itemCount: DemoDataExtended.products.length + 1, // +1 for sponsored
-              itemBuilder: (context, i) {
-                // Insert sponsored product card at position 3
-                if (i == 3) {
-                  return ProtoPressButton(
-                    onTap: () => ProtoToast.show(context, theme.icons.campaign, 'Promoted listing tapped'),
-                    child: SponsoredProductCard(
-                      brandName: 'TechGear UK',
-                      title: 'Pro Wireless Earbuds',
-                      price: '£49',
-                    ),
-                  );
-                }
-                final productIndex = i < 3 ? i : i - 1;
-                if (productIndex >= DemoDataExtended.products.length) {
-                  return const SizedBox.shrink();
-                }
-                final product = DemoDataExtended.products[productIndex];
-                final isWishlisted = _wishlistedIndices.contains(productIndex);
-                return ProtoPressButton(
-                  onTap: () => state.push(ProtoRoutes.shopProduct),
-                  child: Container(
-                    decoration: theme.cardDecoration,
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: ProtoNetworkImage(
-                            imageUrl: product.imageUrl,
-                            width: double.infinity,
+                  Expanded(
+                    flex: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            product.title,
+                            style: theme.title.copyWith(fontSize: 13),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(product.title, style: theme.title.copyWith(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                const SizedBox(height: 2),
-                                Text(product.condition, style: theme.caption),
-                                const Spacer(),
-                                Row(
-                                  children: [
-                                    Text(
-                                      '\$${product.price.toStringAsFixed(0)}',
-                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: theme.primary, fontFamily: theme.displayFont),
-                                    ),
-                                    const Spacer(),
-                                    GestureDetector(
-                                      behavior: HitTestBehavior.opaque,
-                                      onTap: () {
-                                        setState(() {
-                                          if (isWishlisted) {
-                                            _wishlistedIndices.remove(productIndex);
-                                          } else {
-                                            _wishlistedIndices.add(productIndex);
-                                          }
-                                        });
-                                        ProtoToast.show(
-                                          context,
-                                          isWishlisted ? theme.icons.favoriteOutline : theme.icons.favoriteFilled,
-                                          isWishlisted ? 'Removed from wishlist' : 'Added to wishlist',
-                                        );
-                                      },
-                                      child: AnimatedSwitcher(
-                                        duration: const Duration(milliseconds: 200),
-                                        child: Icon(
-                                          isWishlisted ? theme.icons.favoriteFilled : theme.icons.favoriteOutline,
-                                          key: ValueKey(isWishlisted),
-                                          size: 16,
-                                          color: isWishlisted ? theme.accent : theme.textTertiary,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                          const SizedBox(height: 2),
+                          Text(product.condition, style: theme.caption),
+                          const Spacer(),
+                          Row(
+                            children: [
+                              Text(
+                                formatPriceCents(
+                                  product.priceCents,
+                                  product.currency,
                                 ),
-                              ],
-                            ),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: theme.primary,
+                                  fontFamily: theme.displayFont,
+                                ),
+                              ),
+                              const Spacer(),
+                              GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () =>
+                                    onWishlistToggle(product.id, isWishlisted),
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 200),
+                                  child: Icon(
+                                    isWishlisted
+                                        ? theme.icons.favoriteFilled
+                                        : theme.icons.favoriteOutline,
+                                    key: ValueKey(isWishlisted),
+                                    size: 16,
+                                    color: isWishlisted
+                                        ? theme.accent
+                                        : theme.textTertiary,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                );
-              },
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-        ],
-      );
+          );
+        },
+      ),
+    );
   }
 }
+
+const _placeholderImage =
+    'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400&h=400&fit=crop';
