@@ -236,17 +236,35 @@ List<RouteBase> buildProtoModalRoutes({
     GoRoute(
       path: ProtoRoutes.shopProduct,
       parentNavigatorKey: rootNavigatorKey,
-      builder: (c, s) => const ShopProductDetail(),
+      builder: (c, s) {
+        final extra = s.extra;
+        final id = extra is Map && extra['productId'] is String
+            ? extra['productId'] as String
+            : null;
+        return ShopProductDetail(productId: id);
+      },
     ),
     GoRoute(
       path: ProtoRoutes.shopSeller,
       parentNavigatorKey: rootNavigatorKey,
-      builder: (c, s) => const ShopSellerProfile(),
+      builder: (c, s) {
+        final extra = s.extra;
+        final id = extra is Map && extra['sellerId'] is String
+            ? extra['sellerId'] as String
+            : null;
+        return ShopSellerProfile(sellerId: id);
+      },
     ),
     GoRoute(
       path: ProtoRoutes.shopAuction,
       parentNavigatorKey: rootNavigatorKey,
-      builder: (c, s) => const ShopAuctionDetail(),
+      builder: (c, s) {
+        final extra = s.extra;
+        final id = extra is Map && extra['auctionId'] is String
+            ? extra['auctionId'] as String
+            : null;
+        return ShopAuctionDetail(auctionId: id);
+      },
     ),
     GoRoute(
       path: ProtoRoutes.chatConversation,
