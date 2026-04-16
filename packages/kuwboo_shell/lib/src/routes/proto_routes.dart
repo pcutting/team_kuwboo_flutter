@@ -75,6 +75,10 @@ class ProtoRoutes {
   static const authLogin = '/auth/login';
   static const authAgeBlock = '/auth/age-block';
 
+  // ── Legal ─────────────────────────────────────────────────────────────
+  static const legalTerms = '/legal/terms';
+  static const legalPrivacy = '/legal/privacy';
+
   // ── Sponsored ─────────────────────────────────────────────────────────
   static const sponsoredInline = '/sponsored/inline';
   static const sponsoredHub = '/sponsored/hub';
