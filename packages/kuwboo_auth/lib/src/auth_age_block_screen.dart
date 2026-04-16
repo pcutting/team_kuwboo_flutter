@@ -9,9 +9,15 @@ class AuthAgeBlockScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
 
-    return Material(
-      type: MaterialType.transparency,
-      child: Container(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        context.go(ProtoRoutes.authWelcome);
+      },
+      child: Material(
+        type: MaterialType.transparency,
+        child: Container(
       color: theme.surface,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -79,6 +85,8 @@ class AuthAgeBlockScreen extends StatelessWidget {
           ],
         ),
       ),
-        ));
+        ),
+      ),
+    );
   }
 }

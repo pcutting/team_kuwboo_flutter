@@ -38,6 +38,13 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
     _dayController = FixedExtentScrollController(initialItem: _selectedDay);
     _monthController = FixedExtentScrollController(initialItem: _selectedMonth);
     _yearController = FixedExtentScrollController(initialItem: _selectedYear);
+    // ListWheelScrollView doesn't always fire `onSelectedItemChanged` for its
+    // initial item, so the central "selected" label can lag until first scroll.
+    // Force a single rebuild after layout to show the initial selection.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {});
+    });
   }
 
   @override

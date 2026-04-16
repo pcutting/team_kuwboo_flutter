@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -208,7 +209,7 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
         child: Column(
           children: [
             ProtoSubBar(title: 'Verification'),
-            const _TestBuildBanner(),
+            if (!kReleaseMode) const _TestBuildBanner() else const SizedBox.shrink(),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),

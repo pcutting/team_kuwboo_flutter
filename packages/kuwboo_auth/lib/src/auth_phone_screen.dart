@@ -465,7 +465,7 @@ class _PhoneNumberFormatter extends TextInputFormatter {
     }
     try {
       final parsed = pnp.PhoneNumber.parse('+$country$digits');
-      final formatted = parsed.getFormattedNsn();
+      final formatted = parsed.formatNsn();
       if (formatted.isEmpty) return newValue;
       return TextEditingValue(
         text: formatted,

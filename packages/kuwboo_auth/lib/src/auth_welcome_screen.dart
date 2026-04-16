@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
@@ -279,66 +280,20 @@ class _AppleGlyph extends StatelessWidget {
   }
 }
 
-/// Google "G" in the four brand colors. Painted inline so we don't ship an
-/// SVG loader for one button. Replace with the official SVG before production.
+/// Official Google "G" in the four brand colours, loaded from the shared
+/// kuwboo_shell asset bundle. The SVG reproduces the developers.google.com
+/// Sign-In brand mark.
 class _GoogleGlyph extends StatelessWidget {
   const _GoogleGlyph();
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return SvgPicture.asset(
+      'assets/images/google_g.svg',
+      package: 'kuwboo_shell',
       width: 26,
       height: 26,
-      child: CustomPaint(painter: _GoogleGPainter()),
+      semanticsLabel: 'Google',
     );
   }
-}
-
-class _GoogleGPainter extends CustomPainter {
-  static const _blue = Color(0xFF4285F4);
-  static const _red = Color(0xFFEA4335);
-  static const _yellow = Color(0xFFFBBC05);
-  static const _green = Color(0xFF34A853);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final c = Offset(size.width / 2, size.height / 2);
-    final r = size.width * 0.48;
-    final stroke = size.width * 0.18;
-    final rect = Rect.fromCircle(center: c, radius: r - stroke / 2);
-
-    void arc(double startDeg, double sweepDeg, Color color) {
-      final paint = Paint()
-        ..color = color
-        ..strokeWidth = stroke
-        ..strokeCap = StrokeCap.butt
-        ..style = PaintingStyle.stroke;
-      canvas.drawArc(
-        rect,
-        startDeg * 3.14159 / 180,
-        sweepDeg * 3.14159 / 180,
-        false,
-        paint,
-      );
-    }
-
-    // Four brand-color arc segments.
-    arc(-90, 90, _red);       // top → right (red)
-    arc(0, 90, _yellow);      // right → bottom (yellow)
-    arc(90, 90, _green);      // bottom → left (green)
-    arc(180, 90, _blue);      // left → top (blue)
-
-    // Inner horizontal bar (the "G" crossbar).
-    final barPaint = Paint()
-      ..color = _blue
-      ..style = PaintingStyle.fill;
-    final barHeight = stroke * 0.95;
-    canvas.drawRect(
-      Rect.fromLTWH(c.dx, c.dy - barHeight / 2, r - stroke / 2, barHeight),
-      barPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
