@@ -30,12 +30,12 @@ export class VerificationService {
     }
   }
 
-  async sendPhoneOtp(phone: string): Promise<void> {
+  async sendPhoneOtp(phone: string): Promise<{ devCode?: string }> {
     if (this.twilioClient && this.verifySid) {
       await this.twilioClient.verify.v2
         .services(this.verifySid)
         .verifications.create({ to: phone, channel: 'sms' });
-      return;
+      return {};
     }
 
     // Local dev fallback: store a hashed code
@@ -44,7 +44,7 @@ export class VerificationService {
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + OTP_EXPIRY_MINUTES);
 
-    const verification = this.em.create(Verification, {
+    this.em.create(Verification, {
       identifier: phone,
       codeHash,
       type: VerificationType.PHONE_OTP,
@@ -57,6 +57,14 @@ export class VerificationService {
     if (this.config.get('NODE_ENV') === 'development') {
       console.log(`[DEV] OTP for ${phone}: ${code}`);
     }
+
+    // Return the plaintext code in non-production environments so the mobile
+    // client can render it in the on-screen OTP banner. In production (or
+    // when Twilio is configured above), this branch is never taken.
+    if (process.env.NODE_ENV !== 'production') {
+      return { devCode: code };
+    }
+    return {};
   }
 
   async verifyPhoneOtp(phone: string, code: string): Promise<boolean> {
@@ -112,7 +120,7 @@ export class VerificationService {
    * dev fallback logs the code to stdout. A clean seam for D3's
    * EmailTransport service is left as a TODO.
    */
-  async sendEmailOtp(email: string): Promise<void> {
+  async sendEmailOtp(email: string): Promise<{ devCode?: string }> {
     const code = this.generateCode();
     const codeHash = await bcrypt.hash(code, BCRYPT_ROUNDS);
     const expiresAt = new Date();
@@ -130,6 +138,15 @@ export class VerificationService {
     if (this.config.get('NODE_ENV') !== 'production') {
       console.log(`[DEV] Email OTP for ${email}: ${code}`);
     }
+
+    // Return the plaintext code in non-production environments so the mobile
+    // client can render it in the on-screen OTP banner. Email OTP has no
+    // Twilio branch — the local-fallback is the only path until SES lands —
+    // so gating purely on NODE_ENV is sufficient.
+    if (process.env.NODE_ENV !== 'production') {
+      return { devCode: code };
+    }
+    return {};
   }
 
   async verifyEmailOtp(email: string, code: string): Promise<boolean> {

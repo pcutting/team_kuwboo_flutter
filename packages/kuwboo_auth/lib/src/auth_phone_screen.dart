@@ -244,9 +244,10 @@ class _PhoneTabState extends State<_PhoneTab> {
     setState(() => _submitting = true);
     final e164 = _phone!.completeNumber;
     final callbacks = AuthCallbacksScope.maybeOf(context);
+    String? devCode;
     if (callbacks?.onSendPhoneOtp != null) {
       try {
-        await callbacks!.onSendPhoneOtp!(e164);
+        devCode = await callbacks!.onSendPhoneOtp!(e164);
       } catch (e) {
         if (!context.mounted) return;
         setState(() => _submitting = false);
@@ -267,6 +268,7 @@ class _PhoneTabState extends State<_PhoneTab> {
         // raw E.164 as the canonical identifier for the verify call.
         displayIdentifier:
             '+${_phone!.countryCode.replaceAll('+', '')} ${_phone!.number}',
+        devCode: devCode,
       ),
     );
   }
@@ -371,9 +373,10 @@ class _EmailTabState extends State<_EmailTab> {
     }
     setState(() => _submitting = true);
     final callbacks = AuthCallbacksScope.maybeOf(context);
+    String? devCode;
     if (callbacks?.onSendEmailOtp != null) {
       try {
-        await callbacks!.onSendEmailOtp!(email);
+        devCode = await callbacks!.onSendEmailOtp!(email);
       } catch (e) {
         if (!context.mounted) return;
         setState(() => _submitting = false);
@@ -387,7 +390,11 @@ class _EmailTabState extends State<_EmailTab> {
     setState(() => _submitting = false);
     context.go(
       ProtoRoutes.authOtp,
-      extra: AuthOtpArgs(identifier: email, channel: AuthOtpChannel.email),
+      extra: AuthOtpArgs(
+        identifier: email,
+        channel: AuthOtpChannel.email,
+        devCode: devCode,
+      ),
     );
   }
 }

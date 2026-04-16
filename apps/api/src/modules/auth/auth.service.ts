@@ -71,12 +71,12 @@ export class AuthService {
     this.googleClient = new OAuth2Client();
   }
 
-  async sendPhoneOtp(phone: string): Promise<void> {
-    await this.verificationService.sendPhoneOtp(phone);
+  async sendPhoneOtp(phone: string): Promise<{ devCode?: string }> {
+    return this.verificationService.sendPhoneOtp(phone);
   }
 
-  async sendEmailOtp(email: string): Promise<void> {
-    await this.verificationService.sendEmailOtp(this.normaliseEmail(email));
+  async sendEmailOtp(email: string): Promise<{ devCode?: string }> {
+    return this.verificationService.sendEmailOtp(this.normaliseEmail(email));
   }
 
   async verifyPhoneOtp(
