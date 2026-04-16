@@ -9,6 +9,7 @@ import 'package:kuwboo_shell/kuwboo_shell.dart';
 import 'package:phone_numbers_parser/phone_numbers_parser.dart' as pnp;
 
 import '_auth_error_ui.dart';
+import '_step_chip.dart';
 import 'auth_callbacks.dart';
 
 class AuthPhoneScreen extends StatefulWidget {
@@ -52,6 +53,7 @@ class _AuthPhoneScreenState extends State<AuthPhoneScreen>
           child: Column(
             children: [
               ProtoSubBar(title: 'Sign Up'),
+              const StepChip(step: 2),
               // Tab bar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import '_auth_error_ui.dart';
+import '_step_chip.dart';
 import 'auth_callbacks.dart';
 
 const int _otpLength = 6;
@@ -211,6 +212,7 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
           child: Column(
             children: [
               ProtoSubBar(title: 'Verification'),
+              const StepChip(step: 3),
               // Only surface the banner when we actually have a code to show
               // (dev / demo mode). In production the backend omits `devCode`
               // from the response so this renders nothing.

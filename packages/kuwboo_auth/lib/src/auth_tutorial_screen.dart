@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import '_auth_error_ui.dart';
+import '_step_chip.dart';
 import 'auth_callbacks.dart';
 
 /// 4-page swipeable interaction tutorial shown after interest picking.
@@ -115,6 +116,8 @@ class _AuthTutorialScreenState extends State<AuthTutorialScreen> {
                     ),
                   ),
                 ),
+
+                const StepChip(step: 6, almostDone: true),
 
                 // Page content
                 Expanded(

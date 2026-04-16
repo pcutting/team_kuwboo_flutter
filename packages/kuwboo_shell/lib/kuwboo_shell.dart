@@ -15,6 +15,7 @@ export 'src/shared/proto_scaffold.dart';
 export 'src/shared/proto_bottom_nav.dart';
 export 'src/shared/proto_top_bar.dart';
 export 'src/shared/proto_dialogs.dart';
+export 'src/shared/dev_hooks.dart';
 export 'src/shared/proto_press_button.dart';
 export 'src/shared/proto_image.dart';
 export 'src/shared/proto_states.dart';

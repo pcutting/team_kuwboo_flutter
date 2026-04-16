@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import '_step_chip.dart';
 import 'auth_callbacks.dart';
 
 class AuthBirthdayScreen extends StatefulWidget {
@@ -88,6 +89,7 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
           child: Column(
             children: [
               ProtoSubBar(title: ''),
+              const StepChip(step: 4),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),

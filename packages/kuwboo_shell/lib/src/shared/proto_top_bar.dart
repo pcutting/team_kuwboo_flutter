@@ -3,6 +3,7 @@ import '../theme/proto_theme.dart';
 import '../data/proto_demo_data.dart';
 import '../state/proto_state_provider.dart';
 import '../routes/proto_routes.dart';
+import 'dev_hooks.dart';
 import 'proto_dialogs.dart';
 
 /// Interactive top bar matching the Kuwboo design.
@@ -183,7 +184,10 @@ class ProtoTopBar extends StatelessWidget {
           label: 'My profile, has notifications',
           button: true,
           child: GestureDetector(
-            onTap: () => ProtoProfileMenu.show(context),
+            onTap: () => ProtoProfileMenu.show(
+              context,
+              onDevReset: DevHooks.maybeOf(context)?.onResetOnboarding,
+            ),
             child: iconBacking(SizedBox(
               width: 36,
               height: 36,

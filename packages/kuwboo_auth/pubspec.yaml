@@ -22,6 +22,10 @@ dependencies:
   phone_numbers_parser: ^9.0.21
   flutter_svg: ^2.0.14
   go_router: ^14.0.0
+  # Crashlytics is tried from release builds in `_auth_error_ui.dart`. The
+  # package must tolerate Firebase not being initialised (dev builds without
+  # google-services.json) — the call is wrapped in try/catch for that reason.
+  firebase_crashlytics: ^4.3.5
 
 dev_dependencies:
   flutter_test:
