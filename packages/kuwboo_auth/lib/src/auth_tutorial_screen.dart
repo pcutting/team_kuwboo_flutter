@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import '_auth_error_ui.dart';
 import 'auth_callbacks.dart';
 
 /// 4-page swipeable interaction tutorial shown after interest picking.
@@ -54,15 +55,18 @@ class _AuthTutorialScreenState extends State<AuthTutorialScreen> {
     if (callbacks?.onCompleteTutorial != null) {
       try {
         await callbacks!.onCompleteTutorial!();
-      } catch (_) {
-        // Non-fatal — user can retry from settings.
+      } catch (e, st) {
+        // Non-fatal — user can retry from settings. Log so TestFlight
+        // builds surface the failure in Crashlytics / debug console.
+        debugLogAuthError('auth/tutorial-complete', e, st);
       }
     }
     if (callbacks?.onCompleteOnboarding != null) {
       try {
         await callbacks!.onCompleteOnboarding!();
-      } catch (_) {
+      } catch (e, st) {
         // Non-fatal.
+        debugLogAuthError('auth/onboarding-complete', e, st);
       }
     }
     if (!mounted) return;
@@ -85,130 +89,134 @@ class _AuthTutorialScreenState extends State<AuthTutorialScreen> {
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
 
-    return Material(
-      type: MaterialType.transparency,
-      child: Container(
-      color: theme.surface,
-      child: SafeArea(
-        child: Column(
-          children: [
-            // Skip button — top right
-            Align(
-              alignment: Alignment.centerRight,
-              child: GestureDetector(
-                onTap: _enterApp,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 16, right: 24),
-                  child: Text(
-                    'Skip',
-                    style: theme.body.copyWith(
-                      color: theme.textTertiary,
-                      fontWeight: FontWeight.w600,
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Material(
+        type: MaterialType.transparency,
+        child: Container(
+          color: theme.surface,
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Skip button — top right
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    onTap: _enterApp,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 16, right: 24),
+                      child: Text(
+                        'Skip',
+                        style: theme.body.copyWith(
+                          color: theme.textTertiary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
 
-            // Page content
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: _pages.length,
-                onPageChanged: (i) => setState(() => _currentPage = i),
-                itemBuilder: (context, index) {
-                  final page = _pages[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Icon in circle
-                        Container(
-                          width: 160,
-                          height: 160,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: theme.primary.withValues(alpha: 0.10),
-                          ),
-                          child: Icon(
-                            page.icon,
-                            size: 80,
-                            color: theme.primary,
-                          ),
+                // Page content
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: _pages.length,
+                    onPageChanged: (i) => setState(() => _currentPage = i),
+                    itemBuilder: (context, index) {
+                      final page = _pages[index];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Icon in circle
+                            Container(
+                              width: 160,
+                              height: 160,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: theme.primary.withValues(alpha: 0.10),
+                              ),
+                              child: Icon(
+                                page.icon,
+                                size: 80,
+                                color: theme.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 40),
+
+                            // Headline
+                            Text(
+                              page.headline,
+                              style: theme.headline.copyWith(fontSize: 28),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 14),
+
+                            // Description
+                            Text(
+                              page.description,
+                              style: theme.body,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 40),
-
-                        // Headline
-                        Text(
-                          page.headline,
-                          style: theme.headline.copyWith(fontSize: 28),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 14),
-
-                        // Description
-                        Text(
-                          page.description,
-                          style: theme.body,
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            // Dots
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_pages.length, (i) {
-                final isActive = i == _currentPage;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: isActive ? 24 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    color: isActive
-                        ? theme.primary
-                        : theme.text.withValues(alpha: 0.15),
+                      );
+                    },
                   ),
-                );
-              }),
-            ),
-            const SizedBox(height: 32),
+                ),
 
-            // Next / Get Started button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: GestureDetector(
-                onTap: _nextPage,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: BoxDecoration(
-                    color: theme.primary,
-                    borderRadius: BorderRadius.circular(theme.radiusFull),
-                  ),
-                  child: Center(
-                    child: Text(
-                      _currentPage == _pages.length - 1
-                          ? 'Get Started'
-                          : 'Next',
-                      style: theme.button.copyWith(fontSize: 16),
+                // Dots
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(_pages.length, (i) {
+                    final isActive = i == _currentPage;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: isActive ? 24 : 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: isActive
+                            ? theme.primary
+                            : theme.text.withValues(alpha: 0.15),
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 32),
+
+                // Next / Get Started button
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: GestureDetector(
+                    onTap: _nextPage,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: theme.primary,
+                        borderRadius: BorderRadius.circular(theme.radiusFull),
+                      ),
+                      child: Center(
+                        child: Text(
+                          _currentPage == _pages.length - 1
+                              ? 'Get Started'
+                              : 'Next',
+                          style: theme.button.copyWith(fontSize: 16),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 32),
+              ],
             ),
-            const SizedBox(height: 32),
-          ],
+          ),
         ),
       ),
-        ));
+    );
   }
 }
 
