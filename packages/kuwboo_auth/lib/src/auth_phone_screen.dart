@@ -249,7 +249,14 @@ class _PhoneTabState extends State<_PhoneTab> {
     setState(() => _submitting = false);
     context.go(
       ProtoRoutes.authOtp,
-      extra: AuthOtpArgs(identifier: e164, channel: AuthOtpChannel.phone),
+      extra: AuthOtpArgs(
+        identifier: e164,
+        channel: AuthOtpChannel.phone,
+        // Human-readable form for the OTP confirmation screen. Keep the
+        // raw E.164 as the canonical identifier for the verify call.
+        displayIdentifier:
+            '+${_phone!.countryCode.replaceAll('+', '')} ${_phone!.number}',
+      ),
     );
   }
 }

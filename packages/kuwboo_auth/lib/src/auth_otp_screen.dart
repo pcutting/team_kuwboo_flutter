@@ -32,7 +32,12 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
   );
   bool _canResend = false;
   int _countdown = 30;
-  bool _submitted = false;
+
+  /// True while a verify call is in flight. Guarding both auto-submit and
+  /// the post-verify navigation on this flag prevents (a) paste + resend
+  /// firing overlapping verifies, and (b) a stale verify result
+  /// navigating after the user resent the code.
+  bool _isVerifying = false;
 
   @override
   void initState() {
@@ -115,49 +120,63 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
 
   void _maybeAutoSubmit() {
     final full = _controllers.map((c) => c.text).join();
-    if (full.length == _otpLength && !_submitted) {
-      _submitted = true;
+    if (full.length == _otpLength && !_isVerifying) {
       unawaited(_submit(full));
     }
   }
 
   Future<void> _submit(String code) async {
+    _isVerifying = true;
     final callbacks = AuthCallbacksScope.maybeOf(context);
     final args = widget.args;
-    if (callbacks?.onVerifyOtp != null && args != null) {
-      try {
-        await callbacks!.onVerifyOtp!(args.identifier, code, args.channel);
-        if (!mounted) return;
-        // Auth state has flipped to authenticated. The router's redirect
-        // keeps new users inside /auth/* but won't choose a step for us —
-        // explicitly advance to the next onboarding screen.
-        context.go(ProtoRoutes.authBirthday);
-      } catch (e) {
-        if (!mounted) return;
-        setState(() {
-          _submitted = false;
-          for (final c in _controllers) {
-            c.clear();
-          }
-        });
-        FocusScope.of(context).requestFocus(_focusNodes[0]);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Invalid code: $e')),
-        );
+    try {
+      if (callbacks?.onVerifyOtp != null && args != null) {
+        try {
+          await callbacks!.onVerifyOtp!(args.identifier, code, args.channel);
+          if (!mounted) return;
+          // If _resend() fired while we were awaiting, it cleared
+          // _isVerifying and we must NOT navigate — the user is about to
+          // enter a fresh code.
+          if (!_isVerifying) return;
+          // Auth state has flipped to authenticated. The router's redirect
+          // keeps new users inside /auth/* but won't choose a step for us —
+          // explicitly advance to the next onboarding screen.
+          context.go(ProtoRoutes.authBirthday);
+        } catch (e) {
+          if (!mounted) return;
+          if (!_isVerifying) return; // cancelled by a concurrent resend
+          setState(() {
+            for (final c in _controllers) {
+              c.clear();
+            }
+          });
+          FocusScope.of(context).requestFocus(_focusNodes[0]);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Invalid code: $e')),
+          );
+        }
+        return;
       }
-      return;
+      // Mock prototype flow — advance after a brief delay.
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
+      if (!_isVerifying) return;
+      context.go(ProtoRoutes.authBirthday);
+    } finally {
+      if (mounted) {
+        _isVerifying = false;
+      }
     }
-    // Mock prototype flow — advance after a brief delay.
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (!mounted) return;
-    context.go(ProtoRoutes.authBirthday);
   }
 
   Future<void> _resend() async {
+    // Cancel any in-flight verify by flipping the flag; _submit() checks
+    // this before navigating so a stale success can't jump the user past
+    // the fresh code entry.
+    _isVerifying = false;
     setState(() {
       _canResend = false;
       _countdown = 30;
-      _submitted = false;
       for (final c in _controllers) {
         c.clear();
       }
@@ -203,7 +222,9 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      widget.args?.identifier ?? '+44 7XXX XXX XX3',
+                      widget.args?.displayIdentifier ??
+                          widget.args?.identifier ??
+                          '+44 7XXX XXX XX3',
                       style: theme.body.copyWith(
                         fontWeight: FontWeight.w600,
                         color: theme.primary,
