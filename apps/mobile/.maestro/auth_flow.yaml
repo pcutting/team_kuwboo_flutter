@@ -1,40 +1,52 @@
 appId: com.kuwboo.mobile
-name: Auth — welcome + method smoke
+name: Auth — welcome + method smoke (B1-B3 only)
 tags:
   - auth
   - smoke
 ---
-# Smoke test the auth entry flow. Proves:
-# - app launches
-# - welcome screen renders the redesigned layout (logo, tagline, buttons)
-# - TEST BUILD banner is absent from welcome (moved to OTP)
-# - Create Account navigates to the method screen
-# - method screen offers the production option list (phone/email + SSO)
-#
-# The deeper flow (Send Code → OTP → Birthday) needs a whitelisted phone and
-# a reachable backend; extend this file when the seed whitelist is widened.
+# Original 3-step smoke. Kept as a fast pre-flight check; the full B1-B14
+# walkthrough lives at walkthrough.yaml. All selectors use stable testIDs
+# from AuthIds — no text matching, so theme/copy edits don't break it.
 
 - launchApp:
     stopApp: true
     permissions:
       all: allow
 
-# Welcome screen.
-- assertVisible: "Connect. Discover. Be You."
-- assertVisible: "Create Account"
-- assertVisible: "Log In"
+# Welcome screen renders with the four entry buttons (no test banner here).
+- assertVisible:
+    id: "auth.welcome.btn_create_account"
+- assertVisible:
+    id: "auth.welcome.btn_login"
+- assertVisible:
+    id: "auth.welcome.btn_apple"
+- assertVisible:
+    id: "auth.welcome.btn_google"
 - assertNotVisible: "TEST BUILD"
 
 # Nav into method.
-- tapOn: "Create Account"
-- assertVisible: "Use phone or email"
-- assertVisible: "Continue with Google"
-- assertVisible: "Continue with Apple"
+- tapOn:
+    id: "auth.welcome.btn_create_account"
+- assertVisible:
+    id: "auth.method.btn_phone_email"
+- assertVisible:
+    id: "auth.method.btn_google"
+- assertVisible:
+    id: "auth.method.btn_apple"
 
-# Nav into phone/email screen.
-- tapOn: "Use phone or email"
-- assertVisible: "Phone"
-- assertVisible: "Email"
+# Nav into phone/email screen, switch tabs.
+- tapOn:
+    id: "auth.method.btn_phone_email"
+- assertVisible:
+    id: "auth.phone.tab_phone"
+    selected: true
+- assertVisible:
+    id: "auth.phone.tab_email"
 
-- tapOn: "Email"
-- assertVisible: "you@example.com"
+- tapOn:
+    id: "auth.phone.tab_email"
+- assertVisible:
+    id: "auth.phone.tab_email"
+    selected: true
+- assertVisible:
+    id: "auth.email.field_email"

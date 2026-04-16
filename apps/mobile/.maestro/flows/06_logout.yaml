@@ -1,0 +1,39 @@
+appId: com.kuwboo.mobile
+name: B14 — log out → bounced back to welcome
+---
+# Profile menu → Settings (or wherever Log Out lives). The profile menu's
+# log-out row is reserved as ShellIds.profileMenuLogOut but not yet wired
+# into the menu UI per the shell agent's report. Until that lands, this
+# subflow asserts the back-navigation path: tap Settings (which has the
+# log-out option in its current implementation), confirm log out, and
+# verify we land on the welcome screen with tokens cleared.
+#
+# When ShellIds.profileMenuLogOut is wired in the profile menu directly,
+# replace the Settings tap with a tapOn: { id: "shell.profile_menu.item_log_out" }.
+
+- tapOn:
+    id: "shell.topbar.btn_profile_menu"
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    id: "shell.profile_menu.item_settings"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Settings screen has log out as a regular item. Currently no testID on it
+# — fall back to text match for this single transitional step. Replace
+# when ShellIds.profileMenuLogOut moves into the profile menu proper.
+- tapOn: "Log Out"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Confirm dialog — uses the shared dialog constants.
+- tapOn:
+    id: "shell.dialog_confirm.btn_confirm"
+- waitForAnimationToEnd:
+    timeout: 4000
+
+# Bounced to welcome.
+- assertVisible:
+    id: "auth.welcome.btn_create_account"
+- takeScreenshot: /tmp/walkthrough_b14_logged_out

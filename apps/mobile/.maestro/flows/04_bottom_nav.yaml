@@ -1,0 +1,66 @@
+appId: com.kuwboo.mobile
+name: B11 — cycle bottom-nav modules via service menu
+---
+# We're on yoyo. Open the service-switcher FAB, hop to each module, prove
+# the bottom-nav reflects the new module via its selected state. Each module
+# also gets a screenshot for the demo record.
+
+# 1. Yoyo (already here)
+- assertVisible:
+    id: "shell.bottomnav.tab_nearby"
+    selected: true
+
+# 2. Open FAB → tap Video service
+- tapOn:
+    id: "shell.bottomnav.fab_service_menu"
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    id: "shell.bottomnav.service_video"
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: "shell.bottomnav.tab_for you"
+    selected: true
+- takeScreenshot: /tmp/walkthrough_b11_video
+
+# 3. Dating
+- tapOn:
+    id: "shell.bottomnav.fab_service_menu"
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    id: "shell.bottomnav.service_dating"
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: "shell.bottomnav.tab_discover"
+    selected: true
+- takeScreenshot: /tmp/walkthrough_b11_dating
+
+# 4. Social
+- tapOn:
+    id: "shell.bottomnav.fab_service_menu"
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    id: "shell.bottomnav.service_social"
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: "shell.bottomnav.tab_feed"
+    selected: true
+- takeScreenshot: /tmp/walkthrough_b11_social
+
+# 5. Shop
+- tapOn:
+    id: "shell.bottomnav.fab_service_menu"
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    id: "shell.bottomnav.service_shop"
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    id: "shop.browse.input_search"
+- takeScreenshot: /tmp/walkthrough_b11_shop

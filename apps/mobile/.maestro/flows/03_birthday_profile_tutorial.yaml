@@ -1,0 +1,67 @@
+appId: com.kuwboo.mobile
+name: B8-B10 — Birthday → Profile → Tutorial
+---
+# B8: birthday wheels are present and exposing values. Spin the year wheel.
+- assertVisible:
+    id: "auth.birthday.wheel_day"
+- assertVisible:
+    id: "auth.birthday.wheel_month"
+- assertVisible:
+    id: "auth.birthday.wheel_year"
+
+# Scroll year wheel up to land somewhere around 1990 (the wheels are
+# ListWheelScrollViews — Maestro's swipe gesture moves them). The exact
+# year doesn't matter for navigation, only that Continue completes.
+- swipe:
+    from:
+      id: "auth.birthday.wheel_year"
+    direction: DOWN
+    duration: 800
+- waitForAnimationToEnd:
+    timeout: 3000
+
+- tapOn:
+    id: "auth.birthday.btn_continue"
+- waitForAnimationToEnd:
+    timeout: 4000
+
+# B9: profile screen — fill name + username, advance.
+- assertVisible:
+    id: "auth.profile.field_display_name"
+- assertVisible:
+    id: "auth.profile.field_username"
+- assertVisible:
+    id: "auth.profile.btn_continue"
+    enabled: false   # disabled until both fields valid
+
+- tapOn:
+    id: "auth.profile.field_display_name"
+- inputText: "Walkthrough Demo"
+
+- tapOn:
+    id: "auth.profile.field_username"
+- inputText: "walkthroughdemo"
+
+# Continue should now be enabled (state gate).
+- assertVisible:
+    id: "auth.profile.btn_continue"
+    enabled: true
+
+- tapOn:
+    id: "auth.profile.btn_continue"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# B10: tutorial. Skip is fine for the walkthrough — we've proven the route.
+- assertVisible:
+    id: "auth.tutorial.btn_next_or_go"
+- tapOn:
+    id: "auth.tutorial.btn_skip"
+- waitForAnimationToEnd:
+    timeout: 4000
+
+# Landed on /yoyo/nearby — bottom nav has the yoyo tab selected.
+- assertVisible:
+    id: "shell.bottomnav.tab_nearby"
+    selected: true
+- takeScreenshot: /tmp/walkthrough_b10_yoyo_landed

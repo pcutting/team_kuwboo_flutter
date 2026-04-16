@@ -1,0 +1,26 @@
+appId: com.kuwboo.mobile
+name: Full app walkthrough — B1 to B14
+tags:
+  - walkthrough
+  - e2e
+---
+# End-to-end walkthrough exercising every step of the user-onboarding +
+# bottom-nav flow. Subflows are named for the B-step they cover; see the
+# plan at /Users/philipcutting/.claude/plans/playful-snacking-ember.md.
+#
+# Each subflow uses Semantics(identifier:) selectors only — no text-based
+# matches — so theme tweaks (uppercase labels, copy edits) don't break it.
+# State assertions (enabled / selected / value) gate progress so we never
+# advance on a stale frame.
+
+- launchApp:
+    stopApp: true
+    permissions:
+      all: allow
+
+- runFlow: flows/01_welcome_to_phone.yaml      # B1–B4
+- runFlow: flows/02_send_and_otp.yaml          # B5–B7
+- runFlow: flows/03_birthday_profile_tutorial.yaml  # B8–B10
+- runFlow: flows/04_bottom_nav.yaml            # B11
+- runFlow: flows/05_profile_menu.yaml          # B12–B13
+- runFlow: flows/06_logout.yaml                # B14
