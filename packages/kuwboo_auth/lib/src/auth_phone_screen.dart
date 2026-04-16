@@ -176,7 +176,12 @@ class _PhoneTabState extends State<_PhoneTab> {
             dropdownTextStyle: theme.body,
             showCountryFlag: true,
             inputFormatters: [
-              _PhoneNumberFormatter(country: _phone?.countryCode ?? '1'),
+              _PhoneNumberFormatter(
+                isoCode: _phone?.countryISOCode ??
+                    WidgetsBinding
+                            .instance.platformDispatcher.locale.countryCode ??
+                        'GB',
+              ),
             ],
             pickerDialogStyle: PickerDialogStyle(
               searchFieldInputDecoration: InputDecoration(
@@ -447,12 +452,20 @@ class _BottomAction extends StatelessWidget {
 /// failure (partial entry, unsupported country, etc.) so the field never
 /// eats keystrokes.
 class _PhoneNumberFormatter extends TextInputFormatter {
-  _PhoneNumberFormatter({required this.country});
+  _PhoneNumberFormatter({required this.isoCode});
 
-  /// Current country calling code (no leading `+`), e.g. `'1'` for US, `'44'`
-  /// for GB. Supplied by the enclosing widget from `IntlPhoneField`'s
-  /// currently-selected country.
-  final String country;
+  /// ISO 3166-1 alpha-2 code of the currently-selected country ('US', 'GB',
+  /// 'CA', …). Used as the `destinationCountry` so phone_numbers_parser picks
+  /// the right national-format rule.
+  final String isoCode;
+
+  pnp.IsoCode? get _iso {
+    try {
+      return pnp.IsoCode.values.byName(isoCode.toUpperCase());
+    } catch (_) {
+      return null;
+    }
+  }
 
   @override
   TextEditingValue formatEditUpdate(
@@ -460,13 +473,16 @@ class _PhoneNumberFormatter extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
-    if (digits.isEmpty) {
-      return newValue.copyWith(text: '');
-    }
+    if (digits.isEmpty) return newValue.copyWith(text: '');
+    final iso = _iso;
+    if (iso == null) return newValue;
     try {
-      final parsed = pnp.PhoneNumber.parse('+$country$digits');
+      final parsed = pnp.PhoneNumber.parse(
+        digits,
+        destinationCountry: iso,
+      );
       final formatted = parsed.formatNsn();
-      if (formatted.isEmpty) return newValue;
+      if (formatted.isEmpty || formatted == digits) return newValue;
       return TextEditingValue(
         text: formatted,
         selection: TextSelection.collapsed(offset: formatted.length),
