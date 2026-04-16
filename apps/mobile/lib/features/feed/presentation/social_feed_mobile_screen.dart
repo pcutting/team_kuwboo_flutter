@@ -125,8 +125,10 @@ class _PostCard extends StatelessWidget {
     );
   }
 
-  String _relativeTime(DateTime ts) {
+  String _relativeTime(DateTime? ts) {
+    if (ts == null) return '';
     final diff = DateTime.now().difference(ts);
+    if (diff.isNegative) return '';
     if (diff.inMinutes < 1) return 'just now';
     if (diff.inHours < 1) return '${diff.inMinutes}m';
     if (diff.inDays < 1) return '${diff.inHours}h';

@@ -87,11 +87,20 @@ abstract class _TabFeedNotifier extends AsyncNotifier<FeedListState> {
 
   FeedApi get _api => ref.read(feedApiProvider);
 
+  /// Drops rows the UI can't safely render. Today that's rows with a null
+  /// `id`: a Content row without an id can't be liked, can't open a
+  /// detail page, and can't be a stable ListView key. Handle it at the
+  /// edge so downstream widgets don't need defensive null checks
+  /// everywhere. Nullability of `creatorId` / `createdAt` is tolerated
+  /// because the UI already degrades gracefully for those fields.
+  List<Content> _sanitize(List<Content> items) =>
+      items.where((c) => c.id != null).toList();
+
   @override
   Future<FeedListState> build() async {
     final page = await _api.getHome(tab: tab);
     return FeedListState(
-      items: page.items,
+      items: _sanitize(page.items),
       nextCursor: page.nextCursor,
       hasMore: page.hasMore,
     );
@@ -102,7 +111,7 @@ abstract class _TabFeedNotifier extends AsyncNotifier<FeedListState> {
     state = await AsyncValue.guard(() async {
       final page = await _api.getHome(tab: tab);
       return FeedListState(
-        items: page.items,
+        items: _sanitize(page.items),
         nextCursor: page.nextCursor,
         hasMore: page.hasMore,
       );
@@ -119,7 +128,7 @@ abstract class _TabFeedNotifier extends AsyncNotifier<FeedListState> {
     try {
       final page = await _api.getHome(tab: tab, cursor: cursor);
       state = AsyncValue.data(FeedListState(
-        items: [...current.items, ...page.items],
+        items: [...current.items, ..._sanitize(page.items)],
         nextCursor: page.nextCursor,
         hasMore: page.hasMore,
         isLoadingMore: false,
