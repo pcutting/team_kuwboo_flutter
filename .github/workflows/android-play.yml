@@ -69,6 +69,11 @@ jobs:
       - name: Install Flutter dependencies
         run: flutter pub get
 
+      - name: Dart fix + analyze
+        run: |
+          dart fix --apply
+          flutter analyze --fatal-infos
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
