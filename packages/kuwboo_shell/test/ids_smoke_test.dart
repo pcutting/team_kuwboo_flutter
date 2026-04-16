@@ -1,5 +1,11 @@
+// SemanticsNode.hasFlag was deprecated in Flutter 3.32 in favour of a
+// new flagsCollection / Tristate API. The replacement requires a
+// non-trivial rewrite; suppress for this test until we migrate. The
+// deprecated API still works correctly at runtime.
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
