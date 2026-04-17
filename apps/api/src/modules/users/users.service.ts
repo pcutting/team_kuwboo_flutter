@@ -10,7 +10,12 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { PatchMeDto } from './dto/patch-me.dto';
 import { Credential } from '../credentials/entities/credential.entity';
-import { CredentialType, OnboardingProgress } from '../../common/enums';
+import {
+  AgeVerificationStatus,
+  CredentialType,
+  OnboardingProgress,
+} from '../../common/enums';
+import { DobChoice } from '../../common/enums/dob-choice.enum';
 
 /**
  * Username rules: 3–30 chars, [a-zA-Z0-9_.], case-insensitive uniqueness
@@ -103,6 +108,10 @@ export class UsersService {
       user.birthdaySkipped = true;
     }
 
+    if (dto.dobChoice !== undefined) {
+      UsersService.applyDobChoice(user, dto.dobChoice);
+    }
+
     if (dto.onboardingProgress !== undefined) {
       user.onboardingProgress = dto.onboardingProgress;
     } else {
@@ -117,6 +126,42 @@ export class UsersService {
 
     await this.em.flush();
     return user;
+  }
+
+  /**
+   * Apply a DOB-choice transition to a user. Kept as a pure static so the
+   * Dating guard and tests can share the mapping — the guard derives its
+   * 403 code from `ageVerificationStatus` + `dobChoice`, so these two
+   * fields must move in lockstep.
+   *
+   * `PROVIDED` is only valid alongside a real `dateOfBirth`; if the caller
+   * sets the choice to PROVIDED without a DOB in the same patch, we leave
+   * `ageVerificationStatus` untouched (the existing dateOfBirth branch
+   * already set it correctly, or left UNVERIFIED if no DOB exists).
+   */
+  static applyDobChoice(user: User, choice: DobChoice): void {
+    user.dobChoice = choice;
+    switch (choice) {
+      case DobChoice.PROVIDED:
+        if (user.dateOfBirth) {
+          user.ageVerificationStatus = AgeVerificationStatus.SELF_DECLARED;
+          user.birthdaySkipped = false;
+        }
+        break;
+      case DobChoice.ADULT_SELF_DECLARED:
+        user.ageVerificationStatus = AgeVerificationStatus.SELF_DECLARED_ADULT;
+        user.birthdaySkipped = false;
+        break;
+      case DobChoice.PREFER_NOT_TO_SAY:
+        user.ageVerificationStatus = AgeVerificationStatus.PREFER_NOT_TO_SAY;
+        user.birthdaySkipped = false;
+        break;
+      case DobChoice.SKIPPED:
+        user.birthdaySkipped = true;
+        break;
+      case DobChoice.PENDING:
+        break;
+    }
   }
 
   /**
@@ -225,6 +270,22 @@ export class UsersService {
     const user = await this.findById(id);
     user.deletedAt = new Date();
     await this.em.flush();
+  }
+
+  /**
+   * Flush any pending changes on the given user's managed entity.
+   * Narrow helper used by flows (e.g. email verification) that mutate
+   * the user instance directly and need to persist without going
+   * through one of the richer update methods.
+   */
+  async flushUser(userId: string): Promise<void> {
+    // The caller holds a reference to the same managed User instance
+    // this service loaded, so the identity map already tracks the
+    // pending changes — a bare flush is enough.
+    await this.em.flush();
+    // Avoid unused-parameter lint; userId is part of the API for future
+    // extension (e.g. partial-flush by ID).
+    void userId;
   }
 
   /**

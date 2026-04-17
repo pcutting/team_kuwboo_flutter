@@ -1,6 +1,6 @@
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { DatingAgeGuard } from './dating-age.guard';
-import { AgeVerificationStatus } from '../enums';
+import { AgeVerificationStatus, DobChoice } from '../enums';
 
 function ctxFor(user: unknown): ExecutionContext {
   return {
@@ -75,6 +75,74 @@ describe('DatingAgeGuard', () => {
         }),
       ),
     ).toBe(true);
+  });
+
+  it('rejects dob_privacy_declined when user chose prefer_not_to_say', () => {
+    try {
+      guard.canActivate(
+        ctxFor({
+          id: 'u',
+          dateOfBirth: null,
+          ageVerificationStatus: AgeVerificationStatus.PREFER_NOT_TO_SAY,
+          dobChoice: DobChoice.PREFER_NOT_TO_SAY,
+        }),
+      );
+      fail('expected throw');
+    } catch (e) {
+      expect(e).toBeInstanceOf(ForbiddenException);
+      expect((e as ForbiddenException).getResponse()).toMatchObject({
+        code: 'dob_privacy_declined',
+      });
+    }
+  });
+
+  it('allows adult_self_declared users through on discover (pure discover tier)', () => {
+    expect(
+      guard.canActivate(
+        ctxFor({
+          id: 'u',
+          dateOfBirth: null,
+          ageVerificationStatus: AgeVerificationStatus.SELF_DECLARED_ADULT,
+          dobChoice: DobChoice.ADULT_SELF_DECLARED,
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it('rejects dob_required when dob_choice is pending', () => {
+    try {
+      guard.canActivate(
+        ctxFor({
+          id: 'u',
+          dateOfBirth: null,
+          ageVerificationStatus: AgeVerificationStatus.SELF_DECLARED,
+          dobChoice: DobChoice.PENDING,
+        }),
+      );
+      fail('expected throw');
+    } catch (e) {
+      expect((e as ForbiddenException).getResponse()).toMatchObject({
+        code: 'dob_required',
+      });
+    }
+  });
+
+  it('rejects dob_required when dob_choice is skipped', () => {
+    try {
+      guard.canActivate(
+        ctxFor({
+          id: 'u',
+          dateOfBirth: null,
+          ageVerificationStatus: AgeVerificationStatus.SELF_DECLARED,
+          dobChoice: DobChoice.SKIPPED,
+        }),
+      );
+      fail('expected throw');
+    } catch (e) {
+      expect((e as ForbiddenException).getResponse()).toMatchObject({
+        code: 'dob_required',
+      });
+    }
   });
 
   describe('ageFromDob', () => {

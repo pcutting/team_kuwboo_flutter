@@ -15,6 +15,7 @@ import {
   OnlineStatus,
   OnboardingProgress,
   AgeVerificationStatus,
+  DobChoice,
 } from '../../../common/enums';
 import { PointType, Point } from '../../../database/types/point.type';
 import { UserPreferences } from './user-preferences.entity';
@@ -35,7 +36,9 @@ export class User {
     | 'onboardingProgress'
     | 'profileCompletenessPct'
     | 'tutorialVersion'
-    | 'ageVerificationStatus';
+    | 'ageVerificationStatus'
+    | 'emailVerified'
+    | 'credibilityScore';
 
   @PrimaryKey({ type: 'uuid' })
   id: string = randomUUID();
@@ -148,6 +151,34 @@ export class User {
     default: AgeVerificationStatus.SELF_DECLARED,
   })
   ageVerificationStatus: AgeVerificationStatus = AgeVerificationStatus.SELF_DECLARED;
+
+  /**
+   * Whether the email on file has been verified via a one-time code.
+   * Distinct from the existence of an EMAIL credential row: a user may
+   * have registered with email+password (credential exists) but not yet
+   * completed the email-verify flow.
+   */
+  @Property({ type: 'boolean', default: false })
+  emailVerified: boolean = false;
+
+  @Property({ type: 'timestamptz', nullable: true })
+  emailVerifiedAt?: Date;
+
+  /**
+   * Cached aggregate of `trust_signals.delta` for the user. Recomputed
+   * by the trust module on signal append; the ledger remains the source
+   * of truth.
+   */
+  @Property({ type: 'int', default: 0 })
+  credibilityScore: number = 0;
+
+  /**
+   * User's onboarding answer at the DOB step. Stored as varchar(32) so
+   * the enum can be extended without a schema migration; see
+   * `DobChoice` for the authoritative value set.
+   */
+  @Enum({ items: () => DobChoice, nullable: true, columnType: 'varchar(32)' })
+  dobChoice?: DobChoice;
 
   @OneToOne(() => UserPreferences, (prefs) => prefs.user, {
     nullable: true,

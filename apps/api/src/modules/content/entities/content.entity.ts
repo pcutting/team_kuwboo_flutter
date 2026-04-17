@@ -72,6 +72,15 @@ export class Content {
   @Property({ type: 'varchar', length: 255, nullable: true })
   locationName?: string;
 
+  /**
+   * CDN URL for a poster / preview image. Inherited by all STI
+   * subtypes (Video, Product, Post) — videos use it as the poster
+   * frame, products as the first listing image, posts as an optional
+   * header image.
+   */
+  @Property({ type: 'varchar', length: 1024, nullable: true })
+  thumbnailUrl?: string;
+
   @Property({ type: 'int', default: 0 })
   likeCount: number = 0;
 

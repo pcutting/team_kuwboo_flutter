@@ -1,5 +1,7 @@
 import { UsersService } from './users.service';
-import { CredentialType } from '../../common/enums';
+import { AgeVerificationStatus, CredentialType } from '../../common/enums';
+import { DobChoice } from '../../common/enums/dob-choice.enum';
+import { User } from './entities/user.entity';
 
 describe('UsersService.computeCompleteness', () => {
   const dob = new Date('1990-01-01');
@@ -212,5 +214,63 @@ describe('UsersService.computeMissingFields', () => {
         5,
       ),
     ).toEqual([]);
+  });
+});
+
+describe('UsersService.applyDobChoice', () => {
+  const newUser = (): User =>
+    ({
+      birthdaySkipped: false,
+      dateOfBirth: undefined,
+      ageVerificationStatus: AgeVerificationStatus.UNVERIFIED,
+      dobChoice: undefined,
+    }) as User;
+
+  it('PROVIDED with existing DOB sets self_declared', () => {
+    const u = newUser();
+    u.dateOfBirth = new Date('1980-06-01');
+    UsersService.applyDobChoice(u, DobChoice.PROVIDED);
+    expect(u.dobChoice).toBe(DobChoice.PROVIDED);
+    expect(u.ageVerificationStatus).toBe(AgeVerificationStatus.SELF_DECLARED);
+    expect(u.birthdaySkipped).toBe(false);
+  });
+
+  it('PROVIDED without DOB does not flip ageVerificationStatus', () => {
+    const u = newUser();
+    UsersService.applyDobChoice(u, DobChoice.PROVIDED);
+    expect(u.dobChoice).toBe(DobChoice.PROVIDED);
+    expect(u.ageVerificationStatus).toBe(AgeVerificationStatus.UNVERIFIED);
+  });
+
+  it('ADULT_SELF_DECLARED sets self_declared_adult', () => {
+    const u = newUser();
+    UsersService.applyDobChoice(u, DobChoice.ADULT_SELF_DECLARED);
+    expect(u.dobChoice).toBe(DobChoice.ADULT_SELF_DECLARED);
+    expect(u.ageVerificationStatus).toBe(AgeVerificationStatus.SELF_DECLARED_ADULT);
+    expect(u.birthdaySkipped).toBe(false);
+  });
+
+  it('PREFER_NOT_TO_SAY sets prefer_not_to_say', () => {
+    const u = newUser();
+    UsersService.applyDobChoice(u, DobChoice.PREFER_NOT_TO_SAY);
+    expect(u.dobChoice).toBe(DobChoice.PREFER_NOT_TO_SAY);
+    expect(u.ageVerificationStatus).toBe(AgeVerificationStatus.PREFER_NOT_TO_SAY);
+    expect(u.birthdaySkipped).toBe(false);
+  });
+
+  it('SKIPPED flips birthdaySkipped only', () => {
+    const u = newUser();
+    UsersService.applyDobChoice(u, DobChoice.SKIPPED);
+    expect(u.dobChoice).toBe(DobChoice.SKIPPED);
+    expect(u.ageVerificationStatus).toBe(AgeVerificationStatus.UNVERIFIED);
+    expect(u.birthdaySkipped).toBe(true);
+  });
+
+  it('PENDING records the choice but leaves state untouched', () => {
+    const u = newUser();
+    u.ageVerificationStatus = AgeVerificationStatus.SELF_DECLARED;
+    UsersService.applyDobChoice(u, DobChoice.PENDING);
+    expect(u.dobChoice).toBe(DobChoice.PENDING);
+    expect(u.ageVerificationStatus).toBe(AgeVerificationStatus.SELF_DECLARED);
   });
 });
