@@ -160,7 +160,7 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
 
                       // Continue button
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 40),
+                        padding: const EdgeInsets.only(bottom: 12),
                         child: Semantics(
                           identifier: AuthIds.birthdayContinue,
                           button: true,
@@ -186,6 +186,47 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
                           ),
                         ),
                       ),
+
+                      // Alternatives row — three low-emphasis chips that
+                      // each open a confirmation sheet explaining the
+                      // trade-off before committing. Wraps onto two
+                      // lines on narrow devices so labels stay legible.
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 28, top: 4),
+                        child: Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _DobChoiceChip(
+                              identifier:
+                                  AuthIds.birthdayChipPreferNotToSay,
+                              label: 'I prefer not to say',
+                              onTap: () => _openChoiceSheet(
+                                context,
+                                AuthDobChoice.preferNotToSay,
+                              ),
+                            ),
+                            _DobChoiceChip(
+                              identifier:
+                                  AuthIds.birthdayChipAdultSelfDeclared,
+                              label: "I'm 18+",
+                              onTap: () => _openChoiceSheet(
+                                context,
+                                AuthDobChoice.adultSelfDeclared,
+                              ),
+                            ),
+                            _DobChoiceChip(
+                              identifier: AuthIds.birthdayChipSkip,
+                              label: 'Skip for now',
+                              onTap: () => _openChoiceSheet(
+                                context,
+                                AuthDobChoice.skipped,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -195,6 +236,33 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openChoiceSheet(
+    BuildContext context,
+    AuthDobChoice choice,
+  ) async {
+    final copy = _dobChoiceCopy(choice);
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => _DobChoiceSheet(copy: copy),
+    );
+    if (confirmed != true || !mounted) return;
+    final callbacks = AuthCallbacksScope.maybeOf(context);
+    if (callbacks?.onSaveDobChoice != null) {
+      // Best-effort save — same pattern as onSaveBirthday. Never block
+      // navigation on a backend write that may not have an endpoint
+      // wired up yet (see auth_callbacks.dart for the TODO note).
+      unawaited(
+        callbacks!.onSaveDobChoice!(choice).catchError((Object e) {
+          debugPrint('[birthday] dob choice save failed: $e');
+        }),
+      );
+    }
+    if (!context.mounted) return;
+    context.go(ProtoRoutes.authProfile);
   }
 
   Future<void> _onContinue(BuildContext context) async {
@@ -220,6 +288,203 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
     }
     if (!context.mounted) return;
     context.go(ProtoRoutes.authProfile);
+  }
+}
+
+// ─── DOB choice chips + confirm sheet ─────────────────────────────────
+
+class _DobSheetCopy {
+  const _DobSheetCopy({
+    required this.title,
+    required this.body,
+    required this.confirmLabel,
+  });
+
+  final String title;
+  final String body;
+  final String confirmLabel;
+}
+
+_DobSheetCopy _dobChoiceCopy(AuthDobChoice choice) {
+  switch (choice) {
+    case AuthDobChoice.preferNotToSay:
+      return const _DobSheetCopy(
+        title: 'Keep your birthday private?',
+        body:
+            'We respect your privacy. This locks dating, age-gated content, '
+            'and lowers your credibility score — but we record that you '
+            "chose not to share, not that you forgot.",
+        confirmLabel: 'Confirm',
+      );
+    case AuthDobChoice.adultSelfDeclared:
+      return const _DobSheetCopy(
+        title: "Confirm you're an adult",
+        body:
+            "By tapping confirm, you're telling us you're 18 or older. "
+            'We trust you, but dating matches and the verified badge '
+            'still need an exact birthday. You can add it later in '
+            'Settings.',
+        confirmLabel: "I'm 18+",
+      );
+    case AuthDobChoice.skipped:
+      return const _DobSheetCopy(
+        title: 'Skip your birthday?',
+        body:
+            'You can add it later. Until you do, dating, age-rated content, '
+            'and premium visibility stay locked, and your credibility '
+            'score will be low.',
+        confirmLabel: 'Skip anyway',
+      );
+  }
+}
+
+class _DobChoiceChip extends StatelessWidget {
+  const _DobChoiceChip({
+    required this.identifier,
+    required this.label,
+    required this.onTap,
+  });
+
+  final String identifier;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ProtoTheme.of(context);
+    return Semantics(
+      identifier: identifier,
+      button: true,
+      label: label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: theme.text.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(theme.radiusFull),
+            border: Border.all(
+              color: theme.text.withValues(alpha: 0.08),
+            ),
+          ),
+          child: Text(
+            label,
+            style: theme.body.copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: theme.textSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DobChoiceSheet extends StatelessWidget {
+  const _DobChoiceSheet({required this.copy});
+
+  final _DobSheetCopy copy;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ProtoTheme.of(context);
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomInset),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: theme.text.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            copy.title,
+            style: theme.headline.copyWith(fontSize: 20),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            copy.body,
+            style: theme.body.copyWith(color: theme.textSecondary),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: Semantics(
+                  identifier: AuthIds.birthdaySheetCancel,
+                  button: true,
+                  label: 'Go back',
+                  child: GestureDetector(
+                    onTap: () => Navigator.of(context).pop(false),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: theme.background,
+                        borderRadius:
+                            BorderRadius.circular(theme.radiusFull),
+                        border: Border.all(
+                          color: theme.text.withValues(alpha: 0.1),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Go back',
+                          style: theme.button.copyWith(
+                            fontSize: 15,
+                            color: theme.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Semantics(
+                  identifier: AuthIds.birthdaySheetConfirm,
+                  button: true,
+                  label: copy.confirmLabel,
+                  child: GestureDetector(
+                    onTap: () => Navigator.of(context).pop(true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: theme.primary,
+                        borderRadius:
+                            BorderRadius.circular(theme.radiusFull),
+                      ),
+                      child: Center(
+                        child: Text(
+                          copy.confirmLabel,
+                          style: theme.button.copyWith(fontSize: 15),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 

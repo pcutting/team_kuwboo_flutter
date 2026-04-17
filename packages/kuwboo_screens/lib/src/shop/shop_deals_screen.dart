@@ -126,12 +126,14 @@ class _DealsGrid extends StatelessWidget {
       itemCount: deals.length,
       itemBuilder: (context, i) {
         final deal = deals[i];
-        final isSaved = savedIds.contains(deal.id);
+        final dealId = deal.id ?? '';
+        final dealTitle = deal.title ?? 'Untitled listing';
+        final isSaved = savedIds.contains(dealId);
         final discount = _discountLabel(deal);
         return ProtoPressButton(
           onTap: () => state.pushWithArgs(
             ProtoRoutes.shopProduct,
-            {'productId': deal.id},
+            {'productId': dealId},
           ),
           child: Container(
             decoration: theme.cardDecoration,
@@ -144,10 +146,20 @@ class _DealsGrid extends StatelessWidget {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      ProtoNetworkImage(
-                        imageUrl: deal.thumbnailUrl ??
-                            'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400&h=400&fit=crop',
-                      ),
+                      if (deal.thumbnailUrl != null &&
+                          deal.thumbnailUrl!.isNotEmpty)
+                        ProtoNetworkImage(imageUrl: deal.thumbnailUrl!)
+                      else
+                        Container(
+                          color: theme.surface,
+                          child: Center(
+                            child: Icon(
+                              Icons.image_outlined,
+                              color: theme.textTertiary,
+                              size: 28,
+                            ),
+                          ),
+                        ),
                       if (discount.isNotEmpty)
                         Positioned(
                           top: 8,
@@ -176,7 +188,7 @@ class _DealsGrid extends StatelessWidget {
                         right: 8,
                         child: GestureDetector(
                           behavior: HitTestBehavior.opaque,
-                          onTap: () => onToggleSave(deal.id, isSaved),
+                          onTap: () => onToggleSave(dealId, isSaved),
                           child: Container(
                             width: 28,
                             height: 28,
@@ -208,7 +220,7 @@ class _DealsGrid extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          deal.title,
+                          dealTitle,
                           style: theme.title.copyWith(fontSize: 13),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

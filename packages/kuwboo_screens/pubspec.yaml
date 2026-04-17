@@ -23,6 +23,11 @@ dependencies:
     path: ../api_client
   flutter_riverpod: ^2.6.0
   go_router: ^14.0.0
+  # Used by dating_card_stack to introspect DioException error codes
+  # returned by the DatingAgeGuard (dob_required / dob_privacy_declined /
+  # dob_skipped). Re-declared here rather than leaning on api_client's
+  # transitive dep so the dependency is explicit at the import site.
+  dio: ^5.7.0
 
 dev_dependencies:
   flutter_test:

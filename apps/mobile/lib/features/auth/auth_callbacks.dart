@@ -93,7 +93,28 @@ AuthCallbacks buildMobileAuthCallbacks(Ref ref) {
       await authNotifier.refreshUser();
     },
 
-    onSaveProfile: ({displayName, username, avatarUrl, bio}) async {
+    onSaveDobChoice: (choice) async {
+      // TODO(backend): the granular DOB-choice endpoint is being added
+      // in parallel. The backend will need to distinguish between
+      // "prefer not to say", "adult self-declared", and "skipped" and
+      // drive the matching credibility / age-verification state. Until
+      // then we fall back to the existing `birthdaySkipped` flag which
+      // at least locks dating on its own.
+      //
+      // When the dedicated endpoint lands, swap this for a POST /users/me/
+      // dob-choice (or similar) call carrying the full AuthDobChoice
+      // value so the server can score credibility distinctly.
+      await usersApi.patchMe(const PatchMeDto(birthdaySkipped: true));
+      await authNotifier.refreshUser();
+    },
+
+    onSaveProfile: ({displayName, username, avatarUrl, bio, photoPath}) async {
+      // TODO(backend): wire the photo upload flow. For now the local
+      // [photoPath] is only used by the auth_profile_screen to render
+      // an instant preview; actual S3 upload + PATCH /users/me with the
+      // resulting avatarUrl happens in a separate feature because
+      // MediaApi.presignUpload + the confirm step aren't on the
+      // onboarding critical path yet.
       await usersApi.patchMe(PatchMeDto(
         displayName: displayName,
         username: username,

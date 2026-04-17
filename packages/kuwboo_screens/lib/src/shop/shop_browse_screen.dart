@@ -224,7 +224,12 @@ class _ProductGrid extends StatelessWidget {
           }
           final idx = sponsoredSlot >= 0 && i > sponsoredSlot ? i - 1 : i;
           final product = products[idx];
-          final isWishlisted = wishlistedIds.contains(product.id);
+          // [shopBrowseProvider] filters null-id rows at the provider
+          // boundary, but keep a defensive fallback so a bad upstream
+          // change can't crash the grid.
+          final productId = product.id ?? '';
+          final productTitle = product.title ?? 'Untitled listing';
+          final isWishlisted = wishlistedIds.contains(productId);
           final priceText = formatPriceCents(
             product.priceCents,
             product.currency,
@@ -232,12 +237,12 @@ class _ProductGrid extends StatelessWidget {
           return Semantics(
             identifier: ScreensIds.shopBrowseProduct(idx),
             button: true,
-            label: product.title,
-            value: '${product.title} $priceText',
+            label: productTitle,
+            value: '$productTitle $priceText',
             child: ProtoPressButton(
               onTap: () => state.pushWithArgs(
                 ProtoRoutes.shopProduct,
-                {'productId': product.id},
+                {'productId': productId},
               ),
               child: Container(
                 decoration: theme.cardDecoration,
@@ -247,9 +252,9 @@ class _ProductGrid extends StatelessWidget {
                   children: [
                     Expanded(
                       flex: 3,
-                      child: ProtoNetworkImage(
-                        imageUrl: product.thumbnailUrl ?? _placeholderImage,
-                        width: double.infinity,
+                      child: _ProductThumbnail(
+                        url: product.thumbnailUrl,
+                        theme: theme,
                       ),
                     ),
                     Expanded(
@@ -263,13 +268,16 @@ class _ProductGrid extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              product.title,
+                              productTitle,
                               style: theme.title.copyWith(fontSize: 13),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 2),
-                            Text(product.condition, style: theme.caption),
+                            Text(
+                              product.condition ?? '—',
+                              style: theme.caption,
+                            ),
                             const Spacer(),
                             Row(
                               children: [
@@ -293,8 +301,8 @@ class _ProductGrid extends StatelessWidget {
                                       : 'Add to wishlist',
                                   child: GestureDetector(
                                     behavior: HitTestBehavior.opaque,
-                                    onTap: () => onWishlistToggle(
-                                        product.id, isWishlisted),
+                                    onTap: () =>
+                                        onWishlistToggle(productId, isWishlisted),
                                     child: AnimatedSwitcher(
                                       duration:
                                           const Duration(milliseconds: 200),
@@ -328,5 +336,36 @@ class _ProductGrid extends StatelessWidget {
   }
 }
 
-const _placeholderImage =
-    'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400&h=400&fit=crop';
+/// Product grid thumbnail. Renders [ProtoNetworkImage] when the listing
+/// has a real image URL; otherwise falls back to a themed placeholder
+/// icon (no stock-image filler — backend `content.thumbnail_url` is
+/// rolling out gradually and empty listings should read as "no image
+/// yet" rather than "someone's random product photo").
+class _ProductThumbnail extends StatelessWidget {
+  const _ProductThumbnail({
+    required this.url,
+    required this.theme,
+  });
+
+  final String? url;
+  final ProtoTheme theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = url;
+    if (value != null && value.isNotEmpty) {
+      return ProtoNetworkImage(imageUrl: value, width: double.infinity);
+    }
+    return Container(
+      width: double.infinity,
+      color: theme.surface,
+      child: Center(
+        child: Icon(
+          Icons.image_outlined,
+          color: theme.textTertiary,
+          size: 28,
+        ),
+      ),
+    );
+  }
+}
