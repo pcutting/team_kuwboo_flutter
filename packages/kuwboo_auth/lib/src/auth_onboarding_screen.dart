@@ -24,22 +24,11 @@ class AuthOnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _AuthOnboardingScreenState extends ConsumerState<AuthOnboardingScreen> {
-  /// Interest identifiers the user has tapped. For now we key off the
-  /// demo interest name because the web prototype ships without a real
-  /// interest catalogue from the backend; the mobile app's callback
-  /// wiring passes these strings straight through to `POST
-  /// /users/me/interests`. See P2-2 for the backend-gap note.
+  /// Interest identifiers the user has tapped. Users start with an empty
+  /// set so the "X of 3 selected" counter reflects actual progress — the
+  /// demo catalogue's `isSelected` flags were pre-seeding interests and
+  /// making the step look complete before the user picked anything.
   final Set<String> _selectedIds = <String>{};
-
-  @override
-  void initState() {
-    super.initState();
-    // Seed from the demo catalogue's default-selected items so the UI
-    // still shows the counter after first render.
-    for (final interest in ProtoDemoData.interests) {
-      if (interest.isSelected) _selectedIds.add(interest.name);
-    }
-  }
 
   void _onToggle(String id) {
     setState(() {
@@ -191,18 +180,22 @@ class _AuthOnboardingScreenState extends ConsumerState<AuthOnboardingScreen> {
                   ),
                   const SizedBox(height: 12),
                   GestureDetector(
-                    onTap: () => _onContinue(context),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      decoration: BoxDecoration(
-                        color: theme.primary,
-                        borderRadius: BorderRadius.circular(theme.radiusFull),
-                      ),
-                      child: Center(
-                        child: Text(
-                          "Let's Go!",
-                          style: theme.button.copyWith(fontSize: 16),
+                    onTap: reachedMin ? () => _onContinue(context) : null,
+                    child: Opacity(
+                      opacity: reachedMin ? 1 : 0.45,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: theme.primary,
+                          borderRadius:
+                              BorderRadius.circular(theme.radiusFull),
+                        ),
+                        child: Center(
+                          child: Text(
+                            "Let's Go!",
+                            style: theme.button.copyWith(fontSize: 16),
+                          ),
                         ),
                       ),
                     ),

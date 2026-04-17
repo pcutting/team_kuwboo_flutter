@@ -75,9 +75,12 @@ class _AuthProfileScreenState extends State<AuthProfileScreen> {
                   children: [
                     const SizedBox(height: 32),
 
-                    // Avatar placeholder. The whole stack is a single tap
-                    // target — before PR #131 only Continue had a handler,
-                    // so "Add a photo" was visually a button but inert.
+                    // Single tap target spanning the avatar circle AND the
+                    // "Add a photo" label. Previously these were two separate
+                    // GestureDetectors stacked in the widget tree, which
+                    // produced overlapping accessibility nodes and made the
+                    // text-link version look inert when the circle consumed
+                    // the tap.
                     Center(
                       child: Semantics(
                         identifier: AuthIds.profileAddPhoto,
@@ -89,67 +92,68 @@ class _AuthProfileScreenState extends State<AuthProfileScreen> {
                         child: GestureDetector(
                           behavior: HitTestBehavior.opaque,
                           onTap: _pickingPhoto ? null : _onAddPhoto,
-                          child: Stack(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              ClipOval(
-                                child: Container(
-                                  width: 96,
-                                  height: 96,
-                                  color:
-                                      theme.primary.withValues(alpha: 0.1),
-                                  child: _photoPath != null
-                                      ? Image.file(
-                                          File(_photoPath!),
-                                          fit: BoxFit.cover,
-                                          width: 96,
-                                          height: 96,
-                                        )
-                                      : Icon(
-                                          Icons.person_rounded,
-                                          size: 48,
-                                          color: theme.primary
-                                              .withValues(alpha: 0.4),
-                                        ),
-                                ),
-                              ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    color: theme.primary,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: theme.surface,
-                                      width: 2,
+                              Stack(
+                                children: [
+                                  ClipOval(
+                                    child: Container(
+                                      width: 96,
+                                      height: 96,
+                                      color: theme.primary
+                                          .withValues(alpha: 0.1),
+                                      child: _photoPath != null
+                                          ? Image.file(
+                                              File(_photoPath!),
+                                              fit: BoxFit.cover,
+                                              width: 96,
+                                              height: 96,
+                                            )
+                                          : Icon(
+                                              Icons.person_rounded,
+                                              size: 48,
+                                              color: theme.primary
+                                                  .withValues(alpha: 0.4),
+                                            ),
                                     ),
                                   ),
-                                  child: Icon(
-                                    _photoPath != null
-                                        ? Icons.edit_rounded
-                                        : Icons.camera_alt_rounded,
-                                    size: 16,
-                                    color: Colors.white,
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        color: theme.primary,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: theme.surface,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        _photoPath != null
+                                            ? Icons.edit_rounded
+                                            : Icons.camera_alt_rounded,
+                                        size: 16,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                   ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _photoPath == null
+                                    ? 'Add a photo'
+                                    : 'Change photo',
+                                style: theme.caption.copyWith(
+                                  color: theme.primary,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Center(
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: _pickingPhoto ? null : _onAddPhoto,
-                        child: Text(
-                          _photoPath == null ? 'Add a photo' : 'Change photo',
-                          style: theme.caption.copyWith(
-                            color: theme.primary,
-                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
