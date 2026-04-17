@@ -89,15 +89,33 @@ class _ProductBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
+    final thumbnailUrl = product.thumbnailUrl;
+    final title = product.title ?? 'Untitled listing';
+    final description = product.description ?? '';
+    final condition = product.condition ?? '—';
+    final sellerId = product.creatorId;
     return ListView(
       padding: EdgeInsets.zero,
       children: [
-        ProtoNetworkImage(
-          imageUrl: product.thumbnailUrl ??
-              'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=600&h=600&fit=crop',
-          height: 280,
-          width: double.infinity,
-        ),
+        if (thumbnailUrl != null && thumbnailUrl.isNotEmpty)
+          ProtoNetworkImage(
+            imageUrl: thumbnailUrl,
+            height: 280,
+            width: double.infinity,
+          )
+        else
+          Container(
+            height: 280,
+            width: double.infinity,
+            color: theme.surface,
+            child: Center(
+              child: Icon(
+                Icons.image_outlined,
+                color: theme.textTertiary,
+                size: 48,
+              ),
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -129,7 +147,7 @@ class _ProductBody extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 6),
-              Text(product.title, style: theme.title.copyWith(fontSize: 18)),
+              Text(title, style: theme.title.copyWith(fontSize: 18)),
               const SizedBox(height: 4),
               Container(
                 padding:
@@ -139,7 +157,7 @@ class _ProductBody extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  product.condition,
+                  condition,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -149,10 +167,12 @@ class _ProductBody extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               ProtoPressButton(
-                onTap: () => state.pushWithArgs(
-                  ProtoRoutes.shopSeller,
-                  {'sellerId': product.creatorId},
-                ),
+                onTap: sellerId == null
+                    ? null
+                    : () => state.pushWithArgs(
+                          ProtoRoutes.shopSeller,
+                          {'sellerId': sellerId},
+                        ),
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: theme.cardDecoration,
@@ -187,7 +207,12 @@ class _ProductBody extends StatelessWidget {
               const SizedBox(height: 16),
               Text('Description', style: theme.title),
               const SizedBox(height: 6),
-              Text(product.description, style: theme.body),
+              Text(
+                description.isEmpty
+                    ? 'No description provided.'
+                    : description,
+                style: theme.body,
+              ),
             ],
           ),
         ),

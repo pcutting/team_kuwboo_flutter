@@ -147,6 +147,7 @@ _PatchMeDto _$PatchMeDtoFromJson(Map<String, dynamic> json) => _PatchMeDto(
   bio: json['bio'] as String?,
   dateOfBirth: json['dateOfBirth'] as String?,
   birthdaySkipped: json['birthdaySkipped'] as bool?,
+  dobChoice: json['dobChoice'] as String?,
   onboardingProgress: $enumDecodeNullable(
     _$OnboardingProgressEnumMap,
     json['onboardingProgress'],
@@ -161,6 +162,7 @@ Map<String, dynamic> _$PatchMeDtoToJson(_PatchMeDto instance) =>
       'bio': instance.bio,
       'dateOfBirth': instance.dateOfBirth,
       'birthdaySkipped': instance.birthdaySkipped,
+      'dobChoice': instance.dobChoice,
       'onboardingProgress':
           _$OnboardingProgressEnumMap[instance.onboardingProgress],
     };

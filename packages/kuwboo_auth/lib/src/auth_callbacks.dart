@@ -7,6 +7,25 @@ import 'package:kuwboo_models/kuwboo_models.dart';
 /// ("sent to +44 7…" vs "sent to phil@…").
 enum AuthOtpChannel { phone, email }
 
+/// Tiered non-DOB choice the user can make on the birthday screen.
+/// Mirrors the backend's tracked credibility-lowering signals: the user
+/// either declines to share ([preferNotToSay]), self-declares as an
+/// adult without providing a date ([adultSelfDeclared]), or skips the
+/// step entirely ([skipped]).
+enum AuthDobChoice {
+  /// "I prefer not to say" — user declined to share. Locks dating and
+  /// age-gated content, lowers credibility.
+  preferNotToSay,
+
+  /// "I'm 18+" — user self-declares as an adult. Dating matches and the
+  /// verified badge still need an exact birthday; they can add it later.
+  adultSelfDeclared,
+
+  /// "Skip for now" — user skipped. Dating, age-rated content, and
+  /// premium visibility stay locked; credibility is low.
+  skipped,
+}
+
 /// Arguments passed to [AuthOtpScreen] via route-push extra when the
 /// method/phone screen has triggered a real OTP send.
 class AuthOtpArgs {
@@ -55,6 +74,7 @@ class AuthCallbacks {
     this.onVerifyOtp,
     this.onResendOtp,
     this.onSaveBirthday,
+    this.onSaveDobChoice,
     this.onSaveProfile,
     this.onSaveInterests,
     this.onCompleteTutorial,
@@ -108,12 +128,29 @@ class AuthCallbacks {
   /// Save birthday. Caller enforces 13+ locally before invoking.
   final Future<void> Function(DateTime dateOfBirth)? onSaveBirthday;
 
-  /// Save profile fields (patch /users/me).
+  /// Record a non-DOB birthday choice ("I prefer not to say",
+  /// "I'm 18+", "Skip for now"). The [choice] value is one of the
+  /// [AuthDobChoice] constants; the provider layer translates this
+  /// into the appropriate backend patch (e.g. `birthdaySkipped: true`
+  /// + `ageVerificationStatus: self_declared`).
+  ///
+  /// If the backend endpoint for the granular choice is not yet
+  /// available, the mobile provider can stub this with a TODO —
+  /// the screens still get a deterministic callback to navigate on.
+  final Future<void> Function(AuthDobChoice choice)? onSaveDobChoice;
+
+  /// Save profile fields (patch /users/me). [photoPath] is a local
+  /// filesystem path to a freshly picked image (gallery or camera).
+  /// Upload to S3 happens separately at the first media request on
+  /// the resulting User — the host app wires this through to a later
+  /// avatar-upload flow. When [photoPath] is null, no avatar change
+  /// is implied.
   final Future<void> Function({
     String? displayName,
     String? username,
     String? avatarUrl,
     String? bio,
+    String? photoPath,
   })? onSaveProfile;
 
   /// Persist onboarding interest selections (`POST /users/me/interests`).

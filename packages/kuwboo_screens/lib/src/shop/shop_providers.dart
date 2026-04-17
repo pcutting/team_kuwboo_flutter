@@ -42,18 +42,34 @@ class ShopFilters {
   int get hashCode => Object.hash(category, minPrice, maxPrice, condition);
 }
 
+/// Drops products that have no id — they can't be tapped (the detail
+/// route needs an id) or used as a stable grid-item key. Matches the
+/// pattern [Content] uses for feed rows in PR #128.
+ProductPage _stripNullIdProducts(ProductPage page) {
+  final filtered =
+      page.items.where((p) => (p.id ?? '').isNotEmpty).toList(growable: false);
+  if (filtered.length == page.items.length) return page;
+  return ProductPage(items: filtered, nextCursor: page.nextCursor);
+}
+
 final shopBrowseProvider =
     FutureProvider.autoDispose.family<ProductPage, ShopFilters>(
-  (ref, f) => ref.watch(marketplaceApiProvider).listProducts(
-        category: f.category,
-        minPrice: f.minPrice,
-        maxPrice: f.maxPrice,
-        condition: f.condition,
-      ),
+  (ref, f) async {
+    final page = await ref.watch(marketplaceApiProvider).listProducts(
+          category: f.category,
+          minPrice: f.minPrice,
+          maxPrice: f.maxPrice,
+          condition: f.condition,
+        );
+    return _stripNullIdProducts(page);
+  },
 );
 
 final shopDealsProvider = FutureProvider.autoDispose<ProductPage>(
-  (ref) => ref.watch(marketplaceApiProvider).getDeals(),
+  (ref) async {
+    final page = await ref.watch(marketplaceApiProvider).getDeals();
+    return _stripNullIdProducts(page);
+  },
 );
 
 final productDetailProvider =

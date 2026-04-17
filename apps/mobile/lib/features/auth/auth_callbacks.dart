@@ -93,7 +93,28 @@ AuthCallbacks buildMobileAuthCallbacks(Ref ref) {
       await authNotifier.refreshUser();
     },
 
-    onSaveProfile: ({displayName, username, avatarUrl, bio}) async {
+    onSaveDobChoice: (choice) async {
+      // Maps the on-screen chip into the backend's DobChoice enum. The
+      // server applies the lockstep ageVerificationStatus + birthdaySkipped
+      // transitions (see UsersService.applyDobChoice) — we just send the
+      // choice and let the server decide the side-effects, so a future
+      // enum value never needs a mobile-side client update.
+      final wire = switch (choice) {
+        AuthDobChoice.preferNotToSay => 'prefer_not_to_say',
+        AuthDobChoice.adultSelfDeclared => 'adult_self_declared',
+        AuthDobChoice.skipped => 'skipped',
+      };
+      await usersApi.patchMe(PatchMeDto(dobChoice: wire));
+      await authNotifier.refreshUser();
+    },
+
+    onSaveProfile: ({displayName, username, avatarUrl, bio, photoPath}) async {
+      // TODO(backend): wire the photo upload flow. For now the local
+      // [photoPath] is only used by the auth_profile_screen to render
+      // an instant preview; actual S3 upload + PATCH /users/me with the
+      // resulting avatarUrl happens in a separate feature because
+      // MediaApi.presignUpload + the confirm step aren't on the
+      // onboarding critical path yet.
       await usersApi.patchMe(PatchMeDto(
         displayName: displayName,
         username: username,

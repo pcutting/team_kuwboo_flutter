@@ -83,7 +83,7 @@ class _ProductCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.title,
+                  item.title ?? 'Untitled listing',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -97,7 +97,7 @@ class _ProductCard extends StatelessWidget {
                       fontWeight: FontWeight.w700),
                 ),
                 Text(
-                  item.condition.toLowerCase(),
+                  (item.condition ?? '').toLowerCase(),
                   style: const TextStyle(
                       color: Colors.black54, fontSize: 11),
                 ),

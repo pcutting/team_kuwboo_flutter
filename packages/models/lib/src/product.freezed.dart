@@ -11,11 +11,10 @@ part of 'product.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$Product {
 
- String get id; String get creatorId; String get title; String get description; int get priceCents; String get currency; String get condition; bool get isDeal; int? get originalPriceCents; String? get thumbnailUrl; String get status; int get likeCount; int get commentCount; DateTime get createdAt;
+ String? get id; String? get creatorId; FeedCreator? get creator; String? get title; String? get description; int get priceCents; String get currency; String? get condition; bool get isDeal; int? get originalPriceCents; String? get thumbnailUrl; String get status; int get likeCount; int get commentCount; DateTime? get createdAt;
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +27,16 @@ $ProductCopyWith<Product> get copyWith => _$ProductCopyWithImpl<Product>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Product&&(identical(other.id, id) || other.id == id)&&(identical(other.creatorId, creatorId) || other.creatorId == creatorId)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.priceCents, priceCents) || other.priceCents == priceCents)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.condition, condition) || other.condition == condition)&&(identical(other.isDeal, isDeal) || other.isDeal == isDeal)&&(identical(other.originalPriceCents, originalPriceCents) || other.originalPriceCents == originalPriceCents)&&(identical(other.thumbnailUrl, thumbnailUrl) || other.thumbnailUrl == thumbnailUrl)&&(identical(other.status, status) || other.status == status)&&(identical(other.likeCount, likeCount) || other.likeCount == likeCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Product&&(identical(other.id, id) || other.id == id)&&(identical(other.creatorId, creatorId) || other.creatorId == creatorId)&&(identical(other.creator, creator) || other.creator == creator)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.priceCents, priceCents) || other.priceCents == priceCents)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.condition, condition) || other.condition == condition)&&(identical(other.isDeal, isDeal) || other.isDeal == isDeal)&&(identical(other.originalPriceCents, originalPriceCents) || other.originalPriceCents == originalPriceCents)&&(identical(other.thumbnailUrl, thumbnailUrl) || other.thumbnailUrl == thumbnailUrl)&&(identical(other.status, status) || other.status == status)&&(identical(other.likeCount, likeCount) || other.likeCount == likeCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,creatorId,title,description,priceCents,currency,condition,isDeal,originalPriceCents,thumbnailUrl,status,likeCount,commentCount,createdAt);
+int get hashCode => Object.hash(runtimeType,id,creatorId,creator,title,description,priceCents,currency,condition,isDeal,originalPriceCents,thumbnailUrl,status,likeCount,commentCount,createdAt);
 
 @override
 String toString() {
-  return 'Product(id: $id, creatorId: $creatorId, title: $title, description: $description, priceCents: $priceCents, currency: $currency, condition: $condition, isDeal: $isDeal, originalPriceCents: $originalPriceCents, thumbnailUrl: $thumbnailUrl, status: $status, likeCount: $likeCount, commentCount: $commentCount, createdAt: $createdAt)';
+  return 'Product(id: $id, creatorId: $creatorId, creator: $creator, title: $title, description: $description, priceCents: $priceCents, currency: $currency, condition: $condition, isDeal: $isDeal, originalPriceCents: $originalPriceCents, thumbnailUrl: $thumbnailUrl, status: $status, likeCount: $likeCount, commentCount: $commentCount, createdAt: $createdAt)';
 }
 
 
@@ -48,11 +47,11 @@ abstract mixin class $ProductCopyWith<$Res>  {
   factory $ProductCopyWith(Product value, $Res Function(Product) _then) = _$ProductCopyWithImpl;
 @useResult
 $Res call({
- String id, String creatorId, String title, String description, int priceCents, String currency, String condition, bool isDeal, int? originalPriceCents, String? thumbnailUrl, String status, int likeCount, int commentCount, DateTime createdAt
+ String? id, String? creatorId, FeedCreator? creator, String? title, String? description, int priceCents, String currency, String? condition, bool isDeal, int? originalPriceCents, String? thumbnailUrl, String status, int likeCount, int commentCount, DateTime? createdAt
 });
 
 
-
+$FeedCreatorCopyWith<$Res>? get creator;
 
 }
 /// @nodoc
@@ -65,26 +64,39 @@ class _$ProductCopyWithImpl<$Res>
 
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? creatorId = null,Object? title = null,Object? description = null,Object? priceCents = null,Object? currency = null,Object? condition = null,Object? isDeal = null,Object? originalPriceCents = freezed,Object? thumbnailUrl = freezed,Object? status = null,Object? likeCount = null,Object? commentCount = null,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? creatorId = freezed,Object? creator = freezed,Object? title = freezed,Object? description = freezed,Object? priceCents = null,Object? currency = null,Object? condition = freezed,Object? isDeal = null,Object? originalPriceCents = freezed,Object? thumbnailUrl = freezed,Object? status = null,Object? likeCount = null,Object? commentCount = null,Object? createdAt = freezed,}) {
   return _then(_self.copyWith(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,creatorId: null == creatorId ? _self.creatorId : creatorId // ignore: cast_nullable_to_non_nullable
-as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
-as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String,priceCents: null == priceCents ? _self.priceCents : priceCents // ignore: cast_nullable_to_non_nullable
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,creatorId: freezed == creatorId ? _self.creatorId : creatorId // ignore: cast_nullable_to_non_nullable
+as String?,creator: freezed == creator ? _self.creator : creator // ignore: cast_nullable_to_non_nullable
+as FeedCreator?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,priceCents: null == priceCents ? _self.priceCents : priceCents // ignore: cast_nullable_to_non_nullable
 as int,currency: null == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
-as String,condition: null == condition ? _self.condition : condition // ignore: cast_nullable_to_non_nullable
-as String,isDeal: null == isDeal ? _self.isDeal : isDeal // ignore: cast_nullable_to_non_nullable
+as String,condition: freezed == condition ? _self.condition : condition // ignore: cast_nullable_to_non_nullable
+as String?,isDeal: null == isDeal ? _self.isDeal : isDeal // ignore: cast_nullable_to_non_nullable
 as bool,originalPriceCents: freezed == originalPriceCents ? _self.originalPriceCents : originalPriceCents // ignore: cast_nullable_to_non_nullable
 as int?,thumbnailUrl: freezed == thumbnailUrl ? _self.thumbnailUrl : thumbnailUrl // ignore: cast_nullable_to_non_nullable
 as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,likeCount: null == likeCount ? _self.likeCount : likeCount // ignore: cast_nullable_to_non_nullable
 as int,commentCount: null == commentCount ? _self.commentCount : commentCount // ignore: cast_nullable_to_non_nullable
-as int,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as int,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
+/// Create a copy of Product
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$FeedCreatorCopyWith<$Res>? get creator {
+    if (_self.creator == null) {
+    return null;
+  }
 
+  return $FeedCreatorCopyWith<$Res>(_self.creator!, (value) {
+    return _then(_self.copyWith(creator: value));
+  });
+}
 }
 
 
@@ -166,10 +178,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String creatorId,  String title,  String description,  int priceCents,  String currency,  String condition,  bool isDeal,  int? originalPriceCents,  String? thumbnailUrl,  String status,  int likeCount,  int commentCount,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? id,  String? creatorId,  FeedCreator? creator,  String? title,  String? description,  int priceCents,  String currency,  String? condition,  bool isDeal,  int? originalPriceCents,  String? thumbnailUrl,  String status,  int likeCount,  int commentCount,  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Product() when $default != null:
-return $default(_that.id,_that.creatorId,_that.title,_that.description,_that.priceCents,_that.currency,_that.condition,_that.isDeal,_that.originalPriceCents,_that.thumbnailUrl,_that.status,_that.likeCount,_that.commentCount,_that.createdAt);case _:
+return $default(_that.id,_that.creatorId,_that.creator,_that.title,_that.description,_that.priceCents,_that.currency,_that.condition,_that.isDeal,_that.originalPriceCents,_that.thumbnailUrl,_that.status,_that.likeCount,_that.commentCount,_that.createdAt);case _:
   return orElse();
 
 }
@@ -187,10 +199,10 @@ return $default(_that.id,_that.creatorId,_that.title,_that.description,_that.pri
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String creatorId,  String title,  String description,  int priceCents,  String currency,  String condition,  bool isDeal,  int? originalPriceCents,  String? thumbnailUrl,  String status,  int likeCount,  int commentCount,  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? id,  String? creatorId,  FeedCreator? creator,  String? title,  String? description,  int priceCents,  String currency,  String? condition,  bool isDeal,  int? originalPriceCents,  String? thumbnailUrl,  String status,  int likeCount,  int commentCount,  DateTime? createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _Product():
-return $default(_that.id,_that.creatorId,_that.title,_that.description,_that.priceCents,_that.currency,_that.condition,_that.isDeal,_that.originalPriceCents,_that.thumbnailUrl,_that.status,_that.likeCount,_that.commentCount,_that.createdAt);case _:
+return $default(_that.id,_that.creatorId,_that.creator,_that.title,_that.description,_that.priceCents,_that.currency,_that.condition,_that.isDeal,_that.originalPriceCents,_that.thumbnailUrl,_that.status,_that.likeCount,_that.commentCount,_that.createdAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -207,10 +219,10 @@ return $default(_that.id,_that.creatorId,_that.title,_that.description,_that.pri
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String creatorId,  String title,  String description,  int priceCents,  String currency,  String condition,  bool isDeal,  int? originalPriceCents,  String? thumbnailUrl,  String status,  int likeCount,  int commentCount,  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? id,  String? creatorId,  FeedCreator? creator,  String? title,  String? description,  int priceCents,  String currency,  String? condition,  bool isDeal,  int? originalPriceCents,  String? thumbnailUrl,  String status,  int likeCount,  int commentCount,  DateTime? createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Product() when $default != null:
-return $default(_that.id,_that.creatorId,_that.title,_that.description,_that.priceCents,_that.currency,_that.condition,_that.isDeal,_that.originalPriceCents,_that.thumbnailUrl,_that.status,_that.likeCount,_that.commentCount,_that.createdAt);case _:
+return $default(_that.id,_that.creatorId,_that.creator,_that.title,_that.description,_that.priceCents,_that.currency,_that.condition,_that.isDeal,_that.originalPriceCents,_that.thumbnailUrl,_that.status,_that.likeCount,_that.commentCount,_that.createdAt);case _:
   return null;
 
 }
@@ -219,26 +231,27 @@ return $default(_that.id,_that.creatorId,_that.title,_that.description,_that.pri
 }
 
 /// @nodoc
-@JsonSerializable()
+@JsonSerializable(createFactory: false)
 
 class _Product implements Product {
-  const _Product({required this.id, required this.creatorId, required this.title, required this.description, required this.priceCents, this.currency = 'GBP', required this.condition, this.isDeal = false, this.originalPriceCents, this.thumbnailUrl, this.status = 'ACTIVE', this.likeCount = 0, this.commentCount = 0, required this.createdAt});
-  factory _Product.fromJson(Map<String, dynamic> json) => _$ProductFromJson(json);
+  const _Product({this.id, this.creatorId, this.creator, this.title, this.description, this.priceCents = 0, this.currency = 'GBP', this.condition, this.isDeal = false, this.originalPriceCents, this.thumbnailUrl, this.status = 'ACTIVE', this.likeCount = 0, this.commentCount = 0, this.createdAt});
+  
 
-@override final  String id;
-@override final  String creatorId;
-@override final  String title;
-@override final  String description;
-@override final  int priceCents;
+@override final  String? id;
+@override final  String? creatorId;
+@override final  FeedCreator? creator;
+@override final  String? title;
+@override final  String? description;
+@override@JsonKey() final  int priceCents;
 @override@JsonKey() final  String currency;
-@override final  String condition;
+@override final  String? condition;
 @override@JsonKey() final  bool isDeal;
 @override final  int? originalPriceCents;
 @override final  String? thumbnailUrl;
 @override@JsonKey() final  String status;
 @override@JsonKey() final  int likeCount;
 @override@JsonKey() final  int commentCount;
-@override final  DateTime createdAt;
+@override final  DateTime? createdAt;
 
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
@@ -253,16 +266,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Product&&(identical(other.id, id) || other.id == id)&&(identical(other.creatorId, creatorId) || other.creatorId == creatorId)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.priceCents, priceCents) || other.priceCents == priceCents)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.condition, condition) || other.condition == condition)&&(identical(other.isDeal, isDeal) || other.isDeal == isDeal)&&(identical(other.originalPriceCents, originalPriceCents) || other.originalPriceCents == originalPriceCents)&&(identical(other.thumbnailUrl, thumbnailUrl) || other.thumbnailUrl == thumbnailUrl)&&(identical(other.status, status) || other.status == status)&&(identical(other.likeCount, likeCount) || other.likeCount == likeCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Product&&(identical(other.id, id) || other.id == id)&&(identical(other.creatorId, creatorId) || other.creatorId == creatorId)&&(identical(other.creator, creator) || other.creator == creator)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.priceCents, priceCents) || other.priceCents == priceCents)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.condition, condition) || other.condition == condition)&&(identical(other.isDeal, isDeal) || other.isDeal == isDeal)&&(identical(other.originalPriceCents, originalPriceCents) || other.originalPriceCents == originalPriceCents)&&(identical(other.thumbnailUrl, thumbnailUrl) || other.thumbnailUrl == thumbnailUrl)&&(identical(other.status, status) || other.status == status)&&(identical(other.likeCount, likeCount) || other.likeCount == likeCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,creatorId,title,description,priceCents,currency,condition,isDeal,originalPriceCents,thumbnailUrl,status,likeCount,commentCount,createdAt);
+int get hashCode => Object.hash(runtimeType,id,creatorId,creator,title,description,priceCents,currency,condition,isDeal,originalPriceCents,thumbnailUrl,status,likeCount,commentCount,createdAt);
 
 @override
 String toString() {
-  return 'Product(id: $id, creatorId: $creatorId, title: $title, description: $description, priceCents: $priceCents, currency: $currency, condition: $condition, isDeal: $isDeal, originalPriceCents: $originalPriceCents, thumbnailUrl: $thumbnailUrl, status: $status, likeCount: $likeCount, commentCount: $commentCount, createdAt: $createdAt)';
+  return 'Product(id: $id, creatorId: $creatorId, creator: $creator, title: $title, description: $description, priceCents: $priceCents, currency: $currency, condition: $condition, isDeal: $isDeal, originalPriceCents: $originalPriceCents, thumbnailUrl: $thumbnailUrl, status: $status, likeCount: $likeCount, commentCount: $commentCount, createdAt: $createdAt)';
 }
 
 
@@ -273,11 +286,11 @@ abstract mixin class _$ProductCopyWith<$Res> implements $ProductCopyWith<$Res> {
   factory _$ProductCopyWith(_Product value, $Res Function(_Product) _then) = __$ProductCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String creatorId, String title, String description, int priceCents, String currency, String condition, bool isDeal, int? originalPriceCents, String? thumbnailUrl, String status, int likeCount, int commentCount, DateTime createdAt
+ String? id, String? creatorId, FeedCreator? creator, String? title, String? description, int priceCents, String currency, String? condition, bool isDeal, int? originalPriceCents, String? thumbnailUrl, String status, int likeCount, int commentCount, DateTime? createdAt
 });
 
 
-
+@override $FeedCreatorCopyWith<$Res>? get creator;
 
 }
 /// @nodoc
@@ -290,29 +303,41 @@ class __$ProductCopyWithImpl<$Res>
 
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? creatorId = null,Object? title = null,Object? description = null,Object? priceCents = null,Object? currency = null,Object? condition = null,Object? isDeal = null,Object? originalPriceCents = freezed,Object? thumbnailUrl = freezed,Object? status = null,Object? likeCount = null,Object? commentCount = null,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? creatorId = freezed,Object? creator = freezed,Object? title = freezed,Object? description = freezed,Object? priceCents = null,Object? currency = null,Object? condition = freezed,Object? isDeal = null,Object? originalPriceCents = freezed,Object? thumbnailUrl = freezed,Object? status = null,Object? likeCount = null,Object? commentCount = null,Object? createdAt = freezed,}) {
   return _then(_Product(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,creatorId: null == creatorId ? _self.creatorId : creatorId // ignore: cast_nullable_to_non_nullable
-as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
-as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String,priceCents: null == priceCents ? _self.priceCents : priceCents // ignore: cast_nullable_to_non_nullable
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,creatorId: freezed == creatorId ? _self.creatorId : creatorId // ignore: cast_nullable_to_non_nullable
+as String?,creator: freezed == creator ? _self.creator : creator // ignore: cast_nullable_to_non_nullable
+as FeedCreator?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,priceCents: null == priceCents ? _self.priceCents : priceCents // ignore: cast_nullable_to_non_nullable
 as int,currency: null == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
-as String,condition: null == condition ? _self.condition : condition // ignore: cast_nullable_to_non_nullable
-as String,isDeal: null == isDeal ? _self.isDeal : isDeal // ignore: cast_nullable_to_non_nullable
+as String,condition: freezed == condition ? _self.condition : condition // ignore: cast_nullable_to_non_nullable
+as String?,isDeal: null == isDeal ? _self.isDeal : isDeal // ignore: cast_nullable_to_non_nullable
 as bool,originalPriceCents: freezed == originalPriceCents ? _self.originalPriceCents : originalPriceCents // ignore: cast_nullable_to_non_nullable
 as int?,thumbnailUrl: freezed == thumbnailUrl ? _self.thumbnailUrl : thumbnailUrl // ignore: cast_nullable_to_non_nullable
 as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,likeCount: null == likeCount ? _self.likeCount : likeCount // ignore: cast_nullable_to_non_nullable
 as int,commentCount: null == commentCount ? _self.commentCount : commentCount // ignore: cast_nullable_to_non_nullable
-as int,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as int,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
+/// Create a copy of Product
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$FeedCreatorCopyWith<$Res>? get creator {
+    if (_self.creator == null) {
+    return null;
+  }
 
+  return $FeedCreatorCopyWith<$Res>(_self.creator!, (value) {
+    return _then(_self.copyWith(creator: value));
+  });
 }
-
+}
 
 /// @nodoc
 mixin _$ProductPage {
@@ -509,11 +534,11 @@ return $default(_that.items,_that.nextCursor);case _:
 }
 
 /// @nodoc
-@JsonSerializable()
+@JsonSerializable(createFactory: false)
 
 class _ProductPage extends ProductPage {
   const _ProductPage({final  List<Product> items = const <Product>[], this.nextCursor}): _items = items,super._();
-  factory _ProductPage.fromJson(Map<String, dynamic> json) => _$ProductPageFromJson(json);
+  
 
  final  List<Product> _items;
 @override@JsonKey() List<Product> get items {

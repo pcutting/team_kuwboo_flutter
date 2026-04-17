@@ -35,6 +35,13 @@ abstract class AuthIds {
   static const birthdayWheelMonth = 'auth.birthday.wheel_month';
   static const birthdayWheelYear = 'auth.birthday.wheel_year';
   static const birthdayContinue = 'auth.birthday.btn_continue';
+  static const birthdayChipPreferNotToSay =
+      'auth.birthday.chip_prefer_not_to_say';
+  static const birthdayChipAdultSelfDeclared =
+      'auth.birthday.chip_adult_self_declared';
+  static const birthdayChipSkip = 'auth.birthday.chip_skip';
+  static const birthdaySheetConfirm = 'auth.birthday.sheet_confirm';
+  static const birthdaySheetCancel = 'auth.birthday.sheet_cancel';
 
   // auth_profile_screen
   static const profileDisplayName = 'auth.profile.field_display_name';

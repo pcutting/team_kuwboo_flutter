@@ -239,6 +239,14 @@ void main() {
         reason: 'year wheel value should be a non-empty string',
       );
     });
+
+    testWidgets('renders the three tiered DOB-choice chips', (tester) async {
+      await _pumpAtPhoneSize(tester, const AuthBirthdayScreen());
+
+      expect(_bySemId(AuthIds.birthdayChipPreferNotToSay), findsOneWidget);
+      expect(_bySemId(AuthIds.birthdayChipAdultSelfDeclared), findsOneWidget);
+      expect(_bySemId(AuthIds.birthdayChipSkip), findsOneWidget);
+    });
   });
 
   group('AuthProfileScreen state', () {
@@ -264,6 +272,26 @@ void main() {
           isTrue,
           reason:
               'username error text must announce as a live region when validation fails',
+        );
+      },
+    );
+
+    testWidgets(
+      'Add-photo tap target is interactive (enabled button semantics)',
+      (tester) async {
+        await _pumpAtPhoneSize(tester, const AuthProfileScreen());
+
+        final props = _props(tester, AuthIds.profileAddPhoto);
+        expect(
+          props.button,
+          isTrue,
+          reason: 'add-photo avatar must be tagged as a button',
+        );
+        expect(
+          props.enabled,
+          isNot(isFalse),
+          reason:
+              'add-photo must be enabled on initial render (only disabled mid-pick)',
         );
       },
     );

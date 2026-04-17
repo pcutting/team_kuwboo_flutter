@@ -26,6 +26,9 @@ dependencies:
   # package must tolerate Firebase not being initialised (dev builds without
   # google-services.json) — the call is wrapped in try/catch for that reason.
   firebase_crashlytics: ^4.3.5
+  # Profile-avatar picker on the onboarding profile screen. Version
+  # matches apps/mobile/pubspec.yaml so pub resolution stays flat.
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:

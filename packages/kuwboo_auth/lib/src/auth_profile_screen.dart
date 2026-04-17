@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import '_step_chip.dart';
@@ -19,8 +22,11 @@ class AuthProfileScreen extends StatefulWidget {
 class _AuthProfileScreenState extends State<AuthProfileScreen> {
   final _displayNameController = TextEditingController();
   final _usernameController = TextEditingController();
+  final _imagePicker = ImagePicker();
   String? _usernameError;
+  String? _photoPath;
   bool _saving = false;
+  bool _pickingPhoto = false;
 
   static final _usernameRegex = RegExp(r'^[a-zA-Z0-9_]{3,20}$');
 
@@ -69,59 +75,82 @@ class _AuthProfileScreenState extends State<AuthProfileScreen> {
                   children: [
                     const SizedBox(height: 32),
 
-                    // Avatar placeholder
+                    // Avatar placeholder. The whole stack is a single tap
+                    // target — before PR #131 only Continue had a handler,
+                    // so "Add a photo" was visually a button but inert.
                     Center(
                       child: Semantics(
                         identifier: AuthIds.profileAddPhoto,
                         button: true,
-                        label: 'Add photo',
-                        child: Stack(
-                          children: [
-                            Container(
-                              width: 96,
-                              height: 96,
-                              decoration: BoxDecoration(
-                                color: theme.primary.withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
+                        label: _photoPath == null
+                            ? 'Add photo'
+                            : 'Change photo',
+                        enabled: !_pickingPhoto,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: _pickingPhoto ? null : _onAddPhoto,
+                          child: Stack(
+                            children: [
+                              ClipOval(
+                                child: Container(
+                                  width: 96,
+                                  height: 96,
+                                  color:
+                                      theme.primary.withValues(alpha: 0.1),
+                                  child: _photoPath != null
+                                      ? Image.file(
+                                          File(_photoPath!),
+                                          fit: BoxFit.cover,
+                                          width: 96,
+                                          height: 96,
+                                        )
+                                      : Icon(
+                                          Icons.person_rounded,
+                                          size: 48,
+                                          color: theme.primary
+                                              .withValues(alpha: 0.4),
+                                        ),
+                                ),
                               ),
-                              child: Icon(
-                                Icons.person_rounded,
-                                size: 48,
-                                color: theme.primary.withValues(alpha: 0.4),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: theme.primary,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: theme.surface,
-                                    width: 2,
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: theme.primary,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: theme.surface,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    _photoPath != null
+                                        ? Icons.edit_rounded
+                                        : Icons.camera_alt_rounded,
+                                    size: 16,
+                                    color: Colors.white,
                                   ),
                                 ),
-                                child: const Icon(
-                                  Icons.camera_alt_rounded,
-                                  size: 16,
-                                  color: Colors.white,
-                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Center(
-                      child: Text(
-                        'Add a photo',
-                        style: theme.caption.copyWith(
-                          color: theme.primary,
-                          fontWeight: FontWeight.w600,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _pickingPhoto ? null : _onAddPhoto,
+                        child: Text(
+                          _photoPath == null ? 'Add a photo' : 'Change photo',
+                          style: theme.caption.copyWith(
+                            color: theme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -337,6 +366,7 @@ class _AuthProfileScreenState extends State<AuthProfileScreen> {
             .onSaveProfile!(
               displayName: displayName.isEmpty ? null : displayName,
               username: username.isEmpty ? null : username,
+              photoPath: _photoPath,
             )
             .catchError((Object e) {
               debugPrint(
@@ -347,5 +377,38 @@ class _AuthProfileScreenState extends State<AuthProfileScreen> {
     }
     if (!context.mounted) return;
     context.go(ProtoRoutes.authOnboarding);
+  }
+
+  Future<void> _onAddPhoto() async {
+    // Dismiss the soft keyboard before the gallery sheet animates up so
+    // the preview circle isn't covered by it once the user returns.
+    FocusScope.of(context).unfocus();
+    setState(() => _pickingPhoto = true);
+    try {
+      final picked = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        // Large originals are slow to decode on older devices and we
+        // only need preview fidelity here; real S3 upload will reprocess
+        // against an upload-time size policy.
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 90,
+      );
+      if (!mounted) return;
+      if (picked == null) return;
+      setState(() => _photoPath = picked.path);
+    } catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint('[profile] image_picker failed: $e\n$stack');
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Couldn't open the photo library. Try again."),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _pickingPhoto = false);
+    }
   }
 }
