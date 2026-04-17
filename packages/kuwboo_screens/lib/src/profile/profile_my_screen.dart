@@ -16,149 +16,185 @@ class ProfileMyScreen extends ConsumerWidget {
     final meAsync = ref.watch(meProvider);
     final unreadAsync = ref.watch(unreadNotificationCountProvider);
 
-    return Container(
-      color: theme.background,
-      child: Column(
-        children: [
-          ProtoSubBar(title: 'Profile'),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                ref.invalidate(meProvider);
-                ref.invalidate(unreadNotificationCountProvider);
-                await ref.read(meProvider.future);
-              },
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  const SizedBox(height: 20),
-                  // Avatar
-                  Center(
-                    child: Semantics(
-                      identifier: ScreensIds.profileMyAvatar,
-                      image: true,
-                      label: 'Profile photo',
-                      child: Stack(
-                        children: [
-                          ProtoAvatar(
-                            radius: 48,
-                            imageUrl: meAsync.valueOrNull?.avatarUrl ??
-                                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
-                          ),
-                          Positioned(
-                            right: 0,
-                            bottom: 0,
-                            child: Container(
-                              width: 28,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                color: theme.primary,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: theme.background, width: 3),
-                              ),
-                              child: Icon(theme.icons.cameraAlt,
-                                  size: 14, color: Colors.white),
+    // Material ancestor is required by Switch + DefaultTextStyle — the proto
+    // shell otherwise wraps only a bare Container, which lets Text fall back
+    // to the yellow-underline debug style and crashes the Dark Mode switch
+    // with "No Material widget found".
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        color: theme.background,
+        child: Column(
+          children: [
+            ProtoSubBar(title: 'Profile'),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(meProvider);
+                  ref.invalidate(unreadNotificationCountProvider);
+                  await ref.read(meProvider.future);
+                },
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  children: [
+                    const SizedBox(height: 20),
+                    // Avatar
+                    Center(
+                      child: Semantics(
+                        identifier: ScreensIds.profileMyAvatar,
+                        image: true,
+                        label: 'Profile photo',
+                        child: Stack(
+                          children: [
+                            ProtoAvatar(
+                              radius: 48,
+                              imageUrl:
+                                  meAsync.valueOrNull?.avatarUrl ??
+                                  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
                             ),
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: theme.primary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: theme.background,
+                                    width: 3,
+                                  ),
+                                ),
+                                child: Icon(
+                                  theme.icons.cameraAlt,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Semantics(
+                        identifier: ScreensIds.profileMyName,
+                        label: 'Display name',
+                        child: Text(
+                          _displayName(meAsync.valueOrNull),
+                          style: theme.headline.copyWith(fontSize: 24),
+                        ),
+                      ),
+                    ),
+                    Center(
+                      child: Text(
+                        _handle(meAsync.valueOrNull),
+                        style: theme.body,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Stats (still placeholder — counts endpoint not wired yet)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: theme.cardDecoration,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Semantics(
+                            identifier: ScreensIds.profileMyStat('posts'),
+                            value: '—',
+                            label: 'Posts',
+                            child: _Stat(count: '—', label: 'Posts'),
+                          ),
+                          Container(
+                            width: 1,
+                            height: 30,
+                            color: theme.text.withValues(alpha: 0.08),
+                          ),
+                          Semantics(
+                            identifier: ScreensIds.profileMyStat('followers'),
+                            value: '—',
+                            label: 'Followers',
+                            child: _Stat(count: '—', label: 'Followers'),
+                          ),
+                          Container(
+                            width: 1,
+                            height: 30,
+                            color: theme.text.withValues(alpha: 0.08),
+                          ),
+                          Semantics(
+                            identifier: ScreensIds.profileMyStat('following'),
+                            value: '—',
+                            label: 'Following',
+                            child: _Stat(count: '—', label: 'Following'),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Center(
-                    child: Semantics(
-                      identifier: ScreensIds.profileMyName,
-                      label: 'Display name',
-                      child: Text(
-                        _displayName(meAsync.valueOrNull),
-                        style: theme.headline.copyWith(fontSize: 24),
-                      ),
-                    ),
-                  ),
-                  Center(
-                    child: Text(
-                      _handle(meAsync.valueOrNull),
-                      style: theme.body,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // Stats (still placeholder — counts endpoint not wired yet)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: theme.cardDecoration,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Semantics(
-                          identifier: ScreensIds.profileMyStat('posts'),
-                          value: '—',
-                          label: 'Posts',
-                          child: _Stat(count: '—', label: 'Posts'),
-                        ),
-                        Container(width: 1, height: 30, color: theme.text.withValues(alpha: 0.08)),
-                        Semantics(
-                          identifier: ScreensIds.profileMyStat('followers'),
-                          value: '—',
-                          label: 'Followers',
-                          child: _Stat(count: '—', label: 'Followers'),
-                        ),
-                        Container(width: 1, height: 30, color: theme.text.withValues(alpha: 0.08)),
-                        Semantics(
-                          identifier: ScreensIds.profileMyStat('following'),
-                          value: '—',
-                          label: 'Following',
-                          child: _Stat(count: '—', label: 'Following'),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Menu items
-                  Semantics(
-                    identifier: ScreensIds.profileMyEdit,
-                    button: true,
-                    label: 'Edit Profile',
-                    child: _MenuItem(
-                      icon: theme.icons.editOutline,
-                      label: 'Edit Profile',
-                      onTap: () => context.go(ProtoRoutes.profileEdit),
-                    ),
-                  ),
-                  Builder(builder: (context) {
-                    final unreadCount = unreadAsync.when(
-                      data: (count) => count,
-                      loading: () => 0,
-                      error: (_, __) => 0,
-                    );
-                    return Semantics(
-                      identifier: ScreensIds.profileMyNotifications,
+                    // Menu items
+                    Semantics(
+                      identifier: ScreensIds.profileMyEdit,
                       button: true,
-                      label: 'Notifications',
-                      value: unreadCount > 0 ? '$unreadCount unread' : null,
-                      child: _MenuItemWithBadge(
-                        icon: theme.icons.notificationsOutline,
-                        label: 'Notifications',
-                        badgeCount: unreadCount,
-                        onTap: () => context.go(ProtoRoutes.profileNotifications),
+                      label: 'Edit Profile',
+                      child: _MenuItem(
+                        icon: theme.icons.editOutline,
+                        label: 'Edit Profile',
+                        onTap: () => context.go(ProtoRoutes.profileEdit),
                       ),
-                    );
-                  }),
-                  _MenuItem(icon: theme.icons.chatBubbleOutline, label: 'Messages', onTap: () => context.go(ProtoRoutes.chatInbox)),
-                  // TODO: enable when Listings + Saved features ship
-                  // _MenuItem(icon: theme.icons.storefrontOutline, label: 'My Listings', onTap: () {}),
-                  // _MenuItem(icon: theme.icons.favoriteOutline, label: 'Saved Items', onTap: () {}),
-                  _MenuItem(icon: theme.icons.campaign, label: 'Promote', onTap: () => context.go(ProtoRoutes.sponsoredHub)),
-                  _DarkModeToggle(),
-                  _MenuItem(icon: theme.icons.settings, label: 'Settings', onTap: () => context.go(ProtoRoutes.profileSettings)),
-                  const SizedBox(height: 20),
-                ],
+                    ),
+                    Builder(
+                      builder: (context) {
+                        final unreadCount = unreadAsync.when(
+                          data: (count) => count,
+                          loading: () => 0,
+                          error: (_, __) => 0,
+                        );
+                        return Semantics(
+                          identifier: ScreensIds.profileMyNotifications,
+                          button: true,
+                          label: 'Notifications',
+                          value: unreadCount > 0 ? '$unreadCount unread' : null,
+                          child: _MenuItemWithBadge(
+                            icon: theme.icons.notificationsOutline,
+                            label: 'Notifications',
+                            badgeCount: unreadCount,
+                            onTap: () =>
+                                context.go(ProtoRoutes.profileNotifications),
+                          ),
+                        );
+                      },
+                    ),
+                    _MenuItem(
+                      icon: theme.icons.chatBubbleOutline,
+                      label: 'Messages',
+                      onTap: () => context.go(ProtoRoutes.chatInbox),
+                    ),
+                    // TODO: enable when Listings + Saved features ship
+                    // _MenuItem(icon: theme.icons.storefrontOutline, label: 'My Listings', onTap: () {}),
+                    // _MenuItem(icon: theme.icons.favoriteOutline, label: 'Saved Items', onTap: () {}),
+                    _MenuItem(
+                      icon: theme.icons.campaign,
+                      label: 'Promote',
+                      onTap: () => context.go(ProtoRoutes.sponsoredHub),
+                    ),
+                    _DarkModeToggle(),
+                    _MenuItem(
+                      icon: theme.icons.settings,
+                      label: 'Settings',
+                      onTap: () => context.go(ProtoRoutes.profileSettings),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -199,7 +235,11 @@ class _MenuItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  const _MenuItem({required this.icon, required this.label, required this.onTap});
+  const _MenuItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -292,7 +332,9 @@ class _DarkModeToggle extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            state.isDarkMode ? Icons.dark_mode_rounded : Icons.dark_mode_outlined,
+            state.isDarkMode
+                ? Icons.dark_mode_rounded
+                : Icons.dark_mode_outlined,
             size: 22,
             color: state.isDarkMode ? theme.secondary : theme.primary,
           ),
