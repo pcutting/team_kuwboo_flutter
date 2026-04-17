@@ -249,16 +249,37 @@ class RemoteSQL:
         """Ask PM2 what NODE_ENV the API is running with.
 
         Returns a lowercase string ('development', 'production', '') —
-        empty when PM2 doesn't surface it. Used by the pre-flight guard
-        so we can refuse to mutate a production target unless explicitly
-        asked.
+        empty when it can't be determined. Best-effort: if parsing
+        fails for any reason the guard is skipped (see main()). Earlier
+        versions grepped `^NODE_ENV:` out of `pm2 env 0`, but that output
+        mixes the user-facing table header (`node_env:development`) with
+        the actual value, which produced the bogus `node_env:development`
+        string. Now we scan every line of `pm2 env` output, split on the
+        first `:` or `=`, and accept only a plain 'development' or
+        'production' value. Anything else → return empty.
         """
         out = self._send(
-            'sudo -u ubuntu bash -c "pm2 env 0 2>&1 | '
-            'grep -E \\"^NODE_ENV:\\" | head -1 | awk -F: \'{print $2}\' | tr -d \' \'"',
-            poll_seconds=30,
+            'sudo -u ubuntu bash -c "pm2 env 0 2>&1"',
+            poll_seconds=20,
         )
-        return out.strip().lower()
+        for raw in out.splitlines():
+            line = raw.strip()
+            if not line:
+                continue
+            # PM2 emits both `NODE_ENV: development` (status dump) and
+            # `node_env:development` (env listing). Take the rightmost
+            # token after either `:` or `=` and accept only the two
+            # known values.
+            parts = line.replace("=", ":").split(":")
+            if len(parts) < 2:
+                continue
+            key = parts[0].strip().lower()
+            if key != "node_env":
+                continue
+            value = parts[-1].strip().lower()
+            if value in ("development", "production"):
+                return value
+        return ""
 
     def run_sql(self, sql: str, *, tuples_only: bool = False) -> str:
         """Run a block of SQL and return psql's stdout."""
@@ -396,6 +417,32 @@ def build_create_sql(user_id: str, caps: SchemaCaps, password_hash: str) -> str:
         f"VALUES ({', '.join(user_vals)});\n"
     )
 
+    # Credentials are the backend's source-of-truth for "this phone/email
+    # is registered." `auth.service.ts#verifyPhoneOtp` looks up
+    # `credentials` (not `users`) before deciding whether to create a new
+    # account. A bare user row without matching credentials makes the OTP
+    # verify path try to insert a second user with the same phone, hits
+    # the unique constraint, and 500s — the reviewer sees "Internal server
+    # error" at the exact moment the flow is supposed to complete.
+    #
+    # Seed a verified phone credential AND a verified email credential so
+    # both OTP flows work. Note that `users.email_verified = false` stays
+    # independent: the credential existing just means the linkage is
+    # established, not that the user has confirmed ownership via the
+    # email-verify endpoint.
+    phone_cred_id = str(uuid.uuid4())
+    email_cred_id = str(uuid.uuid4())
+    insert_credentials = (
+        f'INSERT INTO credentials ("id", "user_id", "type", "identifier", '
+        f'"verified_at", "is_primary") VALUES '
+        f'({sql_literal(phone_cred_id)}, {sql_literal(user_id)}, '
+        f'{sql_literal("phone")}, {sql_literal(TEST_PHONE)}, now(), TRUE);\n'
+        f'INSERT INTO credentials ("id", "user_id", "type", "identifier", '
+        f'"verified_at", "is_primary") VALUES '
+        f'({sql_literal(email_cred_id)}, {sql_literal(user_id)}, '
+        f'{sql_literal("email")}, {sql_literal(TEST_EMAIL)}, now(), TRUE);\n'
+    )
+
     product_rows: list[str] = []
     for p in SEED_PRODUCTS:
         pid = str(uuid.uuid4())
@@ -427,7 +474,13 @@ def build_create_sql(user_id: str, caps: SchemaCaps, password_hash: str) -> str:
             f"VALUES ({', '.join(vals)});"
         )
 
-    return "BEGIN;\n" + insert_user + "\n".join(product_rows) + "\nCOMMIT;\n"
+    return (
+        "BEGIN;\n"
+        + insert_user
+        + insert_credentials
+        + "\n".join(product_rows)
+        + "\nCOMMIT;\n"
+    )
 
 
 def build_delete_sql() -> str:
