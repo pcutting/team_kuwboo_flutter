@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { randomUUID } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
@@ -114,16 +115,26 @@ export class AuthService {
       user = existingCredential.user;
       await this.credentialsService.markUsed(existingCredential.id);
     } else {
-      user = await this.usersService.create({
-        phone,
-        name: phone,
-        onboardingProgress: OnboardingProgress.OTP,
-      } as any);
-      await this.credentialsService.attach({
-        userId: user.id,
-        type: CredentialType.PHONE,
-        identifier: phone,
-      });
+      try {
+        user = await this.usersService.create({
+          phone,
+          name: phone,
+          onboardingProgress: OnboardingProgress.OTP,
+        } as any);
+        await this.credentialsService.attach({
+          userId: user.id,
+          type: CredentialType.PHONE,
+          identifier: phone,
+        });
+      } catch (e) {
+        if (e instanceof UniqueConstraintViolationException) {
+          throw new ConflictException({
+            code: 'phone_already_registered',
+            message: 'This phone is already registered; log in instead.',
+          });
+        }
+        throw e;
+      }
       await this.trustService.append({
         userId: user.id,
         type: TrustSignalType.PHONE_VERIFIED_MOBILE,
@@ -157,16 +168,26 @@ export class AuthService {
       user = existingCredential.user;
       await this.credentialsService.markUsed(existingCredential.id);
     } else {
-      user = await this.usersService.create({
-        email: normalised,
-        name: normalised,
-        onboardingProgress: OnboardingProgress.OTP,
-      } as any);
-      await this.credentialsService.attach({
-        userId: user.id,
-        type: CredentialType.EMAIL,
-        identifier: normalised,
-      });
+      try {
+        user = await this.usersService.create({
+          email: normalised,
+          name: normalised,
+          onboardingProgress: OnboardingProgress.OTP,
+        } as any);
+        await this.credentialsService.attach({
+          userId: user.id,
+          type: CredentialType.EMAIL,
+          identifier: normalised,
+        });
+      } catch (e) {
+        if (e instanceof UniqueConstraintViolationException) {
+          throw new ConflictException({
+            code: 'email_already_registered',
+            message: 'This email is already registered; log in instead.',
+          });
+        }
+        throw e;
+      }
       await this.trustService.append({
         userId: user.id,
         type: TrustSignalType.EMAIL_VERIFIED,
