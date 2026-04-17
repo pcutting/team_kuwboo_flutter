@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_models/kuwboo_models.dart';
+import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import '../application/feed_provider.dart';
 import 'feed_common.dart';
@@ -38,7 +39,7 @@ class ShopFeedMobileScreen extends ConsumerWidget {
               gridDelegate:
                   const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.7,
+                childAspectRatio: 0.62,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
@@ -71,11 +72,19 @@ class _ProductCard extends StatelessWidget {
         children: [
           AspectRatio(
             aspectRatio: 1,
-            child: Container(
-              color: Colors.black12,
-              child: const Icon(Icons.image_outlined,
-                  size: 48, color: Colors.black45),
-            ),
+            child: (item.thumbnailUrl != null && item.thumbnailUrl!.isNotEmpty)
+                ? ProtoNetworkImage(
+                    imageUrl: item.thumbnailUrl!,
+                    width: double.infinity,
+                  )
+                : Container(
+                    color: Colors.black12,
+                    child: const Icon(
+                      Icons.image_outlined,
+                      size: 48,
+                      color: Colors.black45,
+                    ),
+                  ),
           ),
           Padding(
             padding: const EdgeInsets.all(10),
