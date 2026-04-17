@@ -1,12 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:kuwboo_auth/kuwboo_auth.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import '../features/auth/auth_callbacks.dart';
-import '../providers/auth_provider.dart';
 import '../providers/fcm_provider.dart';
 import 'router.dart';
 import 'theme.dart';
@@ -69,36 +66,15 @@ class _ProtoStateBridge extends ConsumerWidget {
 
     final authCallbacks = ref.watch(authCallbacksProvider);
 
-    // Debug-only "Reset onboarding" hook — surfaced in the profile bottom
-    // sheet when `kDebugMode` is true. Clears tokens, forces the router to
-    // re-evaluate redirect (which lands the user back on /auth/welcome), and
-    // is a no-op wrapper in release builds so the affordance never ships.
-    // Typed as `VoidCallback` — the underlying logout is async but callers
-    // only need fire-and-forget semantics, so we wrap the future.
-    final VoidCallback? onResetOnboarding = kDebugMode
-        ? () {
-            // Fire-and-forget: any token-clear error is already swallowed
-            // inside `logout()` (it always finishes by clearing local state).
-            ref.read(authProvider.notifier).logout();
-            final ctx = rootNavigatorKey.currentContext;
-            if (ctx != null && ctx.mounted) {
-              GoRouter.of(ctx).go(ProtoRoutes.authWelcome);
-            }
-          }
-        : null;
-
     return ProtoStateAccess(
       shell: shell,
       yoyo: yoyo,
       shellNotifier: shellNotifier,
       yoyoNotifier: yoyoNotifier,
       navigatorKey: rootNavigatorKey,
-      child: DevHooks(
-        onResetOnboarding: onResetOnboarding,
-        child: KuwbooAuthFlow(
-          callbacks: authCallbacks,
-          child: child,
-        ),
+      child: KuwbooAuthFlow(
+        callbacks: authCallbacks,
+        child: child,
       ),
     );
   }

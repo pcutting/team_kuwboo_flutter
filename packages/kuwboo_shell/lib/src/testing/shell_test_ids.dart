@@ -4,7 +4,7 @@
 abstract class ShellIds {
   // proto_top_bar
   static const topbarChatIcon = 'shell.topbar.icon_chat';
-  static const topbarProfileMenu = 'shell.topbar.btn_profile_menu';
+  static const topbarProfile = 'shell.topbar.btn_profile';
   static const topbarYoyoToggle = 'shell.topbar.icon_yoyo_toggle';
 
   // proto_bottom_nav
@@ -16,12 +16,6 @@ abstract class ShellIds {
 
   // proto_scaffold
   static const subbarBack = 'shell.subbar.btn_back';
-
-  // proto_dialogs — profile menu
-  static const profileMenuViewProfile = 'shell.profile_menu.item_view_profile';
-  static const profileMenuSettings = 'shell.profile_menu.item_settings';
-  static const profileMenuDarkMode = 'shell.profile_menu.toggle_dark_mode';
-  static const profileMenuLogOut = 'shell.profile_menu.item_log_out';
 
   // proto_dialogs — confirm
   static const dialogConfirmCancel = 'shell.dialog_confirm.btn_cancel';
