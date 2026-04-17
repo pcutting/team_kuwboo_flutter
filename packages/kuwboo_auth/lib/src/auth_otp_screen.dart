@@ -43,10 +43,26 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
   /// navigating after the user resent the code.
   bool _isVerifying = false;
 
+  /// Snapshot of the args captured when the route first mounts. Read this
+  /// instead of [AuthOtpScreen.args] — go_router's `refreshListenable`
+  /// rebuilds the match with `state.extra = null` on any auth-state
+  /// notification (e.g. the `isLoading` toggle during verify), which would
+  /// otherwise flip the screen to its fallback identifier mid-verify.
+  AuthOtpArgs? _args;
+
   @override
   void initState() {
     super.initState();
+    _args = widget.args;
     _startCountdown();
+  }
+
+  @override
+  void didUpdateWidget(covariant AuthOtpScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.args != null && widget.args != oldWidget.args) {
+      _args = widget.args;
+    }
   }
 
   @override
@@ -139,7 +155,7 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
   Future<void> _submit(String code) async {
     _isVerifying = true;
     final callbacks = AuthCallbacksScope.maybeOf(context);
-    final args = widget.args;
+    final args = _args;
     try {
       if (callbacks?.onVerifyOtp != null && args != null) {
         try {
@@ -194,7 +210,7 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
     FocusScope.of(context).requestFocus(_focusNodes[0]);
     _startCountdown();
     final callbacks = AuthCallbacksScope.maybeOf(context);
-    final args = widget.args;
+    final args = _args;
     if (callbacks?.onResendOtp != null && args != null) {
       try {
         await callbacks!.onResendOtp!(args.identifier, args.channel);
@@ -223,10 +239,10 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
               // Only surface the banner when we actually have a code to show
               // (dev / demo mode). In production the backend omits `devCode`
               // from the response so this renders nothing.
-              if (!kReleaseMode && widget.args?.devCode != null)
+              if (!kReleaseMode && _args?.devCode != null)
                 Semantics(
                   identifier: AuthIds.otpBanner,
-                  child: _TestBuildBanner(devCode: widget.args!.devCode!),
+                  child: _TestBuildBanner(devCode: _args!.devCode!),
                 )
               else
                 const SizedBox.shrink(),
@@ -245,9 +261,9 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
                       Semantics(
                         identifier: AuthIds.otpIdentifier,
                         child: Text(
-                          widget.args?.displayIdentifier ??
-                              widget.args?.identifier ??
-                              '+44 7XXX XXX XX3',
+                          _args?.displayIdentifier ??
+                              _args?.identifier ??
+                              'your account',
                           style: theme.body.copyWith(
                             fontWeight: FontWeight.w600,
                             color: theme.primary,
