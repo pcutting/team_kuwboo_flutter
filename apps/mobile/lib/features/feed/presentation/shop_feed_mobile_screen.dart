@@ -17,7 +17,7 @@ class ShopFeedMobileScreen extends ConsumerWidget {
     final notifier = ref.read(shopFeedProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Shop')),
+      backgroundColor: Colors.transparent,
       body: FeedAsyncBuilder<ProductListState>(
         snapshot: AsyncSnapshotLike(
           value: async.valueOrNull,
@@ -37,15 +37,14 @@ class ShopFeedMobileScreen extends ConsumerWidget {
             },
             child: GridView.builder(
               padding: const EdgeInsets.all(12),
-              gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
+              physics: const AlwaysScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 childAspectRatio: 0.62,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
-              itemCount:
-                  state.items.length + (state.isLoadingMore ? 1 : 0),
+              itemCount: state.items.length + (state.isLoadingMore ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index >= state.items.length) {
                   return const Center(child: CircularProgressIndicator());
@@ -72,15 +71,16 @@ class _ProductCard extends StatelessWidget {
         onTap: item.id == null
             ? null
             : () => context.push(
-                  ProtoRoutes.shopProduct,
-                  extra: {'productId': item.id},
-                ),
+                ProtoRoutes.shopProduct,
+                extra: {'productId': item.id},
+              ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AspectRatio(
               aspectRatio: 1,
-              child: (item.thumbnailUrl != null && item.thumbnailUrl!.isNotEmpty)
+              child:
+                  (item.thumbnailUrl != null && item.thumbnailUrl!.isNotEmpty)
                   ? ProtoNetworkImage(
                       imageUrl: item.thumbnailUrl!,
                       width: double.infinity,
@@ -104,19 +104,21 @@ class _ProductCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 13),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     formatPrice(item.priceCents, item.currency),
                     style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w700),
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   Text(
                     (item.condition ?? '').toLowerCase(),
-                    style: const TextStyle(
-                        color: Colors.black54, fontSize: 11),
+                    style: const TextStyle(color: Colors.black54, fontSize: 11),
                   ),
                 ],
               ),

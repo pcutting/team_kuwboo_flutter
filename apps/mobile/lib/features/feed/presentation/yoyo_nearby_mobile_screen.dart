@@ -15,7 +15,7 @@ class YoyoNearbyMobileScreen extends ConsumerWidget {
     final notifier = ref.read(yoyoNearbyProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Nearby')),
+      backgroundColor: Colors.transparent,
       body: FeedAsyncBuilder<List<NearbyUser>>(
         snapshot: AsyncSnapshotLike(
           value: async.valueOrNull,

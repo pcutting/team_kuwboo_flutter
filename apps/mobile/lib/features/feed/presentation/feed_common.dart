@@ -31,10 +31,7 @@ class FeedAsyncBuilder<T> extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
     if (snapshot.error != null && snapshot.value == null) {
-      return _ErrorView(
-        error: snapshot.error!,
-        onRetry: onRefresh,
-      );
+      return _ErrorView(error: snapshot.error!, onRetry: onRefresh);
     }
     final data = snapshot.value;
     if (data == null || isEmpty(data)) {
@@ -47,9 +44,9 @@ class FeedAsyncBuilder<T> extends StatelessWidget {
             Center(
               child: Text(
                 emptyLabel,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.black54,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
               ),
             ),
           ],
@@ -70,11 +67,7 @@ class AsyncSnapshotLike<T> {
   final Object? error;
   final bool isLoading;
 
-  const AsyncSnapshotLike({
-    this.value,
-    this.error,
-    this.isLoading = false,
-  });
+  const AsyncSnapshotLike({this.value, this.error, this.isLoading = false});
 }
 
 class _ErrorView extends StatelessWidget {
@@ -91,7 +84,11 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off_rounded, size: 40, color: Colors.black45),
+            const Icon(
+              Icons.cloud_off_rounded,
+              size: 40,
+              color: Colors.black45,
+            ),
             const SizedBox(height: 12),
             Text(
               'Couldn\u2019t load feed',
