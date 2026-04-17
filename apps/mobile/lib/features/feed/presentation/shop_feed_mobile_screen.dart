@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kuwboo_models/kuwboo_models.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
@@ -67,53 +68,61 @@ class _ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AspectRatio(
-            aspectRatio: 1,
-            child: (item.thumbnailUrl != null && item.thumbnailUrl!.isNotEmpty)
-                ? ProtoNetworkImage(
-                    imageUrl: item.thumbnailUrl!,
-                    width: double.infinity,
-                  )
-                : Container(
-                    color: Colors.black12,
-                    child: const Icon(
-                      Icons.image_outlined,
-                      size: 48,
-                      color: Colors.black45,
+      child: InkWell(
+        onTap: item.id == null
+            ? null
+            : () => context.push(
+                  ProtoRoutes.shopProduct,
+                  extra: {'productId': item.id},
+                ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AspectRatio(
+              aspectRatio: 1,
+              child: (item.thumbnailUrl != null && item.thumbnailUrl!.isNotEmpty)
+                  ? ProtoNetworkImage(
+                      imageUrl: item.thumbnailUrl!,
+                      width: double.infinity,
+                    )
+                  : Container(
+                      color: Colors.black12,
+                      child: const Icon(
+                        Icons.image_outlined,
+                        size: 48,
+                        color: Colors.black45,
+                      ),
                     ),
-                  ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.title ?? 'Untitled listing',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 13),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  formatPrice(item.priceCents, item.currency),
-                  style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w700),
-                ),
-                Text(
-                  (item.condition ?? '').toLowerCase(),
-                  style: const TextStyle(
-                      color: Colors.black54, fontSize: 11),
-                ),
-              ],
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title ?? 'Untitled listing',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    formatPrice(item.priceCents, item.currency),
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    (item.condition ?? '').toLowerCase(),
+                    style: const TextStyle(
+                        color: Colors.black54, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
