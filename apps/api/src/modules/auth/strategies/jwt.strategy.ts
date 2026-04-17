@@ -28,6 +28,17 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     if (!user || user.status !== 'ACTIVE') {
       throw new UnauthorizedException('User not found or inactive');
     }
-    return { id: user.id, role: user.role };
+    // Return the fields downstream guards / decorators rely on. In
+    // particular the `DatingAgeGuard` reads `dateOfBirth`,
+    // `ageVerificationStatus`, and `dobChoice` directly off req.user.
+    return {
+      id: user.id,
+      role: user.role,
+      email: user.email,
+      emailVerified: user.emailVerified,
+      dateOfBirth: user.dateOfBirth,
+      ageVerificationStatus: user.ageVerificationStatus,
+      dobChoice: user.dobChoice,
+    };
   }
 }

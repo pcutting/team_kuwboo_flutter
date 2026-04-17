@@ -228,6 +228,22 @@ export class UsersService {
   }
 
   /**
+   * Flush any pending changes on the given user's managed entity.
+   * Narrow helper used by flows (e.g. email verification) that mutate
+   * the user instance directly and need to persist without going
+   * through one of the richer update methods.
+   */
+  async flushUser(userId: string): Promise<void> {
+    // The caller holds a reference to the same managed User instance
+    // this service loaded, so the identity map already tracks the
+    // pending changes — a bare flush is enough.
+    await this.em.flush();
+    // Avoid unused-parameter lint; userId is part of the API for future
+    // extension (e.g. partial-flush by ID).
+    void userId;
+  }
+
+  /**
    * Walk the onboarding ladder per IDENTITY_CONTRACT §5. We never step
    * backwards — a user who has already reached `profile` doesn't regress
    * to `birthday` if they clear their DOB.

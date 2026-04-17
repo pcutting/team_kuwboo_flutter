@@ -28,6 +28,7 @@ const MIGRATION_ORDER = [
   'Migration20260414_seed_interests',
   'Migration20260414_profile_completeness_nudge',
   'Migration20260414_content_interest_tags',
+  'Migration20260417_auth_and_credibility',
 ];
 
 async function runMigrationsIfNeeded(orm: MikroORM): Promise<void> {

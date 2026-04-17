@@ -24,3 +24,4 @@ export { CredentialType } from './credential-type.enum';
 export { OnboardingProgress } from './onboarding-progress.enum';
 export { TrustSignalType } from './trust-signal-type.enum';
 export { AgeVerificationStatus } from './age-verification.enum';
+export { DobChoice } from './dob-choice.enum';

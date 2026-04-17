@@ -191,6 +191,79 @@ export class VerificationService {
     });
   }
 
+  /**
+   * Password-reset OTP. Shares the `verifications` table with email OTP
+   * but uses the `PASSWORD_RESET` discriminator so the two code streams
+   * cannot be confused and each is consumed exactly once.
+   */
+  async sendPasswordResetOtp(email: string): Promise<{ devCode?: string }> {
+    const code = this.generateCode();
+    const codeHash = await bcrypt.hash(code, BCRYPT_ROUNDS);
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+
+    this.em.create(Verification, {
+      identifier: email,
+      codeHash,
+      type: VerificationType.PASSWORD_RESET,
+      expiresAt,
+    } as any);
+    await this.em.flush();
+
+    if (this.config.get('NODE_ENV') !== 'production') {
+      console.log(`[DEV] Password reset OTP for ${email}: ${code}`);
+      return { devCode: code };
+    }
+    return {};
+  }
+
+  /**
+   * Validates a PASSWORD_RESET code. Succeeds silently; callers that need
+   * the verified row back can rely on `verifiedAt` being populated.
+   * Throws the same `invalid_code` shape regardless of whether the code
+   * was missing, expired, or simply wrong — the reset endpoint must not
+   * leak which branch failed.
+   */
+  async verifyPasswordResetOtp(email: string, code: string): Promise<void> {
+    const verification = await this.em.findOne(
+      Verification,
+      {
+        identifier: email,
+        type: VerificationType.PASSWORD_RESET,
+        verifiedAt: null,
+        expiresAt: { $gt: new Date() },
+      },
+      { orderBy: { createdAt: 'DESC' } },
+    );
+
+    if (!verification) {
+      throw new BadRequestException({
+        code: 'invalid_code',
+        message: 'Invalid or expired code.',
+      });
+    }
+
+    if (verification.attempts >= MAX_ATTEMPTS) {
+      throw new BadRequestException({
+        code: 'invalid_code',
+        message: 'Invalid or expired code.',
+      });
+    }
+
+    const isValid = await bcrypt.compare(code, verification.codeHash);
+    if (!isValid) {
+      verification.attempts += 1;
+      await this.em.flush();
+      throw new BadRequestException({
+        code: 'invalid_code',
+        message: 'Invalid or expired code.',
+      });
+    }
+
+    verification.verifiedAt = new Date();
+    await this.em.flush();
+  }
+
   private generateCode(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }

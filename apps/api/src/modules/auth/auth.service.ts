@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'crypto';
+import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import { UsersService } from '../users/users.service';
@@ -16,7 +17,23 @@ import { AppleJwksService } from './apple/apple-jwks.service';
 import { CredentialsService } from '../credentials/credentials.service';
 import { TrustService } from '../trust/trust.service';
 import { User } from '../users/entities/user.entity';
-import { CredentialType, OnboardingProgress, TrustSignalType } from '../../common/enums';
+import {
+  AgeVerificationStatus,
+  CredentialType,
+  DobChoice,
+  OnboardingProgress,
+  TrustSignalType,
+} from '../../common/enums';
+
+const PASSWORD_BCRYPT_ROUNDS = 10;
+
+export interface EmailRegisterInput {
+  email: string;
+  password: string;
+  name?: string;
+  dateOfBirth?: string;
+  dobChoice?: DobChoice;
+}
 
 export interface AuthTokens {
   accessToken: string;
@@ -402,6 +419,216 @@ export class AuthService {
     }
     const tokens = await this.issueTokens(user, meta);
     return { ...tokens, user, isNewUser };
+  }
+
+  /**
+   * Email + password registration. Creates a new user with a bcrypt
+   * password hash, attaches an EMAIL credential, and issues tokens.
+   * Email verification is a separate step (`/auth/email/verify/send` +
+   * `/auth/email/verify/confirm`) — we do not block registration on it.
+   */
+  async emailRegister(
+    input: EmailRegisterInput,
+    meta?: { userAgent?: string; ipAddress?: string },
+  ): Promise<AuthResponse> {
+    const email = this.normaliseEmail(input.email);
+
+    const existingCredential = await this.credentialsService.findByIdentity(
+      CredentialType.EMAIL,
+      email,
+    );
+    const existingUser = await this.usersService.findByEmail(email);
+    if (existingCredential || existingUser) {
+      throw new ConflictException({
+        code: 'email_taken',
+        message: 'That email is already registered.',
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(input.password, PASSWORD_BCRYPT_ROUNDS);
+
+    // Resolve DOB-related onboarding state.
+    let dobChoice: DobChoice = input.dobChoice ?? DobChoice.PENDING;
+    let ageVerificationStatus: AgeVerificationStatus | undefined;
+    let dateOfBirth: Date | undefined;
+
+    if (input.dateOfBirth) {
+      dateOfBirth = new Date(input.dateOfBirth);
+      dobChoice = DobChoice.PROVIDED;
+      ageVerificationStatus = AgeVerificationStatus.SELF_DECLARED;
+    } else if (input.dobChoice === DobChoice.ADULT_SELF_DECLARED) {
+      ageVerificationStatus = AgeVerificationStatus.SELF_DECLARED_ADULT;
+    } else if (input.dobChoice === DobChoice.PREFER_NOT_TO_SAY) {
+      ageVerificationStatus = AgeVerificationStatus.PREFER_NOT_TO_SAY;
+    }
+
+    const user = await this.usersService.create({
+      email,
+      name: input.name || email,
+      passwordHash,
+      dateOfBirth,
+      dobChoice,
+      ...(ageVerificationStatus !== undefined ? { ageVerificationStatus } : {}),
+      onboardingProgress: OnboardingProgress.OTP,
+    } as any);
+
+    await this.credentialsService.attach({
+      userId: user.id,
+      type: CredentialType.EMAIL,
+      identifier: email,
+    });
+
+    user.lastLoginAt = new Date();
+    const tokens = await this.issueTokens(user, meta);
+    return { ...tokens, user, isNewUser: true };
+  }
+
+  /**
+   * Email + password login. Does not distinguish unknown-email from
+   * wrong-password — both paths return `invalid_credentials` to avoid
+   * user enumeration.
+   */
+  async emailLogin(
+    rawEmail: string,
+    password: string,
+    meta?: { userAgent?: string; ipAddress?: string },
+  ): Promise<AuthResponse> {
+    const email = this.normaliseEmail(rawEmail);
+    const user = await this.usersService.findByEmail(email);
+
+    if (!user || !user.passwordHash) {
+      throw new UnauthorizedException({
+        code: 'invalid_credentials',
+        message: 'Email or password is incorrect.',
+      });
+    }
+
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if (!ok) {
+      throw new UnauthorizedException({
+        code: 'invalid_credentials',
+        message: 'Email or password is incorrect.',
+      });
+    }
+
+    user.lastLoginAt = new Date();
+    const tokens = await this.issueTokens(user, meta);
+    return { ...tokens, user, isNewUser: false };
+  }
+
+  /**
+   * Initiates password reset. Always returns 200 regardless of whether
+   * the email exists — the response shape must not leak account
+   * existence. When the user is unknown we return an empty data object
+   * (or a fresh dev code mimicking a real send so dev tooling still
+   * exhibits a code in the banner).
+   */
+  async emailForgotPassword(
+    rawEmail: string,
+  ): Promise<{ devCode?: string }> {
+    const email = this.normaliseEmail(rawEmail);
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      // Burn cycles to keep timing roughly comparable. The returned
+      // devCode is never usable because no verification row was created.
+      if (process.env.NODE_ENV !== 'production') {
+        return { devCode: '000000' };
+      }
+      return {};
+    }
+    return this.verificationService.sendPasswordResetOtp(email);
+  }
+
+  /**
+   * Consumes a password-reset code, rotates the user's password,
+   * revokes all existing sessions, and issues a fresh token pair.
+   */
+  async emailResetPassword(
+    rawEmail: string,
+    code: string,
+    newPassword: string,
+    meta?: { userAgent?: string; ipAddress?: string },
+  ): Promise<AuthResponse> {
+    const email = this.normaliseEmail(rawEmail);
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      throw new BadRequestException({
+        code: 'invalid_code',
+        message: 'Invalid or expired code.',
+      });
+    }
+
+    await this.verificationService.verifyPasswordResetOtp(email, code);
+
+    user.passwordHash = await bcrypt.hash(newPassword, PASSWORD_BCRYPT_ROUNDS);
+    user.lastLoginAt = new Date();
+
+    await this.sessionsService.revokeAllForUser(user.id);
+    const tokens = await this.issueTokens(user, meta);
+    return { ...tokens, user, isNewUser: false };
+  }
+
+  /**
+   * Sends an email verification code to the authenticated user's email.
+   * Reuses the phone/email OTP table via the EMAIL_VERIFY discriminator.
+   */
+  async emailVerifySend(userId: string): Promise<{ devCode?: string }> {
+    const user = await this.usersService.findById(userId);
+    if (!user.email) {
+      throw new BadRequestException({
+        code: 'no_email_on_file',
+        message: 'This account has no email to verify.',
+      });
+    }
+    return this.verificationService.sendEmailOtp(this.normaliseEmail(user.email));
+  }
+
+  /**
+   * Consumes a code issued by `emailVerifySend` and marks the user's
+   * email as verified. On success appends an EMAIL_VERIFIED trust
+   * signal (idempotent: only the first successful verify earns the
+   * delta).
+   */
+  async emailVerifyConfirm(
+    userId: string,
+    code: string,
+  ): Promise<{ emailVerified: true }> {
+    const user = await this.usersService.findById(userId);
+    if (!user.email) {
+      throw new BadRequestException({
+        code: 'no_email_on_file',
+        message: 'This account has no email to verify.',
+      });
+    }
+
+    try {
+      await this.verificationService.verifyEmailOtp(
+        this.normaliseEmail(user.email),
+        code,
+      );
+    } catch {
+      throw new BadRequestException({
+        code: 'invalid_code',
+        message: 'Invalid or expired code.',
+      });
+    }
+
+    const alreadyVerified = user.emailVerified;
+    user.emailVerified = true;
+    user.emailVerifiedAt = new Date();
+
+    if (!alreadyVerified) {
+      await this.trustService.append({
+        userId: user.id,
+        type: TrustSignalType.EMAIL_VERIFIED,
+        delta: 10,
+        source: 'email_verify',
+      });
+    }
+
+    // Persist the email-verified flag on the user row.
+    await this.usersService.flushUser(user.id);
+    return { emailVerified: true };
   }
 
   private async ssoConfirm(

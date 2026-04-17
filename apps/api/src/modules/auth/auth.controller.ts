@@ -8,19 +8,28 @@ import {
   ForbiddenException,
   ConflictException,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService, EmailOwnedChallenge } from './auth.service';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { SendEmailOtpDto, VerifyEmailOtpDto } from './dto/email-otp.dto';
+import {
+  EmailForgotPasswordDto,
+  EmailLoginDto,
+  EmailRegisterDto,
+  EmailResetPasswordDto,
+  EmailVerifyConfirmDto,
+} from './dto/email-password.dto';
 import { GoogleLoginDto, AppleLoginDto } from './dto/social-login.dto';
 import { GoogleConfirmDto, AppleConfirmDto } from './dto/sso-confirm.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -65,6 +74,67 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async verifyEmailOtp(@Body() dto: VerifyEmailOtpDto, @Req() req: Request) {
     return this.authService.verifyEmailOtp(dto.email, dto.code, reqMeta(req));
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 15 * 60 * 1000 } })
+  @Post('email/register')
+  @HttpCode(HttpStatus.OK)
+  async emailRegister(@Body() dto: EmailRegisterDto, @Req() req: Request) {
+    return this.authService.emailRegister(dto, reqMeta(req));
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 15 * 60 * 1000 } })
+  @Post('email/login')
+  @HttpCode(HttpStatus.OK)
+  async emailLogin(@Body() dto: EmailLoginDto, @Req() req: Request) {
+    return this.authService.emailLogin(dto.email, dto.password, reqMeta(req));
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 15 * 60 * 1000 } })
+  @Post('email/password/forgot')
+  @HttpCode(HttpStatus.OK)
+  async emailPasswordForgot(@Body() dto: EmailForgotPasswordDto) {
+    return this.authService.emailForgotPassword(dto.email);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 15 * 60 * 1000 } })
+  @Post('email/password/reset')
+  @HttpCode(HttpStatus.OK)
+  async emailPasswordReset(
+    @Body() dto: EmailResetPasswordDto,
+    @Req() req: Request,
+  ) {
+    return this.authService.emailResetPassword(
+      dto.email,
+      dto.code,
+      dto.newPassword,
+      reqMeta(req),
+    );
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 5, ttl: 15 * 60 * 1000 } })
+  @Post('email/verify/send')
+  @HttpCode(HttpStatus.OK)
+  async emailVerifySend(@CurrentUser('id') userId: string) {
+    return this.authService.emailVerifySend(userId);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 10, ttl: 15 * 60 * 1000 } })
+  @Post('email/verify/confirm')
+  @HttpCode(HttpStatus.OK)
+  async emailVerifyConfirm(
+    @CurrentUser('id') userId: string,
+    @Body() dto: EmailVerifyConfirmDto,
+  ) {
+    return this.authService.emailVerifyConfirm(userId, dto.code);
   }
 
   @Public()
