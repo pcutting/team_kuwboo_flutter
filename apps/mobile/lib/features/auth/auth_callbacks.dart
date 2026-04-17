@@ -94,17 +94,17 @@ AuthCallbacks buildMobileAuthCallbacks(Ref ref) {
     },
 
     onSaveDobChoice: (choice) async {
-      // TODO(backend): the granular DOB-choice endpoint is being added
-      // in parallel. The backend will need to distinguish between
-      // "prefer not to say", "adult self-declared", and "skipped" and
-      // drive the matching credibility / age-verification state. Until
-      // then we fall back to the existing `birthdaySkipped` flag which
-      // at least locks dating on its own.
-      //
-      // When the dedicated endpoint lands, swap this for a POST /users/me/
-      // dob-choice (or similar) call carrying the full AuthDobChoice
-      // value so the server can score credibility distinctly.
-      await usersApi.patchMe(const PatchMeDto(birthdaySkipped: true));
+      // Maps the on-screen chip into the backend's DobChoice enum. The
+      // server applies the lockstep ageVerificationStatus + birthdaySkipped
+      // transitions (see UsersService.applyDobChoice) — we just send the
+      // choice and let the server decide the side-effects, so a future
+      // enum value never needs a mobile-side client update.
+      final wire = switch (choice) {
+        AuthDobChoice.preferNotToSay => 'prefer_not_to_say',
+        AuthDobChoice.adultSelfDeclared => 'adult_self_declared',
+        AuthDobChoice.skipped => 'skipped',
+      };
+      await usersApi.patchMe(PatchMeDto(dobChoice: wire));
       await authNotifier.refreshUser();
     },
 

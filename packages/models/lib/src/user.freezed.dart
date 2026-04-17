@@ -359,7 +359,7 @@ as DateTime?,
 /// @nodoc
 mixin _$PatchMeDto {
 
- String? get displayName; String? get username; String? get avatarUrl; String? get bio; String? get dateOfBirth; bool? get birthdaySkipped; OnboardingProgress? get onboardingProgress;
+ String? get displayName; String? get username; String? get avatarUrl; String? get bio; String? get dateOfBirth; bool? get birthdaySkipped; String? get dobChoice; OnboardingProgress? get onboardingProgress;
 /// Create a copy of PatchMeDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -372,16 +372,16 @@ $PatchMeDtoCopyWith<PatchMeDto> get copyWith => _$PatchMeDtoCopyWithImpl<PatchMe
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PatchMeDto&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.username, username) || other.username == username)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.bio, bio) || other.bio == bio)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.birthdaySkipped, birthdaySkipped) || other.birthdaySkipped == birthdaySkipped)&&(identical(other.onboardingProgress, onboardingProgress) || other.onboardingProgress == onboardingProgress));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PatchMeDto&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.username, username) || other.username == username)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.bio, bio) || other.bio == bio)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.birthdaySkipped, birthdaySkipped) || other.birthdaySkipped == birthdaySkipped)&&(identical(other.dobChoice, dobChoice) || other.dobChoice == dobChoice)&&(identical(other.onboardingProgress, onboardingProgress) || other.onboardingProgress == onboardingProgress));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,displayName,username,avatarUrl,bio,dateOfBirth,birthdaySkipped,onboardingProgress);
+int get hashCode => Object.hash(runtimeType,displayName,username,avatarUrl,bio,dateOfBirth,birthdaySkipped,dobChoice,onboardingProgress);
 
 @override
 String toString() {
-  return 'PatchMeDto(displayName: $displayName, username: $username, avatarUrl: $avatarUrl, bio: $bio, dateOfBirth: $dateOfBirth, birthdaySkipped: $birthdaySkipped, onboardingProgress: $onboardingProgress)';
+  return 'PatchMeDto(displayName: $displayName, username: $username, avatarUrl: $avatarUrl, bio: $bio, dateOfBirth: $dateOfBirth, birthdaySkipped: $birthdaySkipped, dobChoice: $dobChoice, onboardingProgress: $onboardingProgress)';
 }
 
 
@@ -392,7 +392,7 @@ abstract mixin class $PatchMeDtoCopyWith<$Res>  {
   factory $PatchMeDtoCopyWith(PatchMeDto value, $Res Function(PatchMeDto) _then) = _$PatchMeDtoCopyWithImpl;
 @useResult
 $Res call({
- String? displayName, String? username, String? avatarUrl, String? bio, String? dateOfBirth, bool? birthdaySkipped, OnboardingProgress? onboardingProgress
+ String? displayName, String? username, String? avatarUrl, String? bio, String? dateOfBirth, bool? birthdaySkipped, String? dobChoice, OnboardingProgress? onboardingProgress
 });
 
 
@@ -409,7 +409,7 @@ class _$PatchMeDtoCopyWithImpl<$Res>
 
 /// Create a copy of PatchMeDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? displayName = freezed,Object? username = freezed,Object? avatarUrl = freezed,Object? bio = freezed,Object? dateOfBirth = freezed,Object? birthdaySkipped = freezed,Object? onboardingProgress = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? displayName = freezed,Object? username = freezed,Object? avatarUrl = freezed,Object? bio = freezed,Object? dateOfBirth = freezed,Object? birthdaySkipped = freezed,Object? dobChoice = freezed,Object? onboardingProgress = freezed,}) {
   return _then(_self.copyWith(
 displayName: freezed == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String?,username: freezed == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
@@ -417,7 +417,8 @@ as String?,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // igno
 as String?,bio: freezed == bio ? _self.bio : bio // ignore: cast_nullable_to_non_nullable
 as String?,dateOfBirth: freezed == dateOfBirth ? _self.dateOfBirth : dateOfBirth // ignore: cast_nullable_to_non_nullable
 as String?,birthdaySkipped: freezed == birthdaySkipped ? _self.birthdaySkipped : birthdaySkipped // ignore: cast_nullable_to_non_nullable
-as bool?,onboardingProgress: freezed == onboardingProgress ? _self.onboardingProgress : onboardingProgress // ignore: cast_nullable_to_non_nullable
+as bool?,dobChoice: freezed == dobChoice ? _self.dobChoice : dobChoice // ignore: cast_nullable_to_non_nullable
+as String?,onboardingProgress: freezed == onboardingProgress ? _self.onboardingProgress : onboardingProgress // ignore: cast_nullable_to_non_nullable
 as OnboardingProgress?,
   ));
 }
@@ -503,10 +504,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? displayName,  String? username,  String? avatarUrl,  String? bio,  String? dateOfBirth,  bool? birthdaySkipped,  OnboardingProgress? onboardingProgress)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? displayName,  String? username,  String? avatarUrl,  String? bio,  String? dateOfBirth,  bool? birthdaySkipped,  String? dobChoice,  OnboardingProgress? onboardingProgress)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PatchMeDto() when $default != null:
-return $default(_that.displayName,_that.username,_that.avatarUrl,_that.bio,_that.dateOfBirth,_that.birthdaySkipped,_that.onboardingProgress);case _:
+return $default(_that.displayName,_that.username,_that.avatarUrl,_that.bio,_that.dateOfBirth,_that.birthdaySkipped,_that.dobChoice,_that.onboardingProgress);case _:
   return orElse();
 
 }
@@ -524,10 +525,10 @@ return $default(_that.displayName,_that.username,_that.avatarUrl,_that.bio,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? displayName,  String? username,  String? avatarUrl,  String? bio,  String? dateOfBirth,  bool? birthdaySkipped,  OnboardingProgress? onboardingProgress)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? displayName,  String? username,  String? avatarUrl,  String? bio,  String? dateOfBirth,  bool? birthdaySkipped,  String? dobChoice,  OnboardingProgress? onboardingProgress)  $default,) {final _that = this;
 switch (_that) {
 case _PatchMeDto():
-return $default(_that.displayName,_that.username,_that.avatarUrl,_that.bio,_that.dateOfBirth,_that.birthdaySkipped,_that.onboardingProgress);case _:
+return $default(_that.displayName,_that.username,_that.avatarUrl,_that.bio,_that.dateOfBirth,_that.birthdaySkipped,_that.dobChoice,_that.onboardingProgress);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -544,10 +545,10 @@ return $default(_that.displayName,_that.username,_that.avatarUrl,_that.bio,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? displayName,  String? username,  String? avatarUrl,  String? bio,  String? dateOfBirth,  bool? birthdaySkipped,  OnboardingProgress? onboardingProgress)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? displayName,  String? username,  String? avatarUrl,  String? bio,  String? dateOfBirth,  bool? birthdaySkipped,  String? dobChoice,  OnboardingProgress? onboardingProgress)?  $default,) {final _that = this;
 switch (_that) {
 case _PatchMeDto() when $default != null:
-return $default(_that.displayName,_that.username,_that.avatarUrl,_that.bio,_that.dateOfBirth,_that.birthdaySkipped,_that.onboardingProgress);case _:
+return $default(_that.displayName,_that.username,_that.avatarUrl,_that.bio,_that.dateOfBirth,_that.birthdaySkipped,_that.dobChoice,_that.onboardingProgress);case _:
   return null;
 
 }
@@ -559,7 +560,7 @@ return $default(_that.displayName,_that.username,_that.avatarUrl,_that.bio,_that
 @JsonSerializable()
 
 class _PatchMeDto implements PatchMeDto {
-  const _PatchMeDto({this.displayName, this.username, this.avatarUrl, this.bio, this.dateOfBirth, this.birthdaySkipped, this.onboardingProgress});
+  const _PatchMeDto({this.displayName, this.username, this.avatarUrl, this.bio, this.dateOfBirth, this.birthdaySkipped, this.dobChoice, this.onboardingProgress});
   factory _PatchMeDto.fromJson(Map<String, dynamic> json) => _$PatchMeDtoFromJson(json);
 
 @override final  String? displayName;
@@ -568,6 +569,7 @@ class _PatchMeDto implements PatchMeDto {
 @override final  String? bio;
 @override final  String? dateOfBirth;
 @override final  bool? birthdaySkipped;
+@override final  String? dobChoice;
 @override final  OnboardingProgress? onboardingProgress;
 
 /// Create a copy of PatchMeDto
@@ -583,16 +585,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PatchMeDto&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.username, username) || other.username == username)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.bio, bio) || other.bio == bio)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.birthdaySkipped, birthdaySkipped) || other.birthdaySkipped == birthdaySkipped)&&(identical(other.onboardingProgress, onboardingProgress) || other.onboardingProgress == onboardingProgress));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PatchMeDto&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.username, username) || other.username == username)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.bio, bio) || other.bio == bio)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.birthdaySkipped, birthdaySkipped) || other.birthdaySkipped == birthdaySkipped)&&(identical(other.dobChoice, dobChoice) || other.dobChoice == dobChoice)&&(identical(other.onboardingProgress, onboardingProgress) || other.onboardingProgress == onboardingProgress));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,displayName,username,avatarUrl,bio,dateOfBirth,birthdaySkipped,onboardingProgress);
+int get hashCode => Object.hash(runtimeType,displayName,username,avatarUrl,bio,dateOfBirth,birthdaySkipped,dobChoice,onboardingProgress);
 
 @override
 String toString() {
-  return 'PatchMeDto(displayName: $displayName, username: $username, avatarUrl: $avatarUrl, bio: $bio, dateOfBirth: $dateOfBirth, birthdaySkipped: $birthdaySkipped, onboardingProgress: $onboardingProgress)';
+  return 'PatchMeDto(displayName: $displayName, username: $username, avatarUrl: $avatarUrl, bio: $bio, dateOfBirth: $dateOfBirth, birthdaySkipped: $birthdaySkipped, dobChoice: $dobChoice, onboardingProgress: $onboardingProgress)';
 }
 
 
@@ -603,7 +605,7 @@ abstract mixin class _$PatchMeDtoCopyWith<$Res> implements $PatchMeDtoCopyWith<$
   factory _$PatchMeDtoCopyWith(_PatchMeDto value, $Res Function(_PatchMeDto) _then) = __$PatchMeDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String? displayName, String? username, String? avatarUrl, String? bio, String? dateOfBirth, bool? birthdaySkipped, OnboardingProgress? onboardingProgress
+ String? displayName, String? username, String? avatarUrl, String? bio, String? dateOfBirth, bool? birthdaySkipped, String? dobChoice, OnboardingProgress? onboardingProgress
 });
 
 
@@ -620,7 +622,7 @@ class __$PatchMeDtoCopyWithImpl<$Res>
 
 /// Create a copy of PatchMeDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? displayName = freezed,Object? username = freezed,Object? avatarUrl = freezed,Object? bio = freezed,Object? dateOfBirth = freezed,Object? birthdaySkipped = freezed,Object? onboardingProgress = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? displayName = freezed,Object? username = freezed,Object? avatarUrl = freezed,Object? bio = freezed,Object? dateOfBirth = freezed,Object? birthdaySkipped = freezed,Object? dobChoice = freezed,Object? onboardingProgress = freezed,}) {
   return _then(_PatchMeDto(
 displayName: freezed == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String?,username: freezed == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
@@ -628,7 +630,8 @@ as String?,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // igno
 as String?,bio: freezed == bio ? _self.bio : bio // ignore: cast_nullable_to_non_nullable
 as String?,dateOfBirth: freezed == dateOfBirth ? _self.dateOfBirth : dateOfBirth // ignore: cast_nullable_to_non_nullable
 as String?,birthdaySkipped: freezed == birthdaySkipped ? _self.birthdaySkipped : birthdaySkipped // ignore: cast_nullable_to_non_nullable
-as bool?,onboardingProgress: freezed == onboardingProgress ? _self.onboardingProgress : onboardingProgress // ignore: cast_nullable_to_non_nullable
+as bool?,dobChoice: freezed == dobChoice ? _self.dobChoice : dobChoice // ignore: cast_nullable_to_non_nullable
+as String?,onboardingProgress: freezed == onboardingProgress ? _self.onboardingProgress : onboardingProgress // ignore: cast_nullable_to_non_nullable
 as OnboardingProgress?,
   ));
 }

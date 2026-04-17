@@ -46,6 +46,10 @@ abstract class User with _$User {
 
 /// Partial update of the authenticated user's own profile (PATCH /users/me).
 /// Mirrors `PatchMeDto` in `apps/api/src/modules/users/dto/patch-me.dto.ts`.
+///
+/// `dobChoice` is sent as the enum's lowercase-snake string; the backend
+/// applies the lockstep ageVerificationStatus + birthdaySkipped transitions
+/// (see `UsersService.applyDobChoice`).
 @freezed
 abstract class PatchMeDto with _$PatchMeDto {
   const factory PatchMeDto({
@@ -55,6 +59,7 @@ abstract class PatchMeDto with _$PatchMeDto {
     String? bio,
     String? dateOfBirth,
     bool? birthdaySkipped,
+    String? dobChoice,
     OnboardingProgress? onboardingProgress,
   }) = _PatchMeDto;
 
