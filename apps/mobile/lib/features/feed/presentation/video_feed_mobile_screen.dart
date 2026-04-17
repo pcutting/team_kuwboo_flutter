@@ -20,7 +20,7 @@ class VideoFeedMobileScreen extends ConsumerWidget {
     final notifier = ref.read(videoFeedProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('For You')),
+      backgroundColor: Colors.transparent,
       body: FeedAsyncBuilder<FeedListState>(
         snapshot: AsyncSnapshotLike(
           value: async.valueOrNull,
@@ -110,16 +110,26 @@ class _VideoCard extends StatelessWidget {
                 ),
                 if (item.caption != null) ...[
                   const SizedBox(height: 8),
-                  Text(item.caption!, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text(
+                    item.caption!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     _Stat(icon: Icons.favorite_border, value: item.likeCount),
                     const SizedBox(width: 12),
-                    _Stat(icon: Icons.chat_bubble_outline, value: item.commentCount),
+                    _Stat(
+                      icon: Icons.chat_bubble_outline,
+                      value: item.commentCount,
+                    ),
                     const SizedBox(width: 12),
-                    _Stat(icon: Icons.visibility_outlined, value: item.viewCount),
+                    _Stat(
+                      icon: Icons.visibility_outlined,
+                      value: item.viewCount,
+                    ),
                   ],
                 ),
               ],
@@ -154,7 +164,10 @@ class _Stat extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: Colors.black54),
         const SizedBox(width: 4),
-        Text('$value', style: const TextStyle(color: Colors.black54, fontSize: 12)),
+        Text(
+          '$value',
+          style: const TextStyle(color: Colors.black54, fontSize: 12),
+        ),
       ],
     );
   }

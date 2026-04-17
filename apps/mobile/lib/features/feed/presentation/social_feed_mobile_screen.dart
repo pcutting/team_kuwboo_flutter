@@ -15,7 +15,7 @@ class SocialFeedMobileScreen extends ConsumerWidget {
     final notifier = ref.read(socialFeedProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Social')),
+      backgroundColor: Colors.transparent,
       body: FeedAsyncBuilder<FeedListState>(
         snapshot: AsyncSnapshotLike(
           value: async.valueOrNull,
@@ -92,31 +92,40 @@ class _PostCard extends StatelessWidget {
                       Text(
                         _relativeTime(item.createdAt),
                         style: const TextStyle(
-                            fontSize: 11, color: Colors.black54),
+                          fontSize: 11,
+                          color: Colors.black54,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            if (body != null) ...[
-              const SizedBox(height: 12),
-              Text(body),
-            ],
+            if (body != null) ...[const SizedBox(height: 12), Text(body)],
             const SizedBox(height: 10),
             Row(
               children: [
-                const Icon(Icons.favorite_border,
-                    size: 16, color: Colors.black54),
+                const Icon(
+                  Icons.favorite_border,
+                  size: 16,
+                  color: Colors.black54,
+                ),
                 const SizedBox(width: 4),
-                Text('${item.likeCount}',
-                    style: const TextStyle(color: Colors.black54)),
+                Text(
+                  '${item.likeCount}',
+                  style: const TextStyle(color: Colors.black54),
+                ),
                 const SizedBox(width: 14),
-                const Icon(Icons.chat_bubble_outline,
-                    size: 16, color: Colors.black54),
+                const Icon(
+                  Icons.chat_bubble_outline,
+                  size: 16,
+                  color: Colors.black54,
+                ),
                 const SizedBox(width: 4),
-                Text('${item.commentCount}',
-                    style: const TextStyle(color: Colors.black54)),
+                Text(
+                  '${item.commentCount}',
+                  style: const TextStyle(color: Colors.black54),
+                ),
               ],
             ),
           ],
