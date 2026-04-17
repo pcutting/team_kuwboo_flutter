@@ -72,11 +72,35 @@ except ImportError as exc:  # pragma: no cover
 
 AWS_PROFILE_DEFAULT = "neil-douglas-kuwboo"
 AWS_REGION = "eu-west-2"
-EC2_INSTANCE_ID = "i-0766e373b3147a2aa"
-RDS_HOST = "kuwboo-greenfield-db.cepsv4bfmn1r.eu-west-2.rds.amazonaws.com"
+
+
+# Per-environment targeting. Today there is only one deployed environment
+# (greenfield), which serves both dev iteration and the TestFlight builds
+# the client is testing — so `dev` and `prod` both point here. When a
+# genuine production stack exists, populate the `prod` block and remove
+# the duplicate IDs; the `--env prod --yes-i-mean-production` double-opt-in
+# + the NODE_ENV pre-flight will already gate destructive runs at that
+# point without further code changes.
+ENVIRONMENTS: dict[str, dict[str, str]] = {
+    "dev": {
+        "ec2_instance_id": "i-0766e373b3147a2aa",
+        "rds_host": "kuwboo-greenfield-db.cepsv4bfmn1r.eu-west-2.rds.amazonaws.com",
+        "api_base_url": "http://35.177.230.139",
+        "expected_node_env": "development",
+    },
+    "prod": {
+        "ec2_instance_id": "i-0766e373b3147a2aa",
+        "rds_host": "kuwboo-greenfield-db.cepsv4bfmn1r.eu-west-2.rds.amazonaws.com",
+        "api_base_url": "http://35.177.230.139",
+        "expected_node_env": "production",
+    },
+}
 RDS_USER = "kuwboo_admin"
 RDS_DB = "kuwboo"
-API_BASE_URL = "http://35.177.230.139"
+
+# Commands that delete data. These require `--yes` confirmation, and when
+# `--env prod` they additionally require `--yes-i-mean-production`.
+DESTRUCTIVE_COMMANDS = frozenset({"delete", "reset", "create"})  # create w/ --force deletes first
 
 # Reserved fictional-use US number (NANPA 555-01xx block). Passes
 # libphonenumber validation used by the backend's class-validator
@@ -178,9 +202,10 @@ SEED_PRODUCTS: list[SeedProduct] = [
 class RemoteSQL:
     """Executes SQL on the EC2 host by dispatching psql via SSM."""
 
-    def __init__(self, profile: str, region: str):
+    def __init__(self, profile: str, region: str, env: dict[str, str]):
         session = boto3.Session(profile_name=profile, region_name=region)
         self.ssm = session.client("ssm")
+        self.env = env
 
     def _send(self, shell: str, *, poll_seconds: int = 120) -> str:
         """Run a shell snippet on the remote host and return stdout.
@@ -188,7 +213,7 @@ class RemoteSQL:
         Raises RuntimeError on non-zero exit or error output.
         """
         resp = self.ssm.send_command(
-            InstanceIds=[EC2_INSTANCE_ID],
+            InstanceIds=[self.env["ec2_instance_id"]],
             DocumentName="AWS-RunShellScript",
             Parameters={"commands": [shell]},
             TimeoutSeconds=120,
@@ -198,7 +223,7 @@ class RemoteSQL:
         while True:
             try:
                 inv = self.ssm.get_command_invocation(
-                    CommandId=command_id, InstanceId=EC2_INSTANCE_ID,
+                    CommandId=command_id, InstanceId=self.env["ec2_instance_id"],
                 )
             except self.ssm.exceptions.InvocationDoesNotExist:
                 if time.time() > deadline:
@@ -220,6 +245,21 @@ class RemoteSQL:
             )
         return inv.get("StandardOutputContent", "")
 
+    def probe_node_env(self) -> str:
+        """Ask PM2 what NODE_ENV the API is running with.
+
+        Returns a lowercase string ('development', 'production', '') —
+        empty when PM2 doesn't surface it. Used by the pre-flight guard
+        so we can refuse to mutate a production target unless explicitly
+        asked.
+        """
+        out = self._send(
+            'sudo -u ubuntu bash -c "pm2 env 0 2>&1 | '
+            'grep -E \\"^NODE_ENV:\\" | head -1 | awk -F: \'{print $2}\' | tr -d \' \'"',
+            poll_seconds=30,
+        )
+        return out.strip().lower()
+
     def run_sql(self, sql: str, *, tuples_only: bool = False) -> str:
         """Run a block of SQL and return psql's stdout."""
         b64 = base64.b64encode(sql.encode("utf-8")).decode("ascii")
@@ -236,7 +276,7 @@ class RemoteSQL:
             "| python3 -c 'import sys,json; print(json.load(sys.stdin)[\"password\"])'); "
             'export PGPASSWORD="$PW"; '
             f'echo {b64} | base64 -d > /tmp/_ts.sql && '
-            f'psql -h {RDS_HOST} -U {RDS_USER} -d {RDS_DB} {flags} -f /tmp/_ts.sql'
+            f'psql -h {self.env["rds_host"]} -U {RDS_USER} -d {RDS_DB} {flags} -f /tmp/_ts.sql'
         )
         return self._send(shell)
 
@@ -639,10 +679,11 @@ def cmd_reset(sql: RemoteSQL) -> int:
     return cmd_create(sql, force=False)
 
 
-def cmd_login_token() -> int:
+def cmd_login_token(env: dict[str, str]) -> int:
+    api_base = env["api_base_url"]
     body = json.dumps({"phone": TEST_PHONE}).encode("utf-8")
     req = urllib.request.Request(
-        url=f"{API_BASE_URL}/auth/dev-login",
+        url=f"{api_base}/auth/dev-login",
         data=body,
         method="POST",
         headers={"Content-Type": "application/json"},
@@ -663,7 +704,7 @@ def cmd_login_token() -> int:
                   file=sys.stderr)
         return 1
     except urllib.error.URLError as e:
-        print(f"Error: could not reach {API_BASE_URL}: {e}", file=sys.stderr)
+        print(f"Error: could not reach {api_base}: {e}", file=sys.stderr)
         return 1
 
     data = payload.get("data", payload)
@@ -676,7 +717,7 @@ def cmd_login_token() -> int:
     print(f"refreshToken: {refresh}")
     print()
     print("Verify with:")
-    print(f"  curl {API_BASE_URL}/me -H 'Authorization: Bearer {access}'")
+    print(f"  curl {api_base}/me -H 'Authorization: Bearer {access}'")
     return 0
 
 
@@ -712,6 +753,31 @@ def main(argv: list[str] | None = None) -> int:
         default=AWS_PROFILE_DEFAULT,
         help=f"AWS profile (default: {AWS_PROFILE_DEFAULT})",
     )
+    parser.add_argument(
+        "--env",
+        choices=sorted(ENVIRONMENTS.keys()),
+        default="dev",
+        help="Target environment (default: dev). `prod` requires "
+             "--yes-i-mean-production for any mutation.",
+    )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Skip the interactive confirmation for destructive commands "
+             "(delete / reset / create --force).",
+    )
+    parser.add_argument(
+        "--yes-i-mean-production",
+        action="store_true",
+        help="Required alongside --yes when --env=prod is used with a "
+             "destructive command.",
+    )
+    parser.add_argument(
+        "--skip-env-check",
+        action="store_true",
+        help="Skip the NODE_ENV pre-flight probe (useful when the API is "
+             "down but you still need to reset the DB). Not recommended.",
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_create = sub.add_parser("create", help="Create the test user + 10 products")
@@ -729,12 +795,59 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     args = parser.parse_args(argv)
+    env = ENVIRONMENTS[args.env]
+
+    is_destructive = args.command in DESTRUCTIVE_COMMANDS and not (
+        args.command == "create" and not getattr(args, "force", False)
+    )
+
+    # Opt-in gate for destructive commands. --yes is always required;
+    # prod additionally requires --yes-i-mean-production.
+    if is_destructive:
+        if not args.yes:
+            print(
+                f"Refusing to run `{args.command}` without --yes. "
+                f"This will delete the test user and seeded products on env={args.env}.",
+                file=sys.stderr,
+            )
+            return 2
+        if args.env == "prod" and not args.yes_i_mean_production:
+            print(
+                "Refusing to run a destructive command against --env=prod "
+                "without --yes-i-mean-production. Double-opt-in required.",
+                file=sys.stderr,
+            )
+            return 2
 
     # login-token does not need DB access.
     if args.command == "login-token":
-        return cmd_login_token()
+        return cmd_login_token(env)
 
-    sql = RemoteSQL(profile=args.aws_profile, region=AWS_REGION)
+    sql = RemoteSQL(profile=args.aws_profile, region=AWS_REGION, env=env)
+
+    # NODE_ENV pre-flight. Refuse if what the API actually reports doesn't
+    # match what the caller claimed with --env. Only runs for mutating
+    # commands (info is read-only, login-token already bypassed).
+    if is_destructive and not args.skip_env_check:
+        try:
+            actual = sql.probe_node_env()
+        except RuntimeError as e:
+            print(
+                f"Warning: NODE_ENV probe failed ({e}). "
+                "Re-run with --skip-env-check if you know what you're doing.",
+                file=sys.stderr,
+            )
+            return 2
+        expected = env["expected_node_env"]
+        if actual and actual != expected:
+            print(
+                f"Refusing to mutate: --env={args.env} expects "
+                f"NODE_ENV={expected}, but the target API reports "
+                f"NODE_ENV={actual}. Pick the right --env or use "
+                "--skip-env-check to override.",
+                file=sys.stderr,
+            )
+            return 2
 
     if args.command == "info":
         return cmd_info(sql)
