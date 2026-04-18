@@ -22,6 +22,11 @@ class _VideoCommentsSheetState extends ConsumerState<VideoCommentsSheet> {
   final TextEditingController _inputController = TextEditingController();
   bool _sending = false;
 
+  /// Locally-added comments appended after successful POSTs. Kept in state
+  /// so the user sees their comment immediately even when the backend (or
+  /// the web prototype's mock) doesn't yet persist it across refetches.
+  final List<Comment> _localComments = <Comment>[];
+
   @override
   void dispose() {
     _inputController.dispose();
@@ -42,12 +47,15 @@ class _VideoCommentsSheetState extends ConsumerState<VideoCommentsSheet> {
     if (text.isEmpty || _sending) return;
     setState(() => _sending = true);
     try {
-      await ref
+      final created = await ref
           .read(commentsApiProvider)
           .createComment(contentId, CreateCommentDto(text: text));
       _inputController.clear();
-      // Refresh comments list.
-      ref.invalidate(videoCommentsProvider(contentId));
+      // Append to local state so the comment is visible immediately,
+      // independent of whether the backend's list endpoint has caught up.
+      if (mounted) {
+        setState(() => _localComments.add(created));
+      }
       if (mounted) {
         ProtoToast.show(
             context, ProtoTheme.of(context).icons.checkCircle, 'Comment posted!');
@@ -92,7 +100,7 @@ class _VideoCommentsSheetState extends ConsumerState<VideoCommentsSheet> {
     final contentId = _resolveContentId(context);
 
     if (contentId == null) {
-      return Container(
+      return Material(
         color: theme.surface,
         child: Center(
           child: Padding(
@@ -107,8 +115,16 @@ class _VideoCommentsSheetState extends ConsumerState<VideoCommentsSheet> {
     }
 
     final commentsAsync = ref.watch(videoCommentsProvider(contentId));
+    final fetchedComments = commentsAsync.asData?.value ?? const <Comment>[];
+    // Merge server-fetched comments with locally-added ones so a newly
+    // posted comment shows immediately even if the backend list call
+    // hasn't caught up (the web prototype's mock is intentionally
+    // non-persistent). Local comments are appended at the end.
+    final comments = commentsAsync.asData == null
+        ? const <Comment>[]
+        : <Comment>[...fetchedComments, ..._localComments];
 
-    return Container(
+    return Material(
       color: theme.surface,
       child: Column(
         children: [
@@ -127,7 +143,7 @@ class _VideoCommentsSheetState extends ConsumerState<VideoCommentsSheet> {
                 Text(
                   commentsAsync.asData == null
                       ? 'Comments'
-                      : '${commentsAsync.asData!.value.length} Comments',
+                      : '${comments.length} Comments',
                   style: theme.title,
                 ),
                 const Spacer(),
@@ -155,7 +171,7 @@ class _VideoCommentsSheetState extends ConsumerState<VideoCommentsSheet> {
                   ),
                 ),
               ),
-              data: (comments) {
+              data: (_) {
                 if (comments.isEmpty) {
                   return Center(
                     child: Text('No comments yet — be the first.',

@@ -184,7 +184,29 @@ class MockApiInterceptor extends Interceptor {
         return _envelope(<String, dynamic>{'ok': true});
       }
       if (RegExp(r'^/content/[^/]+/comments$').hasMatch(path)) {
-        return _envelope(_commentsList().first);
+        // Echo the submitted text back so the caller sees the comment it
+        // just posted appear in the list, rather than a canned reply.
+        final contentId = RegExp(r'^/content/([^/]+)/comments$')
+                .firstMatch(path)
+                ?.group(1) ??
+            'demo-content-1';
+        final raw = options.data;
+        String text = '';
+        String? parentCommentId;
+        if (raw is Map) {
+          text = (raw['text'] as String?)?.trim() ?? '';
+          parentCommentId = raw['parentCommentId'] as String?;
+        }
+        return _envelope(<String, dynamic>{
+          'id': 'demo-comment-${DateTime.now().microsecondsSinceEpoch}',
+          'contentId': contentId,
+          'authorId': 'demo-user-me',
+          'text': text,
+          'likeCount': 0,
+          'replyCount': 0,
+          if (parentCommentId != null) 'parentCommentId': parentCommentId,
+          'createdAt': DateTime.now().toIso8601String(),
+        });
       }
       if (RegExp(r'^/comments/[^/]+/like$').hasMatch(path)) {
         return _envelope(<String, dynamic>{'liked': true});
@@ -287,6 +309,11 @@ class MockApiInterceptor extends Interceptor {
       'social' => 'POST',
       _ => 'VIDEO',
     };
+    // Every piece of canned content resolves its comment list to the same
+    // fixed-length demo list (see `_commentsList()`), so seed the feed-
+    // level `commentCount` with the same value rather than a formula that
+    // drifts out of sync with the sheet (the "4 vs 5" off-by-one).
+    final commentCount = _commentsList().length;
     final items = List<Map<String, dynamic>>.generate(8, (i) {
       final isPost = type == 'POST';
       final isProduct = type == 'PRODUCT';
@@ -302,7 +329,7 @@ class MockApiInterceptor extends Interceptor {
         'tier': 'FREE',
         'status': 'ACTIVE',
         'likeCount': 50 + i * 17,
-        'commentCount': 4 + i * 3,
+        'commentCount': commentCount,
         'viewCount': 1200 + i * 87,
         'shareCount': 6 + i,
         'saveCount': 12 + i,
