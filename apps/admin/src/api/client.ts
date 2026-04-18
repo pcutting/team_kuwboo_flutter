@@ -55,6 +55,43 @@ export function verifyOtp(phone: string, code: string) {
   });
 }
 
+interface AuthResponsePayload {
+  data: {
+    accessToken: string;
+    refreshToken: string;
+    user: { id: string; name: string; role: string; avatarUrl?: string };
+    isNewUser: boolean;
+  };
+}
+
+export function emailLogin(email: string, password: string) {
+  return request<AuthResponsePayload>('/auth/email/login', {
+    method: 'POST',
+    body: { email, password },
+  });
+}
+
+export function emailForgotPassword(email: string) {
+  return request<{ data: { devCode?: string } }>(
+    '/auth/email/password/forgot',
+    {
+      method: 'POST',
+      body: { email },
+    },
+  );
+}
+
+export function emailResetPassword(
+  email: string,
+  code: string,
+  newPassword: string,
+) {
+  return request<AuthResponsePayload>('/auth/email/password/reset', {
+    method: 'POST',
+    body: { email, code, newPassword },
+  });
+}
+
 export function refreshTokens(accessToken: string, refreshToken: string) {
   return request<{ data: { accessToken: string; refreshToken: string } }>(
     '/auth/refresh',

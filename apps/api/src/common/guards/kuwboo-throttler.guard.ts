@@ -22,7 +22,9 @@ export class KuwbooThrottlerGuard extends ThrottlerGuard {
   }
 
   private reservedEmails(): Set<string> {
-    const raw = process.env.RESERVED_TEST_EMAILS ?? 'cuttingphilip+test@gmail.com';
+    const raw =
+      process.env.RESERVED_TEST_EMAILS ??
+      'cuttingphilip+test@gmail.com,cuttingphilip@gmail.com,neildouglas33@hotmail.co.uk';
     return new Set(
       raw
         .split(',')

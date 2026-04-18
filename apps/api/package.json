@@ -8,6 +8,7 @@
     "seed:demo": "node -r dotenv/config dist/scripts/seed-demo-data.js",
     "seed:demo:force": "node -r dotenv/config dist/scripts/seed-demo-data.js --force",
     "seed:test-user": "node -r dotenv/config dist/scripts/seed-test-user.js",
+    "seed:admin": "node -r dotenv/config dist/scripts/seed-admin.js",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
