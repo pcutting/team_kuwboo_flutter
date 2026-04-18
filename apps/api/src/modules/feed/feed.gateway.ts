@@ -10,6 +10,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { WsAuthGuard } from '../../common/guards/ws-auth.guard';
+import { corsOrigins } from '../../config/cors-origins';
 
 interface FeedSubscription {
   tab: string;
@@ -30,7 +31,7 @@ interface EngagementUpdatePayload {
 const VALID_FEED_TABS = ['video', 'social', 'marketplace', 'dating'] as const;
 type FeedTab = (typeof VALID_FEED_TABS)[number];
 
-@WebSocketGateway({ namespace: '/feed', cors: true })
+@WebSocketGateway({ namespace: '/feed', cors: { origin: corsOrigins(), credentials: true } })
 @UseGuards(WsAuthGuard)
 export class FeedGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()

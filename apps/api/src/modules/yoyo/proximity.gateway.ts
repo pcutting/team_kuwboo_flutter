@@ -10,6 +10,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { WsAuthGuard } from '../../common/guards/ws-auth.guard';
+import { corsOrigins } from '../../config/cors-origins';
 
 interface LocationUpdatePayload {
   latitude: number;
@@ -29,7 +30,7 @@ interface WaveReceivedPayload {
   message?: string;
 }
 
-@WebSocketGateway({ namespace: '/proximity', cors: true })
+@WebSocketGateway({ namespace: '/proximity', cors: { origin: corsOrigins(), credentials: true } })
 @UseGuards(WsAuthGuard)
 export class ProximityGateway
   implements OnGatewayConnection, OnGatewayDisconnect

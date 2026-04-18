@@ -9,6 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { WsAuthGuard } from '../../common/guards/ws-auth.guard';
+import { corsOrigins } from '../../config/cors-origins';
 
 interface NotificationPayload {
   id: string;
@@ -22,7 +23,7 @@ interface NotificationReadPayload {
   notificationId: string;
 }
 
-@WebSocketGateway({ namespace: '/notifications', cors: true })
+@WebSocketGateway({ namespace: '/notifications', cors: { origin: corsOrigins(), credentials: true } })
 @UseGuards(WsAuthGuard)
 export class NotificationGateway implements OnGatewayConnection {
   @WebSocketServer()

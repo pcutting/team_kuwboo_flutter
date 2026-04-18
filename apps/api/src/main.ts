@@ -5,6 +5,7 @@ import { Logger } from 'nestjs-pino';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { loadAwsSecrets } from './bootstrap/aws-secrets';
+import { corsOrigins } from './config/cors-origins';
 
 async function bootstrap() {
   // Fetch AWS Secrets Manager values into process.env before NestJS reads
@@ -16,7 +17,7 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
 
   app.use(helmet());
-  app.enableCors();
+  app.enableCors({ origin: corsOrigins(), credentials: true });
 
   app.useGlobalPipes(
     new ValidationPipe({
