@@ -117,14 +117,26 @@ export async function POST(req: NextRequest) {
 
     const threadTs = ev.thread_ts;
 
-    // Root @mention with no thread — friendly help instead of silent ignore
-    // so the user knows the bot is alive.
+    // Parse the mention text (strip the leading `<@BOT_USER_ID>` and
+    // lowercase the remainder so "status", "STATUS", "  status  " all match).
+    const command = ev.text
+      .replace(/^<@[^>]+>\s*/, '')
+      .trim()
+      .toLowerCase();
+
+    // Root @mention with no thread — handle simple commands, or show help.
     if (!threadTs) {
-      await postSlack(
-        ev.channel,
-        ev.ts,
-        "Hi! I act on *replies inside a thread* that my local Claude Code session has tagged with a session marker. Mention me inside one of those threads to send a message to Phil's running agent.",
-      );
+      if (command === 'status' || command.startsWith('status ')) {
+        await postSlack(ev.channel, ev.ts, await buildStatusReport());
+      } else if (command === 'help' || command === '') {
+        await postSlack(ev.channel, ev.ts, helpText());
+      } else {
+        await postSlack(
+          ev.channel,
+          ev.ts,
+          `I don't know the command \`${command.slice(0, 80)}\`. Try \`@Kuwboo Claude status\` or \`@Kuwboo Claude help\`.`,
+        );
+      }
       return new NextResponse('ok', { status: 200 });
     }
 
@@ -161,6 +173,51 @@ export async function POST(req: NextRequest) {
   }
 
   return new NextResponse('ok', { status: 200 });
+}
+
+function helpText(): string {
+  return [
+    '*Kuwboo Claude bridge* — I relay Slack replies into a running Claude Agent SDK session on EC2.',
+    '',
+    '*Commands* (root mention, not in a thread):',
+    '• `@Kuwboo Claude status` — show runner health + recent activity',
+    '• `@Kuwboo Claude help` — this message',
+    '',
+    '*Normal flow:* Phil\'s local Claude Code session posts a thread root tagged with a `<!-- kuwboo-session: ... -->` marker. Reply in that thread and the runner will pick it up, run the agent, and open a PR.',
+  ].join('\n');
+}
+
+async function buildStatusReport(): Promise<string> {
+  const lines: string[] = ['*Kuwboo Claude bridge status*', ''];
+
+  // 1. Runner health via the Cloudflare Tunnel
+  let runnerOk = false;
+  let runnerText = '';
+  try {
+    const url = new URL(RUNNER_URL);
+    const healthUrl = `${url.origin}/healthz`;
+    const res = await fetch(healthUrl, {
+      signal: AbortSignal.timeout(4000),
+    });
+    runnerText = await res.text();
+    runnerOk = res.ok;
+  } catch (e) {
+    runnerText = String((e as Error)?.message ?? e).slice(0, 200);
+  }
+  lines.push(
+    runnerOk
+      ? `• *Runner*: :white_check_mark: reachable — \`${runnerText.slice(0, 120)}\``
+      : `• *Runner*: :x: unreachable — \`${runnerText.slice(0, 200)}\``,
+  );
+
+  // 2. Vercel deployment info
+  lines.push(
+    `• *Webhook*: \`${process.env.VERCEL_URL ?? 'local'}\``,
+    `• *Git SHA*: \`${(process.env.VERCEL_GIT_COMMIT_SHA ?? 'unknown').slice(0, 7)}\``,
+    `• *Runner URL*: \`${RUNNER_URL.replace(/https:\/\/([^\/]+).*/, '$1')}\``,
+  );
+
+  return lines.join('\n');
 }
 
 async function postSlack(channel: string, thread_ts: string, text: string) {
