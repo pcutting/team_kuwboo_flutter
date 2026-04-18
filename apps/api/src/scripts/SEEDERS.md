@@ -69,6 +69,28 @@ Gate is `email = 'cuttingphilip+test@gmail.com'`. If the user exists, the script
 - `seed-demo-data.ts` is the **content-creator seed** — it gives the database a population of users + content for unauthenticated browsing and rendering.
 - `seed-test-user.ts` is the **subject seed** — it gives one logged-in user a populated graph (followers, threads, likes) so signed-in screens have something to render. Splitting keeps each script's idempotency gate single-purpose and lets the test user be re-seeded independently of the content seed.
 
+## Admin users (`seed-admin.ts`)
+
+Creates (or upserts) two `SUPER_ADMIN` users with email + bcrypt password credentials so the admin dashboard at `admin.kuwboo.com` can be reached via email+password login. Passwords are never hard-coded — they are read from env vars at seed time.
+
+```bash
+cd apps/api
+npm run build
+ADMIN_PHIL_PASSWORD='...' ADMIN_NEIL_PASSWORD='...' \
+  npm run seed:admin
+```
+
+| Env var | Purpose | Default |
+|---|---|---|
+| `ADMIN_PHIL_EMAIL` | Phil's admin email | `cuttingphilip@gmail.com` |
+| `ADMIN_PHIL_PASSWORD` | Phil's password (required) | — |
+| `ADMIN_NEIL_EMAIL` | Neil's admin email | `neildouglas33@hotmail.co.uk` |
+| `ADMIN_NEIL_PASSWORD` | Neil's password (required) | — |
+
+### Idempotency
+
+If a user with the target email already exists, the script rotates `passwordHash`, elevates `role` to `SUPER_ADMIN` (if lower), and ensures an `EMAIL` credential row. No other user fields are touched. Re-running with a new password is the intended way to rotate.
+
 ## Extending in Phase 7
 
 Phase 7 agents wiring each module's screens to live APIs should add their domain seed data here or in a sibling file. Preferred pattern:
