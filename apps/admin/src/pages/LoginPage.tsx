@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 import { sendOtp, verifyOtp, emailLogin } from '../api/client';
+import { PasswordInput } from '../components/PasswordInput';
 
 type Method = 'email' | 'phone';
 type PhoneStep = 'phone' | 'otp';
@@ -192,13 +193,11 @@ export function LoginPage() {
                       Forgot password?
                     </Link>
                   </div>
-                  <input
+                  <PasswordInput
                     id="password"
-                    type="password"
                     autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow"
                     required
                     minLength={8}
                   />

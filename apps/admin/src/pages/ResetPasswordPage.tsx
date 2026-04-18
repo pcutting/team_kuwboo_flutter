@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 import { emailResetPassword } from '../api/client';
+import { PasswordInput } from '../components/PasswordInput';
 
 export function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -126,13 +127,11 @@ export function ResetPasswordPage() {
                 >
                   New Password
                 </label>
-                <input
+                <PasswordInput
                   id="newPassword"
-                  type="password"
                   autoComplete="new-password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow"
                   required
                   minLength={8}
                 />
@@ -144,13 +143,11 @@ export function ResetPasswordPage() {
                 >
                   Confirm Password
                 </label>
-                <input
+                <PasswordInput
                   id="confirmPassword"
-                  type="password"
                   autoComplete="new-password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow"
                   required
                   minLength={8}
                 />
