@@ -18,6 +18,7 @@ class ShopBrowseScreen extends ConsumerStatefulWidget {
 class _ShopBrowseScreenState extends ConsumerState<ShopBrowseScreen> {
   String _selectedCategory = 'All';
   final Set<String> _wishlistedIds = {};
+  final TextEditingController _searchController = TextEditingController();
 
   static const _categories = [
     'All',
@@ -27,6 +28,12 @@ class _ShopBrowseScreenState extends ConsumerState<ShopBrowseScreen> {
     'Sports',
     'Vintage',
   ];
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,34 +48,55 @@ class _ShopBrowseScreenState extends ConsumerState<ShopBrowseScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.all(12),
+          // Real TextField so the input is focusable, typeable, and reads
+          // as enabled in the accessibility tree. Submission shows a toast
+          // until server-side search lands.
           child: Semantics(
             identifier: ScreensIds.shopBrowseSearch,
             textField: true,
+            enabled: true,
             label: 'Search marketplace',
-            child: GestureDetector(
-              onTap: () => ProtoToast.show(
-                context,
-                theme.icons.search,
-                'Search keyboard would open',
-              ),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: theme.background,
-                  borderRadius: BorderRadius.circular(theme.radiusFull),
-                  border: Border.all(color: theme.text.withValues(alpha: 0.08)),
+            child: TextField(
+              controller: _searchController,
+              textInputAction: TextInputAction.search,
+              onSubmitted: (value) {
+                final query = value.trim();
+                if (query.isEmpty) return;
+                ProtoToast.show(
+                  context,
+                  theme.icons.search,
+                  'Searching for "$query"',
+                );
+              },
+              decoration: InputDecoration(
+                hintText: 'Search marketplace...',
+                hintStyle: theme.body.copyWith(color: theme.textTertiary),
+                prefixIcon: Icon(
+                  theme.icons.search,
+                  size: 20,
+                  color: theme.textTertiary,
                 ),
-                child: Row(
-                  children: [
-                    Icon(theme.icons.search,
-                        size: 20, color: theme.textTertiary),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Search marketplace...',
-                      style: theme.body.copyWith(color: theme.textTertiary),
-                    ),
-                  ],
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                filled: true,
+                fillColor: theme.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(theme.radiusFull),
+                  borderSide:
+                      BorderSide(color: theme.text.withValues(alpha: 0.08)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(theme.radiusFull),
+                  borderSide:
+                      BorderSide(color: theme.text.withValues(alpha: 0.08)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(theme.radiusFull),
+                  borderSide:
+                      BorderSide(color: theme.primary.withValues(alpha: 0.4)),
                 ),
               ),
             ),
