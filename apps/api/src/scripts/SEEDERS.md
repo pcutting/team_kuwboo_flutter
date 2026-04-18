@@ -33,6 +33,42 @@ npm run seed:demo:force
 
 The seed gate is `phone LIKE '+44791%'` — our entire sample-user phone range. Re-running `seed:demo` is a safe no-op. `seed:demo:force` deletes those users and everything that FK-cascades off them (videos, posts, products, waves), then reinserts.
 
+## Connected test user (`seed-test-user.ts`)
+
+A second seed script wires `cuttingphilip+test@gmail.com` into the demo graph so that — when this email is used at sign-in (it bypasses rate limiting via `KuwbooThrottlerGuard.reservedEmails`) — every feed has content visible to the logged-in user.
+
+```bash
+# Standalone (after seed:demo has populated the base content)
+cd apps/api
+npm run build
+npm run seed:test-user
+
+# Auto-run as the tail of seed:demo (default)
+npm run seed:demo
+
+# Suppress the test-user seed inside seed:demo
+node -r dotenv/config dist/scripts/seed-demo-data.js --no-test-user
+```
+
+| Domain | What it adds |
+|---|---|
+| User + credential | `Phil (Test)` / `phil_test`, EMAIL credential, `emailVerified=true` |
+| Consent | TERMS + PRIVACY granted (no consent-gate friction on authed endpoints) |
+| Connections | follows all 8 non-bot seeded humans; 3 follow back; 1 mutual FRIEND edge |
+| Comments | 6 by Phil on a mix of videos + posts; 6 replies back from seeded users |
+| Interactions | 10 LIKEs (videos + posts), 3 SAVEs, 1 VIEW per video (15 events) |
+| Threads + Messages | 3 threads — DM, BUY_SELL, YOYO — 5–6 messages each, mixed senders |
+| Waves | 1 outbound (PENDING), 1 inbound (ACCEPTED) |
+
+### Idempotency
+
+Gate is `email = 'cuttingphilip+test@gmail.com'`. If the user exists, the script logs and exits 0 — no upsert / merge. To re-run from scratch: delete the user manually (`DELETE FROM users WHERE email = '…+test@…'` cascades through credentials/connections/comments/interactions/messages/waves/consents).
+
+### Why a separate file
+
+- `seed-demo-data.ts` is the **content-creator seed** — it gives the database a population of users + content for unauthenticated browsing and rendering.
+- `seed-test-user.ts` is the **subject seed** — it gives one logged-in user a populated graph (followers, threads, likes) so signed-in screens have something to render. Splitting keeps each script's idempotency gate single-purpose and lets the test user be re-seeded independently of the content seed.
+
 ## Extending in Phase 7
 
 Phase 7 agents wiring each module's screens to live APIs should add their domain seed data here or in a sibling file. Preferred pattern:
