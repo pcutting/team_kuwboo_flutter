@@ -187,31 +187,58 @@ function helpText(): string {
   ].join('\n');
 }
 
+interface SmokeCheck {
+  name: string;
+  ok: boolean;
+  ms: number;
+  detail?: string;
+  error?: string;
+}
+
 async function buildStatusReport(): Promise<string> {
   const lines: string[] = ['*Kuwboo Claude bridge status*', ''];
 
-  // 1. Runner health via the Cloudflare Tunnel
-  let runnerOk = false;
-  let runnerText = '';
+  // Call the runner's /smoke endpoint — it exercises each external dep
+  // (Slack, GitHub, Anthropic, Secrets Manager, gh CLI) so we catch things
+  // like expired PATs *before* a real agent run fails.
+  let smokeOk = false;
+  let smokeErr = '';
+  let checks: SmokeCheck[] = [];
   try {
     const url = new URL(RUNNER_URL);
-    const healthUrl = `${url.origin}/healthz`;
-    const res = await fetch(healthUrl, {
-      signal: AbortSignal.timeout(4000),
+    const smokeUrl = `${url.origin}/smoke`;
+    const res = await fetch(smokeUrl, {
+      headers: { authorization: `Bearer ${RUNNER_TOKEN}` },
+      signal: AbortSignal.timeout(8000),
     });
-    runnerText = await res.text();
-    runnerOk = res.ok;
+    const data = (await res.json()) as { ok: boolean; checks: SmokeCheck[] };
+    smokeOk = data.ok;
+    checks = data.checks ?? [];
   } catch (e) {
-    runnerText = String((e as Error)?.message ?? e).slice(0, 200);
+    smokeErr = String((e as Error)?.message ?? e).slice(0, 200);
   }
-  lines.push(
-    runnerOk
-      ? `• *Runner*: :white_check_mark: reachable — \`${runnerText.slice(0, 120)}\``
-      : `• *Runner*: :x: unreachable — \`${runnerText.slice(0, 200)}\``,
-  );
 
-  // 2. Vercel deployment info
+  if (smokeErr) {
+    lines.push(`• *Runner*: :x: unreachable — \`${smokeErr}\``);
+  } else {
+    lines.push(
+      smokeOk
+        ? '• *Runner*: :white_check_mark: all dependency checks green'
+        : '• *Runner*: :warning: degraded — see failing checks below',
+    );
+    for (const c of checks) {
+      const emoji = c.ok ? ':white_check_mark:' : ':x:';
+      const suffix = c.detail
+        ? ` — ${c.detail}`
+        : c.error
+          ? ` — \`${c.error.slice(0, 80)}\``
+          : '';
+      lines.push(`  • ${c.name} ${emoji} ${c.ms}ms${suffix}`);
+    }
+  }
+
   lines.push(
+    '',
     `• *Webhook*: \`${process.env.VERCEL_URL ?? 'local'}\``,
     `• *Git SHA*: \`${(process.env.VERCEL_GIT_COMMIT_SHA ?? 'unknown').slice(0, 7)}\``,
     `• *Runner URL*: \`${RUNNER_URL.replace(/https:\/\/([^\/]+).*/, '$1')}\``,

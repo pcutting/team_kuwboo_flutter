@@ -20,6 +20,7 @@ import { z } from 'zod';
 
 import { loadSecrets } from './secrets.js';
 import { makeSlackClient } from './slack.js';
+import { registerSmokeRoute } from './smoke.js';
 
 const PORT = Number(process.env.RUNNER_PORT ?? 4100);
 const AGENT_RUNS_DIR = process.env.AGENT_RUNS_DIR ?? '/home/ubuntu/agent-runs';
@@ -72,6 +73,7 @@ async function main() {
   });
 
   app.get('/healthz', async () => ({ ok: true, port: PORT }));
+  registerSmokeRoute(app, secrets, AGENT_RUNS_DIR);
 
   await app.listen({ host: '0.0.0.0', port: PORT });
   app.log.info({ port: PORT }, 'kuwboo-slack-runner ready');
