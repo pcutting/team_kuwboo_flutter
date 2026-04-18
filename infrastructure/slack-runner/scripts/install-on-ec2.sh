@@ -29,12 +29,6 @@ if ! command -v gh >/dev/null; then
   sudo apt-get install -y gh
 fi
 
-echo "==> Installing cloudflared"
-if ! command -v cloudflared >/dev/null; then
-  curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /tmp/cloudflared
-  sudo install -m 0755 /tmp/cloudflared /usr/local/bin/cloudflared
-fi
-
 echo "==> Cloning runner code"
 mkdir -p "$LOGS_DIR" "$RUNS_DIR"
 if [[ ! -d "$RUNNER_DIR/.git" ]]; then
