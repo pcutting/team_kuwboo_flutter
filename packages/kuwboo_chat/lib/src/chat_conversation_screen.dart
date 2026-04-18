@@ -476,7 +476,12 @@ class _LiveInputBarState extends State<_LiveInputBar> {
     final theme = widget.theme;
     final hasText = widget.controller.text.trim().isNotEmpty;
     final canSend = hasText && !widget.sending;
-    return Padding(
+    // TextField requires a Material ancestor; the surrounding chat
+    // conversation Container is not one. Use a transparent Material so the
+    // theme.background painted by the parent shows through unchanged.
+    return Material(
+      type: MaterialType.transparency,
+      child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: [
@@ -521,6 +526,7 @@ class _LiveInputBarState extends State<_LiveInputBar> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

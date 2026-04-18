@@ -11,16 +11,37 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 // ─── Shell Wrapper ───────────────────────────────────────────────────────
 
-class _ProtoShellWrapper extends StatelessWidget {
+class _ProtoShellWrapper extends ConsumerWidget {
   final Widget child;
   const _ProtoShellWrapper({required this.child});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).matchedLocation;
     final activeModule = _moduleFor(location);
     final activeTab = _tabFor(location);
     final isYoyoNearby = activeModule == ProtoModule.yoyo && activeTab == 0;
+
+    // Sync the global shell state with the URL-derived module/tab so any
+    // consumer that reads `state.activeModule` (popup labels, top-bar
+    // titles in screens not yet migrated, etc.) stays coherent with the
+    // current route. Done in a post-frame callback to avoid mutating
+    // providers during a build.
+    final shell = ref.read(shellStateProvider);
+    if (shell.activeModule != activeModule || shell.activeTab != activeTab) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final notifier = ref.read(shellStateProvider.notifier);
+        final current = ref.read(shellStateProvider);
+        // switchModule resets activeTab to 0, so run it first then set the
+        // correct tab unconditionally if it differs from the URL-derived one.
+        if (current.activeModule != activeModule) {
+          notifier.switchModule(activeModule);
+        }
+        if (ref.read(shellStateProvider).activeTab != activeTab) {
+          notifier.switchTab(activeTab);
+        }
+      });
+    }
 
     return ProtoScaffold(
       activeModule: activeModule,
