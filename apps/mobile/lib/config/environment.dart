@@ -23,8 +23,8 @@ class Environment {
   /// `--dart-define=KUWBOO_API_BASE_URL=...` (preferred) or the legacy
   /// `KUWBOO_API_URL` name. Otherwise defaults based on [current].
   ///
-  /// The dev default points to the EC2 greenfield instance over plain HTTP
-  /// until TLS is provisioned.
+  /// The dev default assumes a local NestJS instance on the default port.
+  /// Point at a remote dev backend with `--dart-define=KUWBOO_API_BASE_URL=...`.
   static String get apiBaseUrl {
     const override = String.fromEnvironment('KUWBOO_API_BASE_URL');
     if (override.isNotEmpty) return override;
@@ -37,7 +37,7 @@ class Environment {
       case 'staging':
       case 'dev':
       default:
-        return 'http://35.177.230.139';
+        return 'http://localhost:3000';
     }
   }
 
