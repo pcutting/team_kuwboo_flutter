@@ -8,7 +8,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
-import { kv } from '@vercel/kv';
 
 export const runtime = 'nodejs';
 export const maxDuration = 10;
@@ -17,6 +16,12 @@ const SLACK_SIGNING_SECRET = process.env.SLACK_SIGNING_SECRET!;
 const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN!;
 const RUNNER_URL = process.env.RUNNER_URL!;
 const RUNNER_TOKEN = process.env.RUNNER_SHARED_SECRET!;
+
+// Session state lives in the Slack thread root message itself. The local
+// Claude Code session posts the root with a marker like:
+//   <!-- kuwboo-session: runId=abc branch=bot/foo repo=pcutting/team_kuwboo cwd=. -->
+// When a reply arrives we fetch the thread root and parse the marker.
+const SESSION_MARKER = /<!--\s*kuwboo-session:\s*([^>]+?)\s*-->/;
 
 interface SlackEventEnvelope {
   type: 'url_verification' | 'event_callback';
@@ -40,6 +45,40 @@ interface SessionRecord {
   branch: string;
   repo: string;
   cwdHint: string;
+}
+
+async function readThreadRoot(channel: string, threadTs: string): Promise<string | null> {
+  const url = new URL('https://slack.com/api/conversations.replies');
+  url.searchParams.set('channel', channel);
+  url.searchParams.set('ts', threadTs);
+  url.searchParams.set('limit', '1');
+  const res = await fetch(url, {
+    headers: { authorization: `Bearer ${SLACK_BOT_TOKEN}` },
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { ok: boolean; messages?: Array<{ text?: string }> };
+  if (!data.ok || !data.messages?.length) return null;
+  return data.messages[0].text ?? null;
+}
+
+function parseSessionMarker(rootText: string | null): SessionRecord | null {
+  if (!rootText) return null;
+  const match = SESSION_MARKER.exec(rootText);
+  if (!match) return null;
+  const pairs = match[1].split(/\s+/);
+  const parsed: Record<string, string> = {};
+  for (const p of pairs) {
+    const eq = p.indexOf('=');
+    if (eq < 0) continue;
+    parsed[p.slice(0, eq)] = p.slice(eq + 1);
+  }
+  if (!parsed.runId || !parsed.branch || !parsed.repo) return null;
+  return {
+    runId: parsed.runId,
+    branch: parsed.branch,
+    repo: parsed.repo,
+    cwdHint: parsed.cwd ?? '.',
+  };
 }
 
 function verifySlackSignature(body: string, timestamp: string, signature: string): boolean {
@@ -81,13 +120,14 @@ export async function POST(req: NextRequest) {
       return new NextResponse('ignored: not a thread reply', { status: 200 });
     }
 
-    const session = await kv.get<SessionRecord>(`slack:thread:${threadTs}`);
+    const rootText = await readThreadRoot(ev.channel, threadTs);
+    const session = parseSessionMarker(rootText);
 
     if (!session) {
       await postSlack(
         ev.channel,
         threadTs,
-        "I don't have a session bound to this thread yet. Start one from your Claude Code session first.",
+        "I don't have a session marker on this thread's root message. Start one from your Claude Code session first.",
       );
       return new NextResponse('ok', { status: 200 });
     }

@@ -6,8 +6,14 @@ Vercel webhook that relays Slack replies into the EC2-hosted Claude Agent SDK ru
 
 | Route | Purpose |
 |---|---|
-| `POST /api/slack/events` | Slack Events API webhook. Verifies signature, ACKs under 3s, fires-and-forgets to the runner. |
-| `POST /api/slack/sessions` | Bind `threadTs → {runId, branch, repo, cwdHint}` in Vercel KV so thread replies can be routed to the right repo state. Called by the local Claude Code session when it first posts a question. |
+| `POST /api/slack/events` | Slack Events API webhook. Verifies signature, ACKs under 3s, reads the thread root message via `conversations.replies`, parses the `<!-- kuwboo-session: ... -->` marker, fires-and-forgets to the runner. |
+
+Session state lives in the thread root message itself — no external KV needed. The local Claude Code session must prefix its root post with:
+
+```
+<!-- kuwboo-session: runId=<id> branch=<branch> repo=pcutting/team_kuwboo cwd=<dir> -->
+<human-readable question text>
+```
 
 ## Environment variables (set in Vercel)
 
@@ -16,8 +22,7 @@ Vercel webhook that relays Slack replies into the EC2-hosted Claude Agent SDK ru
 | `SLACK_SIGNING_SECRET` | AWS Secrets Manager `/kuwboo/slack` → `signing_secret` |
 | `SLACK_BOT_TOKEN` | AWS Secrets Manager `/kuwboo/slack` → `bot_token` |
 | `RUNNER_URL` | Cloudflare Tunnel URL for the EC2 runner, e.g. `https://kuwboo-runner-<hash>.trycloudflare.com/internal/agent-runs` |
-| `RUNNER_SHARED_SECRET` | Random 32-byte token. Generate once: `openssl rand -hex 32`. Set identically on the EC2 runner. |
-| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Auto-injected when you attach Vercel KV to the project |
+| `RUNNER_SHARED_SECRET` | AWS Secrets Manager `/kuwboo/slack-runner` → `shared_secret` (same value set on EC2 runner) |
 
 ## Deploy
 
@@ -28,7 +33,6 @@ vercel env add SLACK_SIGNING_SECRET production
 vercel env add SLACK_BOT_TOKEN production
 vercel env add RUNNER_URL production
 vercel env add RUNNER_SHARED_SECRET production
-vercel kv create kuwboo-slack-sessions  # one-time; binds KV_REST_API_* automatically
 vercel deploy --prod
 ```
 
