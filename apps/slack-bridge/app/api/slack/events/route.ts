@@ -116,8 +116,16 @@ export async function POST(req: NextRequest) {
     if (ev.bot_id) return new NextResponse('ok', { status: 200 });
 
     const threadTs = ev.thread_ts;
+
+    // Root @mention with no thread — friendly help instead of silent ignore
+    // so the user knows the bot is alive.
     if (!threadTs) {
-      return new NextResponse('ignored: not a thread reply', { status: 200 });
+      await postSlack(
+        ev.channel,
+        ev.ts,
+        "Hi! I act on *replies inside a thread* that my local Claude Code session has tagged with a session marker. Mention me inside one of those threads to send a message to Phil's running agent.",
+      );
+      return new NextResponse('ok', { status: 200 });
     }
 
     const rootText = await readThreadRoot(ev.channel, threadTs);
@@ -127,7 +135,7 @@ export async function POST(req: NextRequest) {
       await postSlack(
         ev.channel,
         threadTs,
-        "I don't have a session marker on this thread's root message. Start one from your Claude Code session first.",
+        "This thread doesn't have a `<!-- kuwboo-session: ... -->` marker in its root message. Phil's Claude Code session posts those when it's asking for your feedback — reply in *that* thread, not a fresh one.",
       );
       return new NextResponse('ok', { status: 200 });
     }
@@ -162,6 +170,9 @@ async function postSlack(channel: string, thread_ts: string, text: string) {
       'content-type': 'application/json; charset=utf-8',
       authorization: `Bearer ${SLACK_BOT_TOKEN}`,
     },
-    body: JSON.stringify({ channel, thread_ts, text }),
+    // reply_broadcast=true — posts inside the thread AND sends a copy to the
+    // channel, so Phil sees bot responses in #claude without drilling into
+    // every thread.
+    body: JSON.stringify({ channel, thread_ts, text, reply_broadcast: true }),
   });
 }
