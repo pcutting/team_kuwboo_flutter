@@ -10,6 +10,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { WsAuthGuard } from '../../common/guards/ws-auth.guard';
+import { corsOrigins } from '../../config/cors-origins';
 
 interface PresenceEntry {
   socketId: string;
@@ -25,7 +26,7 @@ interface PresenceStatus {
   status: 'ONLINE' | 'OFFLINE';
 }
 
-@WebSocketGateway({ namespace: '/presence', cors: true })
+@WebSocketGateway({ namespace: '/presence', cors: { origin: corsOrigins(), credentials: true } })
 @UseGuards(WsAuthGuard)
 export class PresenceGateway
   implements OnGatewayConnection, OnGatewayDisconnect

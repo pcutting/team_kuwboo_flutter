@@ -10,6 +10,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { WsAuthGuard } from '../../common/guards/ws-auth.guard';
+import { corsOrigins } from '../../config/cors-origins';
 
 interface AuctionPayload {
   auctionId: string;
@@ -21,7 +22,7 @@ interface BidPlacedPayload {
   createdAt: string;
 }
 
-@WebSocketGateway({ namespace: '/marketplace', cors: true })
+@WebSocketGateway({ namespace: '/marketplace', cors: { origin: corsOrigins(), credentials: true } })
 @UseGuards(WsAuthGuard)
 export class MarketplaceGateway
   implements OnGatewayConnection, OnGatewayDisconnect

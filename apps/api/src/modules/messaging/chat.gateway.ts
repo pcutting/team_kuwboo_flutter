@@ -10,6 +10,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { WsAuthGuard } from '../../common/guards/ws-auth.guard';
+import { corsOrigins } from '../../config/cors-origins';
 
 interface MessageSendPayload {
   threadId: string;
@@ -20,7 +21,7 @@ interface ThreadPayload {
   threadId: string;
 }
 
-@WebSocketGateway({ namespace: '/chat', cors: true })
+@WebSocketGateway({ namespace: '/chat', cors: { origin: corsOrigins(), credentials: true } })
 @UseGuards(WsAuthGuard)
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
