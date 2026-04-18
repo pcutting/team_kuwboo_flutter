@@ -269,7 +269,13 @@ List<RouteBase> buildProtoModalRoutes({
     GoRoute(
       path: ProtoRoutes.chatConversation,
       parentNavigatorKey: rootNavigatorKey,
-      builder: (c, s) => const ChatConversationScreen(),
+      builder: (c, s) {
+        final extra = s.extra;
+        final threadId = extra is Map && extra['threadId'] is String
+            ? extra['threadId'] as String
+            : null;
+        return ChatConversationScreen(threadId: threadId);
+      },
     ),
     GoRoute(
       path: ProtoRoutes.profileMy,

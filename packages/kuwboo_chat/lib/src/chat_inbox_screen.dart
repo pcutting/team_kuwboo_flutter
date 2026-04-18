@@ -67,6 +67,17 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     return all.where((c) => c.moduleContext == widget.moduleKey).toList();
   }
 
+  /// Apply [_applyFilter] over `(thread, demo)` pairs so the live thread id
+  /// stays attached to the rendered conversation card. Without this the
+  /// conversation screen only knows the display data and falls back to the
+  /// canned transactional prototype (no live input bar).
+  List<(api.Thread, DemoConversation)> _applyFilterPairs(
+    List<(api.Thread, DemoConversation)> all,
+  ) {
+    if (widget.moduleKey == null) return all;
+    return all.where((p) => p.$2.moduleContext == widget.moduleKey).toList();
+  }
+
   // ── Build ──────────────────────────────────────────────────────────────
 
   @override
@@ -76,15 +87,27 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     final threadsAsync = ref.watch(threadsProvider);
     final showModuleBadge = widget.moduleKey == null;
 
-    // Map live threads → DemoConversation view-models, then client-side
-    // filter by moduleKey. Fall back to static demo data when the backend
-    // is unreachable so the prototype remains usable offline.
-    final convos = threadsAsync.when(
-      data: (threads) =>
-          _applyFilter(threads.items.map(_threadToDemo).toList()),
+    // Map live threads → DemoConversation view-models (paired with their
+    // source `api.Thread` so we can pass the live id when navigating into
+    // a conversation), then client-side filter by moduleKey. Fall back to
+    // static demo data with `null` thread id when the backend is unreachable.
+    final convoPairs = threadsAsync.when(
+      data: (threads) => _applyFilterPairs(
+        threads.items.map((t) => (t, _threadToDemo(t))).toList(),
+      ),
+      loading: () => const <(api.Thread, DemoConversation)>[],
+      error: (_, __) => <(api.Thread, DemoConversation)>[],
+    );
+    // Offline / static fallback — DemoConversations without a backend id.
+    final fallbackConvos = threadsAsync.when(
+      data: (_) => const <DemoConversation>[],
       loading: () => const <DemoConversation>[],
       error: (_, __) => _applyFilter(ProtoDemoData.conversations),
     );
+    final convos = [
+      ...convoPairs.map((p) => p.$2),
+      ...fallbackConvos,
+    ];
     final isLoading = threadsAsync.isLoading;
 
     return Container(
@@ -175,6 +198,12 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                     itemCount: convos.length,
                     itemBuilder: (context, i) {
                       final conv = convos[i];
+                      // Cards backed by a live thread carry the id forward
+                      // so the conversation screen renders the live input
+                      // bar (real TextField + functional Send). Fallback
+                      // demo cards still navigate to the canned prototype.
+                      final liveThreadId =
+                          i < convoPairs.length ? convoPairs[i].$1.id : null;
                       return _buildDismissible(
                         context,
                         theme,
@@ -184,8 +213,12 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                           index: i,
                           ornaments: widget.ornaments,
                           showModuleBadge: showModuleBadge,
-                          onTap: () =>
-                              state.push(ProtoRoutes.chatConversation),
+                          onTap: () => liveThreadId == null
+                              ? state.push(ProtoRoutes.chatConversation)
+                              : state.pushWithArgs(
+                                  ProtoRoutes.chatConversation,
+                                  {'threadId': liveThreadId},
+                                ),
                         ),
                       );
                     },
