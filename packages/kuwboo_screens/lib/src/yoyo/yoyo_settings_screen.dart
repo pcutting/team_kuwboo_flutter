@@ -51,302 +51,397 @@ class _YoyoSettingsScreenState extends ConsumerState<YoyoSettingsScreen> {
     final theme = ProtoTheme.of(context);
     final settingsAsync = ref.watch(yoyoSettingsProvider);
 
-    return Container(
-      color: theme.background,
-      child: Column(
-        children: [
-          ProtoSubBar(
-            title: 'YoYo Settings',
-          ),
-          Expanded(
-            child: settingsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text('Failed to load settings: $e', style: theme.body),
-                ),
-              ),
-              data: (_) => ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              children: [
-                // Session Scheduling
-                  _SessionSchedulingCard(theme: theme),
-                  const SizedBox(height: 12),
-                  // Data Retention
-                  _DataRetentionCard(theme: theme, state: state),
-                  const SizedBox(height: 12),
-                  // Visibility
-                  _VisibilityCard(theme: theme, state: state),
-                  const SizedBox(height: 12),
-                  // Do Not Disturb
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: theme.cardDecoration,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40, height: 40,
-                          decoration: BoxDecoration(color: _dndEnabled ? theme.accent.withValues(alpha: 0.1) : theme.background, shape: BoxShape.circle),
-                          child: Icon(Icons.do_not_disturb_rounded, size: 20, color: _dndEnabled ? theme.accent : theme.textTertiary),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Do Not Disturb', style: theme.title),
-                              const SizedBox(height: 2),
-                              Text(_dndEnabled ? '10:00 PM – 7:00 AM' : 'Pause all YoYo alerts', style: theme.caption),
-                            ],
-                          ),
-                        ),
-                        Switch(
-                          value: _dndEnabled,
-                          onChanged: (v) {
-                            setState(() => _dndEnabled = v);
-                            ProtoToast.show(context, Icons.do_not_disturb_rounded, v ? 'DND enabled' : 'DND disabled');
-                          },
-                          activeThumbColor: theme.accent,
-                        ),
-                      ],
+    // Modal route — wrap in Material so Slider's ink layer can mount.
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        color: theme.background,
+        child: Column(
+          children: [
+            ProtoSubBar(title: 'YoYo Settings'),
+            Expanded(
+              child: settingsAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'Failed to load settings: $e',
+                      style: theme.body,
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Encounter Transparency
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: theme.cardDecoration,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40, height: 40,
-                          decoration: BoxDecoration(color: theme.background, shape: BoxShape.circle),
-                          child: Icon(Icons.visibility_rounded, size: 20, color: state.yoyoEncounterTransparency ? theme.secondary : theme.textTertiary),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Who Saw Me', style: theme.title),
-                              const SizedBox(height: 2),
-                              Text('See who viewed your teaser', style: theme.caption),
-                            ],
-                          ),
-                        ),
-                        Switch(
-                          value: state.yoyoEncounterTransparency,
-                          onChanged: state.onYoyoEncounterTransparencyChanged,
-                          activeThumbColor: theme.secondary,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Background Discovery
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: theme.cardDecoration,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40, height: 40,
-                          decoration: BoxDecoration(color: theme.background, shape: BoxShape.circle),
-                          child: Icon(Icons.bluetooth_searching_rounded, size: 20, color: _backgroundDiscovery ? theme.primary : theme.textTertiary),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Background Discovery', style: theme.title),
-                              const SizedBox(height: 2),
-                              Text('May increase battery usage', style: theme.caption.copyWith(color: Colors.orange.shade700)),
-                            ],
-                          ),
-                        ),
-                        Switch(
-                          value: _backgroundDiscovery,
-                          onChanged: (v) {
-                            setState(() => _backgroundDiscovery = v);
-                            ProtoToast.show(context, Icons.bluetooth_searching_rounded, v ? 'Background discovery on' : 'Background discovery off');
-                          },
-                          activeThumbColor: theme.primary,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                // Ghost mode
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: theme.cardDecoration,
-                  child: Row(
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: state.isYoyoHidden
-                              ? theme.accent.withValues(alpha: 0.1)
-                              : theme.background,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          theme.icons.visibilityOff,
-                          size: 20,
-                          color: state.isYoyoHidden ? theme.accent : theme.textTertiary,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Ghost Mode', style: theme.title),
-                            const SizedBox(height: 2),
-                            Text('Hide from nearby users', style: theme.caption),
-                          ],
-                        ),
-                      ),
-                      Switch(
-                        value: state.isYoyoHidden,
-                        onChanged: (_) {
-                          state.onYoyoHiddenToggle();
-                          // Persist visibility to backend:
-                          // ghost mode ON  → isVisible: false
-                          // ghost mode OFF → isVisible: true
-                          _persistVisibility(!state.isYoyoHidden);
-                          ProtoToast.show(
-                            context,
-                            state.isYoyoHidden ? theme.icons.visibilityOn : theme.icons.visibilityOff,
-                            state.isYoyoHidden ? 'You are now visible' : 'Ghost mode enabled',
-                          );
-                        },
-                        activeThumbColor: theme.accent,
-                      ),
-                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
-
-                // Range slider
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: theme.cardDecoration,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                data: (_) => ListView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  children: [
+                    // Session Scheduling
+                    _SessionSchedulingCard(theme: theme),
+                    const SizedBox(height: 12),
+                    // Data Retention
+                    _DataRetentionCard(theme: theme, state: state),
+                    const SizedBox(height: 12),
+                    // Visibility
+                    _VisibilityCard(theme: theme, state: state),
+                    const SizedBox(height: 12),
+                    // Do Not Disturb
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: theme.cardDecoration,
+                      child: Row(
                         children: [
-                          Icon(theme.icons.radar, size: 20, color: theme.primary),
-                          const SizedBox(width: 10),
-                          Text('Discovery Range', style: theme.title),
-                          const Spacer(),
-                          Text(
-                            '${state.yoyoRange.toInt()} km',
-                            style: theme.title.copyWith(color: theme.primary),
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: _dndEnabled
+                                  ? theme.accent.withValues(alpha: 0.1)
+                                  : theme.background,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.do_not_disturb_rounded,
+                              size: 20,
+                              color: _dndEnabled
+                                  ? theme.accent
+                                  : theme.textTertiary,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Do Not Disturb', style: theme.title),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _dndEnabled
+                                      ? '10:00 PM – 7:00 AM'
+                                      : 'Pause all YoYo alerts',
+                                  style: theme.caption,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Switch(
+                            value: _dndEnabled,
+                            onChanged: (v) {
+                              setState(() => _dndEnabled = v);
+                              ProtoToast.show(
+                                context,
+                                Icons.do_not_disturb_rounded,
+                                v ? 'DND enabled' : 'DND disabled',
+                              );
+                            },
+                            activeThumbColor: theme.accent,
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          activeTrackColor: theme.primary,
-                          inactiveTrackColor: theme.primary.withValues(alpha: 0.1),
-                          thumbColor: theme.primary,
-                          trackHeight: 4,
-                        ),
-                        child: Slider(
-                          value: state.yoyoRange,
-                          min: 1,
-                          max: 30,
-                          divisions: 29,
-                          onChanged: state.onYoyoRangeChanged,
-                          onChangeEnd: (v) => _persistRadius(v.toInt()),
-                        ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    ),
+                    const SizedBox(height: 12),
+                    // Encounter Transparency
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: theme.cardDecoration,
+                      child: Row(
                         children: [
-                          Text('1 km', style: theme.caption),
-                          Text('30 km', style: theme.caption),
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: theme.background,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.visibility_rounded,
+                              size: 20,
+                              color: state.yoyoEncounterTransparency
+                                  ? theme.secondary
+                                  : theme.textTertiary,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Who Saw Me', style: theme.title),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'See who viewed your teaser',
+                                  style: theme.caption,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Switch(
+                            value: state.yoyoEncounterTransparency,
+                            onChanged: state.onYoyoEncounterTransparencyChanged,
+                            activeThumbColor: theme.secondary,
+                          ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
+                    ),
+                    const SizedBox(height: 12),
+                    // Background Discovery
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: theme.cardDecoration,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: theme.background,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.bluetooth_searching_rounded,
+                              size: 20,
+                              color: _backgroundDiscovery
+                                  ? theme.primary
+                                  : theme.textTertiary,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Background Discovery',
+                                  style: theme.title,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'May increase battery usage',
+                                  style: theme.caption.copyWith(
+                                    color: Colors.orange.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Switch(
+                            value: _backgroundDiscovery,
+                            onChanged: (v) {
+                              setState(() => _backgroundDiscovery = v);
+                              ProtoToast.show(
+                                context,
+                                Icons.bluetooth_searching_rounded,
+                                v
+                                    ? 'Background discovery on'
+                                    : 'Background discovery off',
+                              );
+                            },
+                            activeThumbColor: theme.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Ghost mode
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: theme.cardDecoration,
+                      child: Row(
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: state.isYoyoHidden
+                                  ? theme.accent.withValues(alpha: 0.1)
+                                  : theme.background,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              theme.icons.visibilityOff,
+                              size: 20,
+                              color: state.isYoyoHidden
+                                  ? theme.accent
+                                  : theme.textTertiary,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Ghost Mode', style: theme.title),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Hide from nearby users',
+                                  style: theme.caption,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Switch(
+                            value: state.isYoyoHidden,
+                            onChanged: (_) {
+                              state.onYoyoHiddenToggle();
+                              // Persist visibility to backend:
+                              // ghost mode ON  → isVisible: false
+                              // ghost mode OFF → isVisible: true
+                              _persistVisibility(!state.isYoyoHidden);
+                              ProtoToast.show(
+                                context,
+                                state.isYoyoHidden
+                                    ? theme.icons.visibilityOn
+                                    : theme.icons.visibilityOff,
+                                state.isYoyoHidden
+                                    ? 'You are now visible'
+                                    : 'Ghost mode enabled',
+                              );
+                            },
+                            activeThumbColor: theme.accent,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
 
-                // Show filters
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: theme.cardDecoration,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Show on Profile', style: theme.title),
-                      const SizedBox(height: 12),
-                      _ToggleRow(
-                        icon: Icons.circle_rounded,
-                        label: 'Online status',
-                        value: state.yoyoShowOnline,
-                        onChanged: state.onYoyoShowOnlineChanged,
-                        theme: theme,
+                    // Range slider
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: theme.cardDecoration,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                theme.icons.radar,
+                                size: 20,
+                                color: theme.primary,
+                              ),
+                              const SizedBox(width: 10),
+                              Text('Discovery Range', style: theme.title),
+                              const Spacer(),
+                              Text(
+                                '${state.yoyoRange.toInt()} km',
+                                style: theme.title.copyWith(
+                                  color: theme.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              activeTrackColor: theme.primary,
+                              inactiveTrackColor: theme.primary.withValues(
+                                alpha: 0.1,
+                              ),
+                              thumbColor: theme.primary,
+                              trackHeight: 4,
+                            ),
+                            child: Slider(
+                              value: state.yoyoRange,
+                              min: 1,
+                              max: 30,
+                              divisions: 29,
+                              onChanged: state.onYoyoRangeChanged,
+                              onChangeEnd: (v) => _persistRadius(v.toInt()),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('1 km', style: theme.caption),
+                              Text('30 km', style: theme.caption),
+                            ],
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 10),
-                      _ToggleRow(
-                        icon: theme.icons.locationOn,
-                        label: 'Distance',
-                        value: state.yoyoShowDistance,
-                        onChanged: state.onYoyoShowDistanceChanged,
-                        theme: theme,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
+                    ),
+                    const SizedBox(height: 12),
 
-                // Notifications
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: theme.cardDecoration,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Notifications', style: theme.title),
-                      const SizedBox(height: 12),
-                      _ToggleRow(
-                        icon: theme.icons.wavingHand,
-                        label: 'Wave notifications',
-                        value: _waveNotifications,
-                        onChanged: (v) {
-                          setState(() => _waveNotifications = v);
-                          ProtoToast.show(context, theme.icons.notifications, v ? 'Wave notifications on' : 'Wave notifications off');
-                        },
-                        theme: theme,
+                    // Show filters
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: theme.cardDecoration,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Show on Profile', style: theme.title),
+                          const SizedBox(height: 12),
+                          _ToggleRow(
+                            icon: Icons.circle_rounded,
+                            label: 'Online status',
+                            value: state.yoyoShowOnline,
+                            onChanged: state.onYoyoShowOnlineChanged,
+                            theme: theme,
+                          ),
+                          const SizedBox(height: 10),
+                          _ToggleRow(
+                            icon: theme.icons.locationOn,
+                            label: 'Distance',
+                            value: state.yoyoShowDistance,
+                            onChanged: state.onYoyoShowDistanceChanged,
+                            theme: theme,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 10),
-                      _ToggleRow(
-                        icon: theme.icons.group,
-                        label: 'Connection requests',
-                        value: _connectionNotifications,
-                        onChanged: (v) {
-                          setState(() => _connectionNotifications = v);
-                          ProtoToast.show(context, theme.icons.notifications, v ? 'Connection notifications on' : 'Connection notifications off');
-                        },
-                        theme: theme,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Notifications
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: theme.cardDecoration,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Notifications', style: theme.title),
+                          const SizedBox(height: 12),
+                          _ToggleRow(
+                            icon: theme.icons.wavingHand,
+                            label: 'Wave notifications',
+                            value: _waveNotifications,
+                            onChanged: (v) {
+                              setState(() => _waveNotifications = v);
+                              ProtoToast.show(
+                                context,
+                                theme.icons.notifications,
+                                v
+                                    ? 'Wave notifications on'
+                                    : 'Wave notifications off',
+                              );
+                            },
+                            theme: theme,
+                          ),
+                          const SizedBox(height: 10),
+                          _ToggleRow(
+                            icon: theme.icons.group,
+                            label: 'Connection requests',
+                            value: _connectionNotifications,
+                            onChanged: (v) {
+                              setState(() => _connectionNotifications = v);
+                              ProtoToast.show(
+                                context,
+                                theme.icons.notifications,
+                                v
+                                    ? 'Connection notifications on'
+                                    : 'Connection notifications off',
+                              );
+                            },
+                            theme: theme,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -371,7 +466,11 @@ class _ToggleRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: value ? theme.secondary : theme.textTertiary),
+        Icon(
+          icon,
+          size: 16,
+          color: value ? theme.secondary : theme.textTertiary,
+        ),
         const SizedBox(width: 10),
         Expanded(child: Text(label, style: theme.body)),
         Switch(
@@ -421,15 +520,33 @@ class _SessionSchedulingCardState extends State<_SessionSchedulingCard> {
             children: ['Morning', 'Lunch', 'Evening', 'Commute'].map((t) {
               final sel = _selectedTimes.contains(t);
               return ProtoPressButton(
-                onTap: () => setState(() => sel ? _selectedTimes.remove(t) : _selectedTimes.add(t)),
+                onTap: () => setState(
+                  () => sel ? _selectedTimes.remove(t) : _selectedTimes.add(t),
+                ),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: sel ? theme.primary.withValues(alpha: 0.15) : theme.background,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: sel ? theme.primary : theme.textTertiary.withValues(alpha: 0.2)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
                   ),
-                  child: Text(t, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: sel ? theme.primary : theme.textSecondary)),
+                  decoration: BoxDecoration(
+                    color: sel
+                        ? theme.primary.withValues(alpha: 0.15)
+                        : theme.background,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: sel
+                          ? theme.primary
+                          : theme.textTertiary.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Text(
+                    t,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: sel ? theme.primary : theme.textSecondary,
+                    ),
+                  ),
                 ),
               );
             }).toList(),
@@ -437,18 +554,36 @@ class _SessionSchedulingCardState extends State<_SessionSchedulingCard> {
           const SizedBox(height: 10),
           Wrap(
             spacing: 6,
-            children: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) {
+            children: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((
+              d,
+            ) {
               final sel = _selectedDays.contains(d);
               return ProtoPressButton(
-                onTap: () => setState(() => sel ? _selectedDays.remove(d) : _selectedDays.add(d)),
+                onTap: () => setState(
+                  () => sel ? _selectedDays.remove(d) : _selectedDays.add(d),
+                ),
                 child: Container(
-                  width: 36, height: 36,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: sel ? theme.primary : theme.background,
                     shape: BoxShape.circle,
-                    border: sel ? null : Border.all(color: theme.textTertiary.withValues(alpha: 0.2)),
+                    border: sel
+                        ? null
+                        : Border.all(
+                            color: theme.textTertiary.withValues(alpha: 0.2),
+                          ),
                   ),
-                  child: Center(child: Text(d[0], style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: sel ? Colors.white : theme.textSecondary))),
+                  child: Center(
+                    child: Text(
+                      d[0],
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: sel ? Colors.white : theme.textSecondary,
+                      ),
+                    ),
+                  ),
                 ),
               );
             }).toList(),
@@ -469,7 +604,9 @@ class _DataRetentionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final idx = _stops.indexOf(state.yoyoDataRetentionHours).clamp(0, _stops.length - 1);
+    final idx = _stops
+        .indexOf(state.yoyoDataRetentionHours)
+        .clamp(0, _stops.length - 1);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: theme.cardDecoration,
@@ -482,7 +619,10 @@ class _DataRetentionCard extends StatelessWidget {
               const SizedBox(width: 10),
               Text('Data Retention', style: theme.title),
               const Spacer(),
-              Text(_labels[idx], style: theme.title.copyWith(color: theme.primary)),
+              Text(
+                _labels[idx],
+                style: theme.title.copyWith(color: theme.primary),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -498,12 +638,16 @@ class _DataRetentionCard extends StatelessWidget {
               min: 0,
               max: (_stops.length - 1).toDouble(),
               divisions: _stops.length - 1,
-              onChanged: (v) => state.onYoyoDataRetentionChanged(_stops[v.round()]),
+              onChanged: (v) =>
+                  state.onYoyoDataRetentionChanged(_stops[v.round()]),
             ),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [Text('1h', style: theme.caption), Text('7d', style: theme.caption)],
+            children: [
+              Text('1h', style: theme.caption),
+              Text('7d', style: theme.caption),
+            ],
           ),
         ],
       ),
@@ -544,27 +688,55 @@ class _VisibilityCard extends StatelessWidget {
             ProtoPressButton(
               onTap: () => state.onYoyoVisibilityTierChanged(i),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
-                  color: state.yoyoVisibilityTier == i ? theme.primary.withValues(alpha: 0.1) : theme.background,
+                  color: state.yoyoVisibilityTier == i
+                      ? theme.primary.withValues(alpha: 0.1)
+                      : theme.background,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: state.yoyoVisibilityTier == i ? theme.primary : theme.textTertiary.withValues(alpha: 0.15)),
+                  border: Border.all(
+                    color: state.yoyoVisibilityTier == i
+                        ? theme.primary
+                        : theme.textTertiary.withValues(alpha: 0.15),
+                  ),
                 ),
                 child: Row(
                   children: [
-                    Icon(_tiers[i].$3, size: 18, color: state.yoyoVisibilityTier == i ? theme.primary : theme.textSecondary),
+                    Icon(
+                      _tiers[i].$3,
+                      size: 18,
+                      color: state.yoyoVisibilityTier == i
+                          ? theme.primary
+                          : theme.textSecondary,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_tiers[i].$1, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: state.yoyoVisibilityTier == i ? theme.primary : theme.text)),
+                          Text(
+                            _tiers[i].$1,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: state.yoyoVisibilityTier == i
+                                  ? theme.primary
+                                  : theme.text,
+                            ),
+                          ),
                           Text(_tiers[i].$2, style: theme.caption),
                         ],
                       ),
                     ),
                     if (state.yoyoVisibilityTier == i)
-                      Icon(Icons.check_circle_rounded, size: 18, color: theme.primary),
+                      Icon(
+                        Icons.check_circle_rounded,
+                        size: 18,
+                        color: theme.primary,
+                      ),
                   ],
                 ),
               ),
