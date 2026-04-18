@@ -130,14 +130,14 @@ function readSpecsFromEnv(): AdminSpec[] {
       email: process.env.ADMIN_PHIL_EMAIL ?? 'cuttingphilip@gmail.com',
       password: philPassword!,
       name: 'Phil Cutting',
-      username: 'phil',
+      username: process.env.ADMIN_PHIL_USERNAME ?? 'phil_admin',
     },
     {
       label: 'neil',
       email: process.env.ADMIN_NEIL_EMAIL ?? 'neildouglas33@hotmail.co.uk',
       password: neilPassword!,
       name: 'Neil Douglas',
-      username: 'neil',
+      username: process.env.ADMIN_NEIL_USERNAME ?? 'neil_admin',
     },
   ];
 }
