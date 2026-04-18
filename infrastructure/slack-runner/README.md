@@ -51,6 +51,24 @@ LOCAL_DEV=1 \
 
 Then point a tunnel (ngrok / cloudflared quick tunnel) at `localhost:4100` and use that URL in your dev Vercel project's `RUNNER_URL`.
 
+## Smoke test
+
+Two layers:
+
+**Bash probe (from laptop):**
+```bash
+bash infrastructure/slack-runner/scripts/smoke.sh
+```
+Checks `/healthz`, enforces 401 on unauthenticated dispatches, verifies TLS cert has >7 days left, and calls `/smoke` with the bearer fetched from AWS Secrets Manager.
+
+**From Slack:**
+```
+@Kuwboo Claude status
+```
+The webhook's status command fans out to `/smoke` and reports per-dependency health in-channel.
+
+`/smoke` (bearer-auth protected) probes each external dep the runner needs for a real run: Slack API (`auth.test`), GitHub API (`/user` with the PAT), Anthropic API (`/v1/models`), AWS Secrets Manager, the agent-runs dir, and the `gh` CLI. Returns `{ok, checks: [{name, ok, ms, detail|error}]}`. 503 if any check fails.
+
 ## Public endpoint
 
 `runner.kuwboo.com` is an A record in Route 53 (hosted zone `Z00630163C9Z42EHND9NG`) pointing at the EC2 EIP `35.177.230.139`. On the box, Nginx terminates TLS with a Let's Encrypt cert and proxies to `127.0.0.1:4100`.
