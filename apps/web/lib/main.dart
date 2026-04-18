@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'mock/package_overrides.dart';
 import 'prototype/app.dart';
 import 'widgets/phone_frame.dart';
 
 void main() {
-  runApp(const ProviderScope(child: KuwbooPrototypeWeb()));
+  // Web prototype has no backend. We override every shared-package
+  // `apiClientProvider` with a mocked KuwbooApiClient so screens that
+  // would otherwise throw `UnimplementedError` render canned demo data.
+  runApp(
+    ProviderScope(
+      overrides: buildWebPackageOverrides(),
+      child: const KuwbooPrototypeWeb(),
+    ),
+  );
 }
 
 /// Web entry point for the Kuwboo prototype.
