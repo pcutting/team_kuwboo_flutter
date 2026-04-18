@@ -36,35 +36,41 @@ class _VideoCreatorProfileState extends ConsumerState<VideoCreatorProfile> {
     final userId = _resolveUserId(context);
     final userAsync = ref.watch(creatorProfileProvider(userId));
 
-    return Container(
-      color: theme.background,
-      child: Column(
-        children: [
-          ProtoSubBar(title: 'Creator Profile'),
-          Expanded(
-            child: userAsync.when(
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    'Couldn\'t load profile.\n$err',
-                    textAlign: TextAlign.center,
-                    style: theme.body.copyWith(color: theme.textSecondary),
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        color: theme.background,
+        child: Column(
+          children: [
+            ProtoSubBar(title: 'Creator Profile'),
+            Expanded(
+              child: userAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, _) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'Couldn\'t load profile.\n$err',
+                      textAlign: TextAlign.center,
+                      style: theme.body.copyWith(color: theme.textSecondary),
+                    ),
                   ),
                 ),
+                data: (user) => _buildProfile(context, state, theme, user),
               ),
-              data: (user) => _buildProfile(context, state, theme, user),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildProfile(BuildContext context, PrototypeStateProvider state,
-      ProtoTheme theme, User user) {
+  Widget _buildProfile(
+    BuildContext context,
+    PrototypeStateProvider state,
+    ProtoTheme theme,
+    User user,
+  ) {
     final displayName = _displayName(user);
     return ListView(
       padding: EdgeInsets.zero,
@@ -75,11 +81,13 @@ class _VideoCreatorProfileState extends ConsumerState<VideoCreatorProfile> {
             children: [
               ProtoAvatar(radius: 40, imageUrl: user.avatarUrl ?? ''),
               const SizedBox(height: 12),
-              Text(displayName,
-                  style: theme.headline.copyWith(fontSize: 22)),
+              Text(displayName, style: theme.headline.copyWith(fontSize: 22)),
               const SizedBox(height: 4),
-              Text(user.bio ?? 'Creator',
-                  style: theme.body, textAlign: TextAlign.center),
+              Text(
+                user.bio ?? 'Creator',
+                style: theme.body,
+                textAlign: TextAlign.center,
+              ),
             ],
           ),
         ),
@@ -106,8 +114,7 @@ class _VideoCreatorProfileState extends ConsumerState<VideoCreatorProfile> {
             children: [
               Expanded(
                 child: ProtoPressButton(
-                  onTap: () =>
-                      setState(() => _isFollowing = !_isFollowing),
+                  onTap: () => setState(() => _isFollowing = !_isFollowing),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
@@ -138,12 +145,15 @@ class _VideoCreatorProfileState extends ConsumerState<VideoCreatorProfile> {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
                       border: Border.all(
-                          color: theme.text.withValues(alpha: 0.2)),
+                        color: theme.text.withValues(alpha: 0.2),
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
-                      child: Text('Message',
-                          style: theme.title.copyWith(fontSize: 14)),
+                      child: Text(
+                        'Message',
+                        style: theme.title.copyWith(fontSize: 14),
+                      ),
                     ),
                   ),
                 ),
@@ -169,12 +179,17 @@ class _VideoCreatorProfileState extends ConsumerState<VideoCreatorProfile> {
               (i) => GestureDetector(
                 onTap: () => state.push(ProtoRoutes.videoFeed),
                 child: Container(
-                  color: Color.lerp(theme.primary, theme.secondary, i / 9)!
-                      .withValues(alpha: 0.3),
+                  color: Color.lerp(
+                    theme.primary,
+                    theme.secondary,
+                    i / 9,
+                  )!.withValues(alpha: 0.3),
                   child: Center(
-                    child: Icon(theme.icons.playArrow,
-                        size: 24,
-                        color: Colors.white.withValues(alpha: 0.5)),
+                    child: Icon(
+                      theme.icons.playArrow,
+                      size: 24,
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
                   ),
                 ),
               ),
@@ -205,8 +220,7 @@ class _Stat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(count,
-            style: ProtoTheme.of(context).title.copyWith(fontSize: 18)),
+        Text(count, style: ProtoTheme.of(context).title.copyWith(fontSize: 18)),
         Text(label, style: ProtoTheme.of(context).caption),
       ],
     );

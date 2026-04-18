@@ -60,20 +60,15 @@ class _ShopAuctionDetailState extends ConsumerState<ShopAuctionDetail> {
     final id = widget.auctionId;
     if (id == null) return;
     try {
-      await ref.read(marketplaceApiProvider).placeBid(
-            auctionId: id,
-            amountCents: bidCents,
-          );
+      await ref
+          .read(marketplaceApiProvider)
+          .placeBid(auctionId: id, amountCents: bidCents);
       if (!mounted) return;
       ref.invalidate(auctionDetailProvider(id));
       ProtoToast.show(context, theme.icons.gavel, 'Bid placed: $formatted');
     } catch (_) {
       if (!mounted) return;
-      ProtoToast.show(
-        context,
-        Icons.error_outline,
-        'Could not place bid',
-      );
+      ProtoToast.show(context, Icons.error_outline, 'Could not place bid');
     }
   }
 
@@ -82,55 +77,59 @@ class _ShopAuctionDetailState extends ConsumerState<ShopAuctionDetail> {
     final theme = ProtoTheme.of(context);
     final id = widget.auctionId;
 
-    return Container(
-      color: theme.background,
-      child: Column(
-        children: [
-          ProtoSubBar(
-            title: 'Auction',
-            actions: [
-              ProtoPressButton(
-                onTap: () => ProtoShareSheet.show(context),
-                child: Icon(theme.icons.share, size: 20, color: theme.text),
-              ),
-            ],
-          ),
-          Expanded(
-            child: id == null
-                ? const ProtoEmptyState(
-                    icon: Icons.gavel_rounded,
-                    title: 'No auction selected',
-                    subtitle: 'Open an auction from a listing',
-                  )
-                : ref.watch(auctionDetailProvider(id)).when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (err, _) => ProtoErrorState(
-                        message: 'Could not load auction',
-                        onRetry: () =>
-                            ref.invalidate(auctionDetailProvider(id)),
-                      ),
-                      data: (awb) => _AuctionBody(
-                        awb: awb,
-                        theme: theme,
-                        bidIncrementCents: _bidIncrementCents,
-                        onChangeIncrement: (v) =>
-                            setState(() => _bidIncrementCents = v),
-                        countdownText: _formatCountdown(awb.auction.endsAt),
-                      ),
-                    ),
-          ),
-          if (id != null)
-            _PlaceBidBar(
-              theme: theme,
-              onTap: () {
-                final awb =
-                    ref.read(auctionDetailProvider(id)).valueOrNull;
-                if (awb != null) _handlePlaceBid(awb);
-              },
-              nextBidLabel: _nextBidLabel(id),
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        color: theme.background,
+        child: Column(
+          children: [
+            ProtoSubBar(
+              title: 'Auction',
+              actions: [
+                ProtoPressButton(
+                  onTap: () => ProtoShareSheet.show(context),
+                  child: Icon(theme.icons.share, size: 20, color: theme.text),
+                ),
+              ],
             ),
-        ],
+            Expanded(
+              child: id == null
+                  ? const ProtoEmptyState(
+                      icon: Icons.gavel_rounded,
+                      title: 'No auction selected',
+                      subtitle: 'Open an auction from a listing',
+                    )
+                  : ref
+                        .watch(auctionDetailProvider(id))
+                        .when(
+                          loading: () =>
+                              const Center(child: CircularProgressIndicator()),
+                          error: (err, _) => ProtoErrorState(
+                            message: 'Could not load auction',
+                            onRetry: () =>
+                                ref.invalidate(auctionDetailProvider(id)),
+                          ),
+                          data: (awb) => _AuctionBody(
+                            awb: awb,
+                            theme: theme,
+                            bidIncrementCents: _bidIncrementCents,
+                            onChangeIncrement: (v) =>
+                                setState(() => _bidIncrementCents = v),
+                            countdownText: _formatCountdown(awb.auction.endsAt),
+                          ),
+                        ),
+            ),
+            if (id != null)
+              _PlaceBidBar(
+                theme: theme,
+                onTap: () {
+                  final awb = ref.read(auctionDetailProvider(id)).valueOrNull;
+                  if (awb != null) _handlePlaceBid(awb);
+                },
+                nextBidLabel: _nextBidLabel(id),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -161,8 +160,7 @@ class _AuctionBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auction = awb.auction;
-    final idShort =
-        auction.id.substring(0, auction.id.length.clamp(0, 6));
+    final idShort = auction.id.substring(0, auction.id.length.clamp(0, 6));
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -181,10 +179,7 @@ class _AuctionBody extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Text(
-          'Auction #$idShort',
-          style: theme.headline.copyWith(fontSize: 22),
-        ),
+        Text('Auction #$idShort', style: theme.headline.copyWith(fontSize: 22)),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.all(14),
@@ -274,47 +269,45 @@ class _AuctionBody extends StatelessWidget {
             child: Text('No bids yet', style: theme.caption),
           )
         else
-          ...awb.bids.map(
-            (bid) {
-              final bidderInitial = bid.bidderId.isNotEmpty
-                  ? bid.bidderId[0].toUpperCase()
-                  : '?';
-              final bidderShort = bid.bidderId.substring(
-                0,
-                bid.bidderId.length.clamp(0, 6),
-              );
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 14,
-                      backgroundColor: theme.primary.withValues(alpha: 0.1),
-                      child: Text(
-                        bidderInitial,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: theme.primary,
-                        ),
+          ...awb.bids.map((bid) {
+            final bidderInitial = bid.bidderId.isNotEmpty
+                ? bid.bidderId[0].toUpperCase()
+                : '?';
+            final bidderShort = bid.bidderId.substring(
+              0,
+              bid.bidderId.length.clamp(0, 6),
+            );
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 14,
+                    backgroundColor: theme.primary.withValues(alpha: 0.1),
+                    child: Text(
+                      bidderInitial,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: theme.primary,
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Bidder $bidderShort',
-                        style: theme.body.copyWith(color: theme.text),
-                      ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Bidder $bidderShort',
+                      style: theme.body.copyWith(color: theme.text),
                     ),
-                    Text(
-                      formatPriceCents(bid.amountCents, 'GBP'),
-                      style: theme.title.copyWith(fontSize: 14),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                  ),
+                  Text(
+                    formatPriceCents(bid.amountCents, 'GBP'),
+                    style: theme.title.copyWith(fontSize: 14),
+                  ),
+                ],
+              ),
+            );
+          }),
       ],
     );
   }

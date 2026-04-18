@@ -5,7 +5,8 @@ class SponsoredCreateCampaign extends StatefulWidget {
   const SponsoredCreateCampaign({super.key});
 
   @override
-  State<SponsoredCreateCampaign> createState() => _SponsoredCreateCampaignState();
+  State<SponsoredCreateCampaign> createState() =>
+      _SponsoredCreateCampaignState();
 }
 
 class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
@@ -26,7 +27,11 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
   static const _campaignTypes = [
     ('Promoted Post', Icons.article_outlined, 'Native post in social feeds'),
     ('Video Ad', Icons.videocam_outlined, 'Short video in the video feed'),
-    ('Product Spotlight', Icons.storefront_outlined, 'Featured listing in shop'),
+    (
+      'Product Spotlight',
+      Icons.storefront_outlined,
+      'Featured listing in shop',
+    ),
     ('Banner Ad', Icons.web_outlined, 'Banner across any module'),
   ];
 
@@ -55,17 +60,22 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
 
-    return Container(
-      color: theme.background,
-      child: Column(
-        children: [
-          _CreateCampaignBar(theme: theme, onBack: _prevStep),
-          // Progress indicator
-          _StepIndicator(theme: theme, currentStep: _currentStep, totalSteps: 6),
-          Expanded(
-            child: _buildCurrentStep(theme),
-          ),
-        ],
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        color: theme.background,
+        child: Column(
+          children: [
+            _CreateCampaignBar(theme: theme, onBack: _prevStep),
+            // Progress indicator
+            _StepIndicator(
+              theme: theme,
+              currentStep: _currentStep,
+              totalSteps: 6,
+            ),
+            Expanded(child: _buildCurrentStep(theme)),
+          ],
+        ),
       ),
     );
   }
@@ -97,7 +107,10 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
       children: [
         Text('Choose Ad Type', style: theme.headline.copyWith(fontSize: 22)),
         const SizedBox(height: 4),
-        Text('Select the format for your campaign', style: theme.body.copyWith(color: theme.textSecondary)),
+        Text(
+          'Select the format for your campaign',
+          style: theme.body.copyWith(color: theme.textSecondary),
+        ),
         const SizedBox(height: 20),
 
         ...List.generate(_campaignTypes.length, (i) {
@@ -111,10 +124,14 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isSelected ? theme.primary.withValues(alpha: 0.08) : theme.surface,
+                  color: isSelected
+                      ? theme.primary.withValues(alpha: 0.08)
+                      : theme.surface,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: isSelected ? theme.primary : theme.text.withValues(alpha: 0.08),
+                    color: isSelected
+                        ? theme.primary
+                        : theme.text.withValues(alpha: 0.08),
                     width: isSelected ? 2 : 1,
                   ),
                 ),
@@ -124,24 +141,37 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: isSelected ? theme.primary.withValues(alpha: 0.12) : theme.background,
+                        color: isSelected
+                            ? theme.primary.withValues(alpha: 0.12)
+                            : theme.background,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(icon, size: 24, color: isSelected ? theme.primary : theme.textSecondary),
+                      child: Icon(
+                        icon,
+                        size: 24,
+                        color: isSelected ? theme.primary : theme.textSecondary,
+                      ),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(title, style: theme.title.copyWith(fontSize: 15)),
+                          Text(
+                            title,
+                            style: theme.title.copyWith(fontSize: 15),
+                          ),
                           const SizedBox(height: 2),
                           Text(desc, style: theme.caption),
                         ],
                       ),
                     ),
                     if (isSelected)
-                      Icon(theme.icons.checkCircle, size: 22, color: theme.primary),
+                      Icon(
+                        theme.icons.checkCircle,
+                        size: 22,
+                        color: theme.primary,
+                      ),
                   ],
                 ),
               ),
@@ -168,7 +198,10 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
       children: [
         Text('Target Audience', style: theme.headline.copyWith(fontSize: 22)),
         const SizedBox(height: 4),
-        Text('Choose who sees your ad', style: theme.body.copyWith(color: theme.textSecondary)),
+        Text(
+          'Choose who sees your ad',
+          style: theme.body.copyWith(color: theme.textSecondary),
+        ),
         const SizedBox(height: 20),
 
         // Module targeting
@@ -192,18 +225,29 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
-                  color: isSelected ? theme.primary.withValues(alpha: 0.1) : theme.surface,
+                  color: isSelected
+                      ? theme.primary.withValues(alpha: 0.1)
+                      : theme.surface,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isSelected ? theme.primary : theme.text.withValues(alpha: 0.1),
+                    color: isSelected
+                        ? theme.primary
+                        : theme.text.withValues(alpha: 0.1),
                   ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(icon, size: 16, color: isSelected ? theme.primary : theme.textSecondary),
+                    Icon(
+                      icon,
+                      size: 16,
+                      color: isSelected ? theme.primary : theme.textSecondary,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       label,
@@ -238,7 +282,11 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
               const SizedBox(width: 10),
               Text('United Kingdom', style: theme.body),
               const Spacer(),
-              Icon(theme.icons.chevronRight, size: 20, color: theme.textTertiary),
+              Icon(
+                theme.icons.chevronRight,
+                size: 20,
+                color: theme.textTertiary,
+              ),
             ],
           ),
         ),
@@ -250,7 +298,10 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
         const SizedBox(height: 10),
         Row(
           children: [
-            Text('${_ageMin.round()}', style: theme.body.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              '${_ageMin.round()}',
+              style: theme.body.copyWith(fontWeight: FontWeight.w600),
+            ),
             Expanded(
               child: RangeSlider(
                 values: RangeValues(_ageMin, _ageMax),
@@ -267,7 +318,10 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
                 },
               ),
             ),
-            Text('${_ageMax.round()}+', style: theme.body.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              '${_ageMax.round()}+',
+              style: theme.body.copyWith(fontWeight: FontWeight.w600),
+            ),
           ],
         ),
 
@@ -279,23 +333,41 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
         Wrap(
           spacing: 6,
           runSpacing: 6,
-          children: ['Fashion', 'Tech', 'Music', 'Sports', 'Food', 'Travel', 'Art', 'Fitness'].map((interest) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: theme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text(
-                interest,
-                style: theme.caption.copyWith(color: theme.primary),
-              ),
-            );
-          }).toList(),
+          children:
+              [
+                'Fashion',
+                'Tech',
+                'Music',
+                'Sports',
+                'Food',
+                'Travel',
+                'Art',
+                'Fitness',
+              ].map((interest) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    interest,
+                    style: theme.caption.copyWith(color: theme.primary),
+                  ),
+                );
+              }).toList(),
         ),
 
         const SizedBox(height: 24),
-        _NextButton(theme: theme, label: 'Continue', enabled: _selectedModules.isNotEmpty, onTap: _nextStep),
+        _NextButton(
+          theme: theme,
+          label: 'Continue',
+          enabled: _selectedModules.isNotEmpty,
+          onTap: _nextStep,
+        ),
       ],
     );
   }
@@ -308,18 +380,28 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
       children: [
         Text('Ad Creative', style: theme.headline.copyWith(fontSize: 22)),
         const SizedBox(height: 4),
-        Text('Design your ad content', style: theme.body.copyWith(color: theme.textSecondary)),
+        Text(
+          'Design your ad content',
+          style: theme.body.copyWith(color: theme.textSecondary),
+        ),
         const SizedBox(height: 20),
 
         // Image upload placeholder
         GestureDetector(
-          onTap: () => ProtoToast.show(context, Icons.photo_library_outlined, 'Media picker would open'),
+          onTap: () => ProtoToast.show(
+            context,
+            Icons.photo_library_outlined,
+            'Media picker would open',
+          ),
           child: Container(
             height: 200,
             decoration: BoxDecoration(
               color: theme.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: theme.text.withValues(alpha: 0.1), style: BorderStyle.solid),
+              border: Border.all(
+                color: theme.text.withValues(alpha: 0.1),
+                style: BorderStyle.solid,
+              ),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -331,10 +413,17 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
                     color: theme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(theme.icons.addPhoto, size: 28, color: theme.primary),
+                  child: Icon(
+                    theme.icons.addPhoto,
+                    size: 28,
+                    color: theme.primary,
+                  ),
                 ),
                 const SizedBox(height: 12),
-                Text('Upload Image or Video', style: theme.title.copyWith(fontSize: 14)),
+                Text(
+                  'Upload Image or Video',
+                  style: theme.title.copyWith(fontSize: 14),
+                ),
                 const SizedBox(height: 4),
                 Text('Tap to select media', style: theme.caption),
               ],
@@ -390,11 +479,16 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected ? theme.primary : theme.surface,
                   borderRadius: BorderRadius.circular(8),
-                  border: isSelected ? null : Border.all(color: theme.text.withValues(alpha: 0.1)),
+                  border: isSelected
+                      ? null
+                      : Border.all(color: theme.text.withValues(alpha: 0.1)),
                 ),
                 child: Text(
                   cta,
@@ -422,11 +516,19 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
                 height: 140,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                  gradient: LinearGradient(colors: [theme.primary, theme.secondary]),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                  gradient: LinearGradient(
+                    colors: [theme.primary, theme.secondary],
+                  ),
                 ),
                 child: Center(
-                  child: Icon(theme.icons.image, size: 40, color: Colors.white.withValues(alpha: 0.5)),
+                  child: Icon(
+                    theme.icons.image,
+                    size: 40,
+                    color: Colors.white.withValues(alpha: 0.5),
+                  ),
                 ),
               ),
               Padding(
@@ -437,19 +539,34 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: theme.textTertiary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: Text('Sponsored', style: theme.caption.copyWith(fontSize: 9, fontWeight: FontWeight.w600)),
+                          child: Text(
+                            'Sponsored',
+                            style: theme.caption.copyWith(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 8),
-                        Text('Your Brand', style: theme.title.copyWith(fontSize: 13)),
+                        Text(
+                          'Your Brand',
+                          style: theme.title.copyWith(fontSize: 13),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 6),
-                    Text('Summer Collection — Up to 50% Off', style: theme.title.copyWith(fontSize: 14)),
+                    Text(
+                      'Summer Collection — Up to 50% Off',
+                      style: theme.title.copyWith(fontSize: 14),
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       'Discover our new summer collection with styles for every occasion.',
@@ -465,7 +582,10 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Center(
-                        child: Text('Shop Now', style: theme.button.copyWith(fontSize: 13)),
+                        child: Text(
+                          'Shop Now',
+                          style: theme.button.copyWith(fontSize: 13),
+                        ),
                       ),
                     ),
                   ],
@@ -476,7 +596,12 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
         ),
 
         const SizedBox(height: 24),
-        _NextButton(theme: theme, label: 'Continue', enabled: true, onTap: _nextStep),
+        _NextButton(
+          theme: theme,
+          label: 'Continue',
+          enabled: true,
+          onTap: _nextStep,
+        ),
       ],
     );
   }
@@ -489,7 +614,10 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
       children: [
         Text('Budget & Schedule', style: theme.headline.copyWith(fontSize: 22)),
         const SizedBox(height: 4),
-        Text('Set your spending limits and timeline', style: theme.body.copyWith(color: theme.textSecondary)),
+        Text(
+          'Set your spending limits and timeline',
+          style: theme.body.copyWith(color: theme.textSecondary),
+        ),
         const SizedBox(height: 20),
 
         // Budget type
@@ -534,11 +662,20 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
           ),
           child: Row(
             children: [
-              Text('£', style: theme.headline.copyWith(fontSize: 20, color: theme.primary)),
+              Text(
+                '£',
+                style: theme.headline.copyWith(
+                  fontSize: 20,
+                  color: theme.primary,
+                ),
+              ),
               const SizedBox(width: 8),
               Text(
                 _selectedBudgetType == 0 ? '10.00' : '100.00',
-                style: theme.headline.copyWith(fontSize: 20, fontWeight: FontWeight.w600),
+                style: theme.headline.copyWith(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const Spacer(),
               Text('per day', style: theme.caption),
@@ -616,12 +753,18 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
               const SizedBox(height: 6),
               _SummaryRow(theme: theme, label: 'Duration', value: '14 days'),
               const SizedBox(height: 6),
-              _SummaryRow(theme: theme, label: 'Est. impressions', value: '12K–34K'),
+              _SummaryRow(
+                theme: theme,
+                label: 'Est. impressions',
+                value: '12K–34K',
+              ),
               Divider(height: 16, color: theme.primary.withValues(alpha: 0.15)),
               _SummaryRow(
                 theme: theme,
                 label: 'Est. cost per result',
-                value: _selectedBidType == 0 ? '£2.94–£8.33 CPM' : '£0.15–£0.42 CPC',
+                value: _selectedBidType == 0
+                    ? '£2.94–£8.33 CPM'
+                    : '£0.15–£0.42 CPC',
                 bold: true,
               ),
             ],
@@ -629,7 +772,12 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
         ),
 
         const SizedBox(height: 24),
-        _NextButton(theme: theme, label: 'Review Campaign', enabled: true, onTap: _nextStep),
+        _NextButton(
+          theme: theme,
+          label: 'Review Campaign',
+          enabled: true,
+          onTap: _nextStep,
+        ),
       ],
     );
   }
@@ -637,31 +785,69 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
   // ── Step 5: Review & confirm ──────────────────────────────────────────────
 
   Widget _buildReviewStep(ProtoTheme theme) {
-    final typeName = _selectedType >= 0 ? _campaignTypes[_selectedType].$1 : 'Not selected';
+    final typeName = _selectedType >= 0
+        ? _campaignTypes[_selectedType].$1
+        : 'Not selected';
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         Text('Review Campaign', style: theme.headline.copyWith(fontSize: 22)),
         const SizedBox(height: 4),
-        Text('Check your details before proceeding', style: theme.body.copyWith(color: theme.textSecondary)),
+        Text(
+          'Check your details before proceeding',
+          style: theme.body.copyWith(color: theme.textSecondary),
+        ),
         const SizedBox(height: 20),
 
         _ReviewSection(theme: theme, title: 'Campaign Type', value: typeName),
-        _ReviewSection(theme: theme, title: 'Target Modules', value: _selectedModules.map((m) {
-          switch (m) {
-            case 'video_making': return 'Video';
-            case 'social_stumble': return 'Social';
-            case 'buy_sell': return 'Shop';
-            case 'dating': return 'Dating';
-            default: return m;
-          }
-        }).join(', ')),
-        _ReviewSection(theme: theme, title: 'Age Range', value: '${_ageMin.round()}–${_ageMax.round()}+'),
-        _ReviewSection(theme: theme, title: 'Location', value: 'United Kingdom'),
-        _ReviewSection(theme: theme, title: 'Budget', value: _selectedBudgetType == 0 ? '£10.00/day' : '£100.00 total'),
-        _ReviewSection(theme: theme, title: 'Bid Strategy', value: _selectedBidType == 0 ? 'CPM (per 1K views)' : 'CPC (per click)'),
-        _ReviewSection(theme: theme, title: 'Schedule', value: 'Today – 14 days'),
+        _ReviewSection(
+          theme: theme,
+          title: 'Target Modules',
+          value: _selectedModules
+              .map((m) {
+                switch (m) {
+                  case 'video_making':
+                    return 'Video';
+                  case 'social_stumble':
+                    return 'Social';
+                  case 'buy_sell':
+                    return 'Shop';
+                  case 'dating':
+                    return 'Dating';
+                  default:
+                    return m;
+                }
+              })
+              .join(', '),
+        ),
+        _ReviewSection(
+          theme: theme,
+          title: 'Age Range',
+          value: '${_ageMin.round()}–${_ageMax.round()}+',
+        ),
+        _ReviewSection(
+          theme: theme,
+          title: 'Location',
+          value: 'United Kingdom',
+        ),
+        _ReviewSection(
+          theme: theme,
+          title: 'Budget',
+          value: _selectedBudgetType == 0 ? '£10.00/day' : '£100.00 total',
+        ),
+        _ReviewSection(
+          theme: theme,
+          title: 'Bid Strategy',
+          value: _selectedBidType == 0
+              ? 'CPM (per 1K views)'
+              : 'CPC (per click)',
+        ),
+        _ReviewSection(
+          theme: theme,
+          title: 'Schedule',
+          value: 'Today – 14 days',
+        ),
 
         const SizedBox(height: 16),
 
@@ -676,12 +862,19 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.info_outline_rounded, size: 18, color: Colors.amber.shade700),
+              Icon(
+                Icons.info_outline_rounded,
+                size: 18,
+                color: Colors.amber.shade700,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Payment is collected via our web portal to keep costs low. You\'ll complete checkout in your browser.',
-                  style: theme.caption.copyWith(fontSize: 12, color: theme.text),
+                  style: theme.caption.copyWith(
+                    fontSize: 12,
+                    color: theme.text,
+                  ),
                 ),
               ),
             ],
@@ -716,7 +909,11 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
             ),
             child: Text(
               'WEB PORTAL PREVIEW',
-              style: theme.label.copyWith(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.blue),
+              style: theme.label.copyWith(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: Colors.blue,
+              ),
             ),
           ),
         ),
@@ -734,15 +931,31 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Campaign Summary', style: theme.title.copyWith(fontSize: 14)),
+              Text(
+                'Campaign Summary',
+                style: theme.title.copyWith(fontSize: 14),
+              ),
               const SizedBox(height: 10),
-              _CheckoutRow(theme: theme, label: 'Summer Collection Launch', value: ''),
-              _CheckoutRow(theme: theme, label: 'Product Spotlight · 14 days', value: ''),
+              _CheckoutRow(
+                theme: theme,
+                label: 'Summer Collection Launch',
+                value: '',
+              ),
+              _CheckoutRow(
+                theme: theme,
+                label: 'Product Spotlight · 14 days',
+                value: '',
+              ),
               Divider(height: 16, color: theme.text.withValues(alpha: 0.06)),
               _CheckoutRow(theme: theme, label: 'Subtotal', value: '£100.00'),
               _CheckoutRow(theme: theme, label: 'VAT (20%)', value: '£20.00'),
               Divider(height: 16, color: theme.text.withValues(alpha: 0.06)),
-              _CheckoutRow(theme: theme, label: 'Total', value: '£120.00', bold: true),
+              _CheckoutRow(
+                theme: theme,
+                label: 'Total',
+                value: '£120.00',
+                bold: true,
+              ),
             ],
           ),
         ),
@@ -760,19 +973,40 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
               const SizedBox(height: 12),
 
               // Card number
-              _MockInputField(theme: theme, label: 'Card number', value: '4242 4242 4242 4242', icon: Icons.credit_card_rounded),
+              _MockInputField(
+                theme: theme,
+                label: 'Card number',
+                value: '4242 4242 4242 4242',
+                icon: Icons.credit_card_rounded,
+              ),
               const SizedBox(height: 10),
 
               Row(
                 children: [
-                  Expanded(child: _MockInputField(theme: theme, label: 'Expiry', value: '12/27')),
+                  Expanded(
+                    child: _MockInputField(
+                      theme: theme,
+                      label: 'Expiry',
+                      value: '12/27',
+                    ),
+                  ),
                   const SizedBox(width: 10),
-                  Expanded(child: _MockInputField(theme: theme, label: 'CVC', value: '•••')),
+                  Expanded(
+                    child: _MockInputField(
+                      theme: theme,
+                      label: 'CVC',
+                      value: '•••',
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
 
-              _MockInputField(theme: theme, label: 'Name on card', value: 'Alex Chen'),
+              _MockInputField(
+                theme: theme,
+                label: 'Name on card',
+                value: 'Alex Chen',
+              ),
 
               const SizedBox(height: 14),
 
@@ -780,9 +1014,16 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.lock_outline_rounded, size: 12, color: theme.textTertiary),
+                  Icon(
+                    Icons.lock_outline_rounded,
+                    size: 12,
+                    color: theme.textTertiary,
+                  ),
                   const SizedBox(width: 4),
-                  Text('Powered by Stripe', style: theme.caption.copyWith(fontSize: 10)),
+                  Text(
+                    'Powered by Stripe',
+                    style: theme.caption.copyWith(fontSize: 10),
+                  ),
                 ],
               ),
             ],
@@ -794,7 +1035,11 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
         // Pay button
         ProtoPressButton(
           onTap: () {
-            ProtoToast.show(context, Icons.check_circle_rounded, 'Campaign submitted!');
+            ProtoToast.show(
+              context,
+              Icons.check_circle_rounded,
+              'Campaign submitted!',
+            );
             // Pop back to hub after a brief delay
             Future.delayed(const Duration(milliseconds: 800), () {
               if (mounted) {
@@ -813,7 +1058,10 @@ class _SponsoredCreateCampaignState extends State<SponsoredCreateCampaign> {
             child: Center(
               child: Text(
                 'Pay £120.00',
-                style: theme.button.copyWith(fontSize: 16, fontWeight: FontWeight.w700),
+                style: theme.button.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
@@ -865,7 +1113,11 @@ class _CreateCampaignBar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text('Create Campaign', style: theme.title, overflow: TextOverflow.ellipsis),
+            child: Text(
+              'Create Campaign',
+              style: theme.title,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -877,7 +1129,11 @@ class _StepIndicator extends StatelessWidget {
   final ProtoTheme theme;
   final int currentStep;
   final int totalSteps;
-  const _StepIndicator({required this.theme, required this.currentStep, required this.totalSteps});
+  const _StepIndicator({
+    required this.theme,
+    required this.currentStep,
+    required this.totalSteps,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -895,8 +1151,8 @@ class _StepIndicator extends StatelessWidget {
                 color: isCompleted
                     ? theme.primary
                     : isCurrent
-                        ? theme.primary.withValues(alpha: 0.5)
-                        : theme.text.withValues(alpha: 0.08),
+                    ? theme.primary.withValues(alpha: 0.5)
+                    : theme.text.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -913,7 +1169,13 @@ class _NextButton extends StatelessWidget {
   final IconData? icon;
   final bool enabled;
   final VoidCallback onTap;
-  const _NextButton({required this.theme, required this.label, this.icon, required this.enabled, required this.onTap});
+  const _NextButton({
+    required this.theme,
+    required this.label,
+    this.icon,
+    required this.enabled,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -940,7 +1202,11 @@ class _NextButton extends StatelessWidget {
             ),
             if (icon != null) ...[
               const SizedBox(width: 6),
-              Icon(icon, size: 16, color: enabled ? Colors.white : theme.textTertiary),
+              Icon(
+                icon,
+                size: 16,
+                color: enabled ? Colors.white : theme.textTertiary,
+              ),
             ],
           ],
         ),
@@ -955,7 +1221,13 @@ class _ToggleChip extends StatelessWidget {
   final String? subtitle;
   final bool isSelected;
   final VoidCallback onTap;
-  const _ToggleChip({required this.theme, required this.label, this.subtitle, required this.isSelected, required this.onTap});
+  const _ToggleChip({
+    required this.theme,
+    required this.label,
+    this.subtitle,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -965,10 +1237,14 @@ class _ToggleChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? theme.primary.withValues(alpha: 0.1) : theme.surface,
+          color: isSelected
+              ? theme.primary.withValues(alpha: 0.1)
+              : theme.surface,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isSelected ? theme.primary : theme.text.withValues(alpha: 0.08),
+            color: isSelected
+                ? theme.primary
+                : theme.text.withValues(alpha: 0.08),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -994,7 +1270,11 @@ class _DateField extends StatelessWidget {
   final ProtoTheme theme;
   final String label;
   final String value;
-  const _DateField({required this.theme, required this.label, required this.value});
+  const _DateField({
+    required this.theme,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1012,9 +1292,16 @@ class _DateField extends StatelessWidget {
           const SizedBox(height: 2),
           Row(
             children: [
-              Text(value, style: theme.body.copyWith(fontWeight: FontWeight.w600)),
+              Text(
+                value,
+                style: theme.body.copyWith(fontWeight: FontWeight.w600),
+              ),
               const Spacer(),
-              Icon(Icons.calendar_today_rounded, size: 16, color: theme.textTertiary),
+              Icon(
+                Icons.calendar_today_rounded,
+                size: 16,
+                color: theme.textTertiary,
+              ),
             ],
           ),
         ],
@@ -1028,20 +1315,33 @@ class _SummaryRow extends StatelessWidget {
   final String label;
   final String value;
   final bool bold;
-  const _SummaryRow({required this.theme, required this.label, required this.value, this.bold = false});
+  const _SummaryRow({
+    required this.theme,
+    required this.label,
+    required this.value,
+    this.bold = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: bold ? theme.title.copyWith(fontSize: 13) : theme.body.copyWith(fontSize: 13)),
-        Text(value, style: TextStyle(
-          fontSize: 13,
-          fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
-          color: theme.text,
-          fontFamily: theme.displayFont,
-        )),
+        Text(
+          label,
+          style: bold
+              ? theme.title.copyWith(fontSize: 13)
+              : theme.body.copyWith(fontSize: 13),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+            color: theme.text,
+            fontFamily: theme.displayFont,
+          ),
+        ),
       ],
     );
   }
@@ -1051,7 +1351,11 @@ class _ReviewSection extends StatelessWidget {
   final ProtoTheme theme;
   final String title;
   final String value;
-  const _ReviewSection({required this.theme, required this.title, required this.value});
+  const _ReviewSection({
+    required this.theme,
+    required this.title,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1065,7 +1369,13 @@ class _ReviewSection extends StatelessWidget {
             child: Text(title, style: theme.caption.copyWith(fontSize: 12)),
           ),
           Expanded(
-            child: Text(value, style: theme.body.copyWith(fontWeight: FontWeight.w600, fontSize: 13)),
+            child: Text(
+              value,
+              style: theme.body.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
           ),
         ],
       ),
@@ -1078,7 +1388,12 @@ class _CheckoutRow extends StatelessWidget {
   final String label;
   final String value;
   final bool bold;
-  const _CheckoutRow({required this.theme, required this.label, required this.value, this.bold = false});
+  const _CheckoutRow({
+    required this.theme,
+    required this.label,
+    required this.value,
+    this.bold = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1087,14 +1402,22 @@ class _CheckoutRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: bold ? theme.title.copyWith(fontSize: 13) : theme.body.copyWith(fontSize: 13)),
+          Text(
+            label,
+            style: bold
+                ? theme.title.copyWith(fontSize: 13)
+                : theme.body.copyWith(fontSize: 13),
+          ),
           if (value.isNotEmpty)
-            Text(value, style: TextStyle(
-              fontSize: 13,
-              fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
-              color: theme.text,
-              fontFamily: theme.displayFont,
-            )),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+                color: theme.text,
+                fontFamily: theme.displayFont,
+              ),
+            ),
         ],
       ),
     );
@@ -1106,7 +1429,12 @@ class _MockInputField extends StatelessWidget {
   final String label;
   final String value;
   final IconData? icon;
-  const _MockInputField({required this.theme, required this.label, required this.value, this.icon});
+  const _MockInputField({
+    required this.theme,
+    required this.label,
+    required this.value,
+    this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {

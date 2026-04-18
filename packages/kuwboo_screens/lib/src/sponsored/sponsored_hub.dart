@@ -53,93 +53,101 @@ class SponsoredHub extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
-    final activeCount =
-        _demoCampaigns.where((c) => c.status == 'Active').length;
+    final activeCount = _demoCampaigns
+        .where((c) => c.status == 'Active')
+        .length;
 
-    return Container(
-      color: theme.background,
-      child: Column(
-        children: [
-          ProtoSubBar(title: 'Promote'),
-          if (!kSponsoredEnabled) _ComingSoonBanner(theme: theme),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                const SizedBox(height: 16),
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        color: theme.background,
+        child: Column(
+          children: [
+            ProtoSubBar(title: 'Promote'),
+            if (!kSponsoredEnabled) _ComingSoonBanner(theme: theme),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  const SizedBox(height: 16),
 
-                // Stats overview cards
-                _StatsRow(theme: theme),
+                  // Stats overview cards
+                  _StatsRow(theme: theme),
 
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                // Action buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: ProtoPressButton(
-                        onTap: () => state.push(ProtoRoutes.sponsoredCreate),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            color: theme.primary,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(theme.icons.add, size: 20, color: Colors.white),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Create Campaign',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
+                  // Action buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ProtoPressButton(
+                          onTap: () => state.push(ProtoRoutes.sponsoredCreate),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            decoration: BoxDecoration(
+                              color: theme.primary,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  theme.icons.add,
+                                  size: 20,
                                   color: Colors.white,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Create Campaign',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // Section header
-                Row(
-                  children: [
-                    Text(
-                      'My Campaigns',
-                      style: theme.title.copyWith(fontSize: 18),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '$activeCount active',
-                      style: theme.caption.copyWith(color: theme.primary),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                // Campaign cards
-                for (var i = 0; i < _demoCampaigns.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 10),
-                  _CampaignCard(
-                    theme: theme,
-                    campaign: _demoCampaigns[i],
-                    onTap: () => state.push(ProtoRoutes.sponsoredCampaign),
+                    ],
                   ),
-                ],
 
-                const SizedBox(height: 80),
-              ],
+                  const SizedBox(height: 24),
+
+                  // Section header
+                  Row(
+                    children: [
+                      Text(
+                        'My Campaigns',
+                        style: theme.title.copyWith(fontSize: 18),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '$activeCount active',
+                        style: theme.caption.copyWith(color: theme.primary),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Campaign cards
+                  for (var i = 0; i < _demoCampaigns.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 10),
+                    _CampaignCard(
+                      theme: theme,
+                      campaign: _demoCampaigns[i],
+                      onTap: () => state.push(ProtoRoutes.sponsoredCampaign),
+                    ),
+                  ],
+
+                  const SizedBox(height: 80),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -153,11 +161,32 @@ class _StatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: _StatCard(theme: theme, label: 'Impressions', value: '48.4K', icon: Icons.visibility_outlined)),
+        Expanded(
+          child: _StatCard(
+            theme: theme,
+            label: 'Impressions',
+            value: '48.4K',
+            icon: Icons.visibility_outlined,
+          ),
+        ),
         const SizedBox(width: 10),
-        Expanded(child: _StatCard(theme: theme, label: 'Clicks', value: '1,244', icon: Icons.touch_app_outlined)),
+        Expanded(
+          child: _StatCard(
+            theme: theme,
+            label: 'Clicks',
+            value: '1,244',
+            icon: Icons.touch_app_outlined,
+          ),
+        ),
         const SizedBox(width: 10),
-        Expanded(child: _StatCard(theme: theme, label: 'Spend', value: '\u00a3196', icon: Icons.payments_outlined)),
+        Expanded(
+          child: _StatCard(
+            theme: theme,
+            label: 'Spend',
+            value: '\u00a3196',
+            icon: Icons.payments_outlined,
+          ),
+        ),
       ],
     );
   }
@@ -168,7 +197,12 @@ class _StatCard extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
-  const _StatCard({required this.theme, required this.label, required this.value, required this.icon});
+  const _StatCard({
+    required this.theme,
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -224,14 +258,20 @@ class _CampaignCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(campaign.title, style: theme.title.copyWith(fontSize: 15)),
+                      Text(
+                        campaign.title,
+                        style: theme.title.copyWith(fontSize: 15),
+                      ),
                       const SizedBox(height: 2),
                       Text(campaign.type, style: theme.caption),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: campaign.statusColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
@@ -251,9 +291,17 @@ class _CampaignCard extends StatelessWidget {
             // Stats row
             Row(
               children: [
-                _CampaignStat(theme: theme, label: 'Impressions', value: campaign.impressions),
+                _CampaignStat(
+                  theme: theme,
+                  label: 'Impressions',
+                  value: campaign.impressions,
+                ),
                 const SizedBox(width: 16),
-                _CampaignStat(theme: theme, label: 'Clicks', value: campaign.clicks),
+                _CampaignStat(
+                  theme: theme,
+                  label: 'Clicks',
+                  value: campaign.clicks,
+                ),
                 const Spacer(),
                 Text(
                   '${campaign.spent} / ${campaign.budget}',
@@ -334,7 +382,11 @@ class _CampaignStat extends StatelessWidget {
   final ProtoTheme theme;
   final String label;
   final String value;
-  const _CampaignStat({required this.theme, required this.label, required this.value});
+  const _CampaignStat({
+    required this.theme,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
