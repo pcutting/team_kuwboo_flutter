@@ -84,8 +84,10 @@ ADMIN_PHIL_PASSWORD='...' ADMIN_NEIL_PASSWORD='...' \
 |---|---|---|
 | `ADMIN_PHIL_EMAIL` | Phil's admin email | `cuttingphilip@gmail.com` |
 | `ADMIN_PHIL_PASSWORD` | Phil's password (required) | — |
+| `ADMIN_PHIL_USERNAME` | Phil's username (unique across `users`) | `phil_admin` |
 | `ADMIN_NEIL_EMAIL` | Neil's admin email | `neildouglas33@hotmail.co.uk` |
 | `ADMIN_NEIL_PASSWORD` | Neil's password (required) | — |
+| `ADMIN_NEIL_USERNAME` | Neil's username (unique across `users`) | `neil_admin` |
 
 ### Idempotency
 
