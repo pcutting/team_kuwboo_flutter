@@ -26,6 +26,7 @@ import { Video } from '../modules/content/entities/video.entity';
 import { Post } from '../modules/content/entities/post.entity';
 import { Product } from '../modules/content/entities/product.entity';
 import { Wave } from '../modules/yoyo/entities/wave.entity';
+import { seedTestUser } from './seed-test-user';
 import {
   Role,
   UserStatus,
@@ -237,6 +238,17 @@ async function bootstrap() {
 
   console.log('\n[seed] Done:');
   console.table(summary);
+
+  // Seed the connected test user. Idempotent: skips if it already exists.
+  // Disable with `--no-test-user` if a clean main-seed-only state is desired.
+  if (!process.argv.includes('--no-test-user')) {
+    try {
+      await seedTestUser(em);
+    } catch (err) {
+      console.error('[seed] test-user seed failed (continuing):', err);
+    }
+  }
+
   await app.close();
 }
 
