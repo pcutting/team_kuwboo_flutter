@@ -47,6 +47,18 @@ describe('KuwbooThrottlerGuard', () => {
     expect(skip).toBe(true);
   });
 
+  it('skips for the default admin emails (case-insensitive)', async () => {
+    const philSkip = await guard['shouldSkip'](
+      ctxWithBody({ email: 'CuttingPhilip@gmail.com' }),
+    );
+    expect(philSkip).toBe(true);
+
+    const neilSkip = await guard['shouldSkip'](
+      ctxWithBody({ email: 'NeilDouglas33@hotmail.co.uk' }),
+    );
+    expect(neilSkip).toBe(true);
+  });
+
   it('delegates to super for unreserved phones', async () => {
     const skip = await guard['shouldSkip'](
       ctxWithBody({ phone: '+14045550199' }),
