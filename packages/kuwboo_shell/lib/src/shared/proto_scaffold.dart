@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../routes/proto_routes.dart';
 import '../theme/proto_theme.dart';
 import '../state/proto_state_provider.dart';
 import '../testing/shell_test_ids.dart';
@@ -34,12 +36,27 @@ class ProtoScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = PrototypeStateProvider.maybeOf(context);
     final theme = ProtoTheme.of(context);
     final bg = backgroundColor ?? theme.background;
     final bodyBottomPadding = showBottomNav
         ? _barHeight + MediaQuery.paddingOf(context).bottom
         : 0.0;
+
+    void onTabTapped(int tabIndex) {
+      // Route lookup uses the activeModule passed to this scaffold, NOT
+      // the shell state's activeModule. The shell state can lag behind
+      // URL changes (e.g. cold-loaded deep links, GoRouter-driven module
+      // switches) — using the parameter keeps tab nav in sync with the
+      // currently rendered module.
+      final route = ProtoRoutes.tabRoute(activeModule.name, tabIndex);
+      if (route != null) GoRouter.of(context).go(route);
+    }
+
+    void onServiceSelected(ProtoModule module) {
+      // Same reasoning as above — derive target route from the module the
+      // user picked, not from a state field that may be stale.
+      GoRouter.of(context).go(ProtoRoutes.homeRoute(module.name));
+    }
 
     // Overlay mode: top bar floats over the body (transparent, radar shows through)
     if (overlayTopBar && showTopBar) {
@@ -67,12 +84,8 @@ class ProtoScaffold extends StatelessWidget {
                   activeModule: activeModule,
                   activeTab: activeTab,
                   tabBadges: tabBadges,
-                  onTabTapped: (tabIndex) {
-                    if (state != null) state.switchTab(tabIndex);
-                  },
-                  onServiceSelected: (module) {
-                    if (state != null) state.switchModule(module);
-                  },
+                  onTabTapped: onTabTapped,
+                  onServiceSelected: onServiceSelected,
                 ),
               ),
           ],
@@ -109,16 +122,8 @@ class ProtoScaffold extends StatelessWidget {
                       activeModule: activeModule,
                       activeTab: activeTab,
                       tabBadges: tabBadges,
-                      onTabTapped: (tabIndex) {
-                        if (state != null) {
-                          state.switchTab(tabIndex);
-                        }
-                      },
-                      onServiceSelected: (module) {
-                        if (state != null) {
-                          state.switchModule(module);
-                        }
-                      },
+                      onTabTapped: onTabTapped,
+                      onServiceSelected: onServiceSelected,
                     ),
                   ),
               ],
