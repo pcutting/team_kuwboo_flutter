@@ -22,31 +22,47 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
     final user = DemoData.nearbyUsers[0];
     final encounter = ProtoDemoData.encounters[0]; // Maya — shared, friend
     // First real nearby user (if loaded) — target for the live wave button.
-    final realTarget =
-        ref.watch(yoyoNearbyProvider).valueOrNull?.firstOrNull;
+    final realTarget = ref.watch(yoyoNearbyProvider).valueOrNull?.firstOrNull;
 
-    return Container(
-      color: theme.background,
-      child: Column(
-        children: [
-          ProtoSubBar(
-            title: !_isRevealed ? 'Anonymous User' : user.name,
-            actions: [
-              ProtoPressButton(
-                onTap: () => ProtoShareSheet.show(context),
-                child: Icon(theme.icons.share, size: 20, color: theme.text),
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        color: theme.background,
+        child: Column(
+          children: [
+            ProtoSubBar(
+              title: !_isRevealed ? 'Anonymous User' : user.name,
+              actions: [
+                ProtoPressButton(
+                  onTap: () => ProtoShareSheet.show(context),
+                  child: Icon(theme.icons.share, size: 20, color: theme.text),
+                ),
+              ],
+            ),
+            Expanded(
+              child: _buildProfile(
+                context,
+                theme,
+                state,
+                user,
+                encounter,
+                realTarget?.id,
               ),
-            ],
-          ),
-          Expanded(
-            child: _buildProfile(context, theme, state, user, encounter, realTarget?.id),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildProfile(BuildContext context, ProtoTheme theme, PrototypeStateProvider state, NearbyUser user, DemoEncounter enc, String? realTargetId) {
+  Widget _buildProfile(
+    BuildContext context,
+    ProtoTheme theme,
+    PrototypeStateProvider state,
+    NearbyUser user,
+    DemoEncounter enc,
+    String? realTargetId,
+  ) {
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       children: [
@@ -62,8 +78,14 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
-                _isRevealed ? 'Viewing: Revealed' : 'Viewing: Teaser (pre-consent)',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: theme.textSecondary),
+                _isRevealed
+                    ? 'Viewing: Revealed'
+                    : 'Viewing: Teaser (pre-consent)',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: theme.textSecondary,
+                ),
               ),
             ),
           ),
@@ -82,9 +104,16 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.lock_rounded, size: 48, color: theme.textTertiary.withValues(alpha: 0.4)),
+                  Icon(
+                    Icons.lock_rounded,
+                    size: 48,
+                    color: theme.textTertiary.withValues(alpha: 0.4),
+                  ),
                   const SizedBox(height: 8),
-                  Text('Profile Hidden', style: theme.body.copyWith(color: theme.textTertiary)),
+                  Text(
+                    'Profile Hidden',
+                    style: theme.body.copyWith(color: theme.textTertiary),
+                  ),
                 ],
               ),
             ),
@@ -98,23 +127,50 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: enc.encounterType == EncounterType.nearby ? theme.secondary.withValues(alpha: 0.15) : Colors.amber.withValues(alpha: 0.15),
+                  color: enc.encounterType == EncounterType.nearby
+                      ? theme.secondary.withValues(alpha: 0.15)
+                      : Colors.amber.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(enc.encounterType == EncounterType.nearby ? Icons.pin_drop_rounded : Icons.flash_on_rounded, size: 12, color: enc.encounterType == EncounterType.nearby ? theme.secondary : Colors.amber.shade700),
+                    Icon(
+                      enc.encounterType == EncounterType.nearby
+                          ? Icons.pin_drop_rounded
+                          : Icons.flash_on_rounded,
+                      size: 12,
+                      color: enc.encounterType == EncounterType.nearby
+                          ? theme.secondary
+                          : Colors.amber.shade700,
+                    ),
                     const SizedBox(width: 4),
-                    Text(enc.encounterType == EncounterType.nearby ? 'Nearby' : 'Pass-by', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: enc.encounterType == EncounterType.nearby ? theme.secondary : Colors.amber.shade700)),
+                    Text(
+                      enc.encounterType == EncounterType.nearby
+                          ? 'Nearby'
+                          : 'Pass-by',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: enc.encounterType == EncounterType.nearby
+                            ? theme.secondary
+                            : Colors.amber.shade700,
+                      ),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(width: 6),
-              Text('Very Near', style: theme.caption.copyWith(color: theme.textTertiary)),
+              Text(
+                'Very Near',
+                style: theme.caption.copyWith(color: theme.textTertiary),
+              ),
               if (enc.ageRange != null) ...[
                 const SizedBox(width: 8),
-                Text(enc.ageRange!, style: theme.caption.copyWith(color: theme.textTertiary)),
+                Text(
+                  enc.ageRange!,
+                  style: theme.caption.copyWith(color: theme.textTertiary),
+                ),
               ],
             ],
           ),
@@ -124,11 +180,24 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: enc.interests.map((i) => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: theme.accentPillDecoration(theme.primary),
-              child: Text(i[0].toUpperCase() + i.substring(1), style: theme.caption.copyWith(color: theme.primary, fontWeight: FontWeight.w600)),
-            )).toList(),
+            children: enc.interests
+                .map(
+                  (i) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: theme.accentPillDecoration(theme.primary),
+                    child: Text(
+                      i[0].toUpperCase() + i.substring(1),
+                      style: theme.caption.copyWith(
+                        color: theme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
           ),
           const SizedBox(height: 20),
           // Consent buttons
@@ -137,15 +206,30 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
             child: ProtoPressButton(
               onTap: () {
                 setState(() => _isRevealed = true);
-                ProtoToast.show(context, Icons.celebration_rounded, 'Profiles revealed! Say hello');
+                ProtoToast.show(
+                  context,
+                  Icons.celebration_rounded,
+                  'Profiles revealed! Say hello',
+                );
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [theme.primary, theme.secondary]),
+                  gradient: LinearGradient(
+                    colors: [theme.primary, theme.secondary],
+                  ),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Center(child: Text('Share My Card', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white))),
+                child: const Center(
+                  child: Text(
+                    'Share My Card',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -154,9 +238,20 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
             child: ProtoPressButton(
               onTap: () {
                 state.pop();
-                ProtoToast.show(context, Icons.schedule_rounded, 'Maybe next time');
+                ProtoToast.show(
+                  context,
+                  Icons.schedule_rounded,
+                  'Maybe next time',
+                );
               },
-              child: Text('Not now', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: theme.textSecondary)),
+              child: Text(
+                'Not now',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: theme.textSecondary,
+                ),
+              ),
             ),
           ),
         ] else ...[
@@ -165,7 +260,11 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
             height: 200,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(theme.radiusMd),
-              child: Image.network(user.imageUrl.replaceAll('100', '400'), fit: BoxFit.cover, width: double.infinity),
+              child: Image.network(
+                user.imageUrl.replaceAll('100', '400'),
+                fit: BoxFit.cover,
+                width: double.infinity,
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -175,28 +274,79 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
               const SizedBox(width: 8),
               if (enc.relationship == RelationshipType.friend)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: [Icon(Icons.star_rounded, size: 12, color: Colors.amber.shade700), const SizedBox(width: 4), Text('Friend', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.amber.shade700))],
+                    children: [
+                      Icon(
+                        Icons.star_rounded,
+                        size: 12,
+                        color: Colors.amber.shade700,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Friend',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.amber.shade700,
+                        ),
+                      ),
+                    ],
                   ),
                 )
               else if (enc.relationship == RelationshipType.partner)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: [Icon(Icons.favorite_rounded, size: 12, color: Colors.red), SizedBox(width: 4), Text('Partner', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.red))],
+                    children: [
+                      Icon(Icons.favorite_rounded, size: 12, color: Colors.red),
+                      SizedBox(width: 4),
+                      Text(
+                        'Partner',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               if (user.isOnline) ...[
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: theme.secondary.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-                  child: Text('Online', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: theme.secondary)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.secondary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Online',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: theme.secondary,
+                    ),
+                  ),
                 ),
               ],
             ],
@@ -205,13 +355,25 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
           // "How you met" encounter badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(color: theme.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(
+              color: theme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(enc.encounterType == EncounterType.nearby ? Icons.pin_drop_rounded : Icons.flash_on_rounded, size: 14, color: theme.primary),
+                Icon(
+                  enc.encounterType == EncounterType.nearby
+                      ? Icons.pin_drop_rounded
+                      : Icons.flash_on_rounded,
+                  size: 14,
+                  color: theme.primary,
+                ),
                 const SizedBox(width: 6),
-                Text('${enc.encounterType == EncounterType.nearby ? "Nearby" : "Pass-by"} encounter, ${enc.encounterTime}', style: TextStyle(fontSize: 12, color: theme.primary)),
+                Text(
+                  '${enc.encounterType == EncounterType.nearby ? "Nearby" : "Pass-by"} encounter, ${enc.encounterTime}',
+                  style: TextStyle(fontSize: 12, color: theme.primary),
+                ),
               ],
             ),
           ),
@@ -221,11 +383,25 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: ProtoDemoData.interests.take(6).map((i) => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: theme.accentPillDecoration(theme.primary),
-              child: Text(i.name, style: theme.caption.copyWith(color: theme.primary, fontWeight: FontWeight.w600)),
-            )).toList(),
+            children: ProtoDemoData.interests
+                .take(6)
+                .map(
+                  (i) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: theme.accentPillDecoration(theme.primary),
+                    child: Text(
+                      i.name,
+                      style: theme.caption.copyWith(
+                        color: theme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
           ),
           const SizedBox(height: 16),
           // Who Saw Me section
@@ -237,9 +413,16 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.visibility_rounded, size: 16, color: theme.textSecondary),
+                    Icon(
+                      Icons.visibility_rounded,
+                      size: 16,
+                      color: theme.textSecondary,
+                    ),
                     const SizedBox(width: 8),
-                    Text('Who Saw Me', style: theme.title.copyWith(fontSize: 13)),
+                    Text(
+                      'Who Saw Me',
+                      style: theme.title.copyWith(fontSize: 13),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -252,12 +435,22 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
           // Retention indicator
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: Row(
               children: [
-                Icon(Icons.auto_delete_rounded, size: 14, color: Colors.orange.shade700),
+                Icon(
+                  Icons.auto_delete_rounded,
+                  size: 14,
+                  color: Colors.orange.shade700,
+                ),
                 const SizedBox(width: 6),
-                Text('Profile data expires in 28h', style: TextStyle(fontSize: 12, color: Colors.orange.shade700)),
+                Text(
+                  'Profile data expires in 28h',
+                  style: TextStyle(fontSize: 12, color: Colors.orange.shade700),
+                ),
               ],
             ),
           ),
@@ -267,8 +460,15 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
         const SizedBox(height: 24),
         Center(
           child: ProtoPressButton(
-            onTap: () => ProtoToast.show(context, theme.icons.flag, 'Report dialog would open'),
-            child: Text('Report or Block', style: theme.caption.copyWith(color: theme.textTertiary)),
+            onTap: () => ProtoToast.show(
+              context,
+              theme.icons.flag,
+              'Report dialog would open',
+            ),
+            child: Text(
+              'Report or Block',
+              style: theme.caption.copyWith(color: theme.textTertiary),
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -276,7 +476,13 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, ProtoTheme theme, PrototypeStateProvider state, NearbyUser user, String? realTargetId) {
+  Widget _buildActionButtons(
+    BuildContext context,
+    ProtoTheme theme,
+    PrototypeStateProvider state,
+    NearbyUser user,
+    String? realTargetId,
+  ) {
     return Row(
       children: [
         Expanded(
@@ -290,10 +496,16 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
                       .read(yoyoApiProvider)
                       .sendWave(toUserId: realTargetId);
                   ref.invalidate(yoyoSentWavesProvider);
-                } catch (_) {/* swallow */}
+                } catch (_) {
+                  /* swallow */
+                }
               }
               if (!context.mounted) return;
-              ProtoToast.show(context, theme.icons.wavingHand, 'Waved at ${user.name}!');
+              ProtoToast.show(
+                context,
+                theme.icons.wavingHand,
+                'Waved at ${user.name}!',
+              );
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 250),
@@ -305,8 +517,46 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 child: _hasWaved
-                    ? Row(key: const ValueKey('waved'), mainAxisAlignment: MainAxisAlignment.center, children: [Icon(theme.icons.check, size: 18, color: Colors.white), const SizedBox(width: 8), const Text('Waved!', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white))])
-                    : Row(key: const ValueKey('wave'), mainAxisAlignment: MainAxisAlignment.center, children: [Icon(theme.icons.wavingHand, size: 18, color: Colors.white), const SizedBox(width: 8), const Text('Wave', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white))]),
+                    ? Row(
+                        key: const ValueKey('waved'),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            theme.icons.check,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Waved!',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        key: const ValueKey('wave'),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            theme.icons.wavingHand,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Wave',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
               ),
             ),
           ),
@@ -324,7 +574,11 @@ class _YoyoUserProfileState extends ConsumerState<YoyoUserProfile> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(theme.icons.chatBubbleOutline, size: 18, color: theme.text),
+                  Icon(
+                    theme.icons.chatBubbleOutline,
+                    size: 18,
+                    color: theme.text,
+                  ),
                   const SizedBox(width: 8),
                   Text('Message', style: theme.title.copyWith(fontSize: 14)),
                 ],

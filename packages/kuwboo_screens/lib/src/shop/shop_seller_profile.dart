@@ -25,58 +25,63 @@ class _ShopSellerProfileState extends ConsumerState<ShopSellerProfile> {
     final theme = ProtoTheme.of(context);
     final id = widget.sellerId;
 
-    return Container(
-      color: theme.background,
-      child: Column(
-        children: [
-          ProtoSubBar(
-            title: 'Seller',
-            actions: [
-              ProtoPressButton(
-                onTap: () => ProtoShareSheet.show(context),
-                child: Icon(theme.icons.share, size: 20, color: theme.text),
-              ),
-            ],
-          ),
-          Expanded(
-            child: id == null
-                ? const ProtoEmptyState(
-                    icon: Icons.person_outline_rounded,
-                    title: 'No seller selected',
-                    subtitle: 'Open a seller from a product listing',
-                  )
-                : ref.watch(sellerRatingsProvider(id)).when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (err, _) => ProtoErrorState(
-                        message: 'Could not load seller',
-                        onRetry: () =>
-                            ref.invalidate(sellerRatingsProvider(id)),
-                      ),
-                      data: (page) => _SellerBody(
-                        sellerId: id,
-                        page: page,
-                        theme: theme,
-                        activeTab: _activeTab,
-                        onTabChanged: (tab) =>
-                            setState(() => _activeTab = tab),
-                        isFriend: _isFriend,
-                        onToggleFriend: () {
-                          setState(() => _isFriend = !_isFriend);
-                          ProtoToast.show(
-                            context,
-                            _isFriend
-                                ? theme.icons.personAdd
-                                : theme.icons.personRemove,
-                            _isFriend
-                                ? 'Friend request sent'
-                                : 'Friend removed',
-                          );
-                        },
-                      ),
-                    ),
-          ),
-        ],
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        color: theme.background,
+        child: Column(
+          children: [
+            ProtoSubBar(
+              title: 'Seller',
+              actions: [
+                ProtoPressButton(
+                  onTap: () => ProtoShareSheet.show(context),
+                  child: Icon(theme.icons.share, size: 20, color: theme.text),
+                ),
+              ],
+            ),
+            Expanded(
+              child: id == null
+                  ? const ProtoEmptyState(
+                      icon: Icons.person_outline_rounded,
+                      title: 'No seller selected',
+                      subtitle: 'Open a seller from a product listing',
+                    )
+                  : ref
+                        .watch(sellerRatingsProvider(id))
+                        .when(
+                          loading: () =>
+                              const Center(child: CircularProgressIndicator()),
+                          error: (err, _) => ProtoErrorState(
+                            message: 'Could not load seller',
+                            onRetry: () =>
+                                ref.invalidate(sellerRatingsProvider(id)),
+                          ),
+                          data: (page) => _SellerBody(
+                            sellerId: id,
+                            page: page,
+                            theme: theme,
+                            activeTab: _activeTab,
+                            onTabChanged: (tab) =>
+                                setState(() => _activeTab = tab),
+                            isFriend: _isFriend,
+                            onToggleFriend: () {
+                              setState(() => _isFriend = !_isFriend);
+                              ProtoToast.show(
+                                context,
+                                _isFriend
+                                    ? theme.icons.personAdd
+                                    : theme.icons.personRemove,
+                                _isFriend
+                                    ? 'Friend request sent'
+                                    : 'Friend removed',
+                              );
+                            },
+                          ),
+                        ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -101,8 +106,7 @@ class _SellerBody extends StatelessWidget {
   final bool isFriend;
   final VoidCallback onToggleFriend;
 
-  String _sellerShortId() =>
-      sellerId.substring(0, sellerId.length.clamp(0, 6));
+  String _sellerShortId() => sellerId.substring(0, sellerId.length.clamp(0, 6));
 
   @override
   Widget build(BuildContext context) {
@@ -129,10 +133,11 @@ class _SellerBody extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(theme.icons.starFilled, size: 18, color: theme.tertiary),
-                  Text(' ${avg.toStringAsFixed(1)}',
-                      style: theme.title.copyWith(fontSize: 14)),
-                  Text(' (${page.items.length} reviews)',
-                      style: theme.caption),
+                  Text(
+                    ' ${avg.toStringAsFixed(1)}',
+                    style: theme.title.copyWith(fontSize: 14),
+                  ),
+                  Text(' (${page.items.length} reviews)', style: theme.caption),
                 ],
               ),
               const SizedBox(height: 12),
@@ -181,8 +186,9 @@ class _SellerBody extends StatelessWidget {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        border:
-                            Border.all(color: theme.text.withValues(alpha: 0.2)),
+                        border: Border.all(
+                          color: theme.text.withValues(alpha: 0.2),
+                        ),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -235,8 +241,9 @@ class _SellerBody extends StatelessWidget {
                         tab,
                         style: TextStyle(
                           fontSize: 13,
-                          fontWeight:
-                              isActive ? FontWeight.w600 : FontWeight.w400,
+                          fontWeight: isActive
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                           color: isActive ? theme.text : theme.textTertiary,
                         ),
                       ),
@@ -309,46 +316,46 @@ class _ReviewsList extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        ...reviews.map(
-          (r) {
-            final buyerShort =
-                r.buyerId.substring(0, r.buyerId.length.clamp(0, 6));
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(12),
-              decoration: theme.cardDecoration,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        'Buyer $buyerShort',
-                        style: theme.title.copyWith(fontSize: 14),
-                      ),
-                      const Spacer(),
-                      ...List.generate(5, (i) {
-                        return Icon(
-                          i < r.rating
-                              ? theme.icons.starFilled
-                              : Icons.star_outline_rounded,
-                          size: 12,
-                          color: i < r.rating
-                              ? theme.tertiary
-                              : theme.textTertiary,
-                        );
-                      }),
-                    ],
-                  ),
-                  if (r.review != null) ...[
-                    const SizedBox(height: 6),
-                    Text(r.review!, style: theme.body),
+        ...reviews.map((r) {
+          final buyerShort = r.buyerId.substring(
+            0,
+            r.buyerId.length.clamp(0, 6),
+          );
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: theme.cardDecoration,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Buyer $buyerShort',
+                      style: theme.title.copyWith(fontSize: 14),
+                    ),
+                    const Spacer(),
+                    ...List.generate(5, (i) {
+                      return Icon(
+                        i < r.rating
+                            ? theme.icons.starFilled
+                            : Icons.star_outline_rounded,
+                        size: 12,
+                        color: i < r.rating
+                            ? theme.tertiary
+                            : theme.textTertiary,
+                      );
+                    }),
                   ],
+                ),
+                if (r.review != null) ...[
+                  const SizedBox(height: 6),
+                  Text(r.review!, style: theme.body),
                 ],
-              ),
-            );
-          },
-        ),
+              ],
+            ),
+          );
+        }),
       ],
     );
   }
@@ -370,10 +377,7 @@ class _AboutBlock extends StatelessWidget {
         children: [
           Text('About this seller', style: theme.title),
           const SizedBox(height: 6),
-          Text(
-            'Seller ID: $sellerId',
-            style: theme.caption,
-          ),
+          Text('Seller ID: $sellerId', style: theme.caption),
         ],
       ),
     );

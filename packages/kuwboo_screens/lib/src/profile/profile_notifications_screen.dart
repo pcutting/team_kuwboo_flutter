@@ -16,34 +16,43 @@ class _ProfileNotificationsScreenState
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
 
-    return Container(
-      color: theme.background,
-      child: Column(
-        children: [
-          ProtoSubBar(
-            title: 'Notifications',
-          ),
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        color: theme.background,
+        child: Column(
+          children: [
+            ProtoSubBar(title: 'Notifications'),
 
-          // Search bar + mark all read
-          Padding(
+            // Search bar + mark all read
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
-                          color: theme.surface,
-                          borderRadius: BorderRadius.circular(24)),
+                        color: theme.surface,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
                       child: Row(
                         children: [
-                          Icon(theme.icons.search,
-                              size: 20, color: theme.textTertiary),
+                          Icon(
+                            theme.icons.search,
+                            size: 20,
+                            color: theme.textTertiary,
+                          ),
                           const SizedBox(width: 10),
-                          Text('Search notifications...',
-                              style: theme.body
-                                  .copyWith(color: theme.textTertiary)),
+                          Text(
+                            'Search notifications...',
+                            style: theme.body.copyWith(
+                              color: theme.textTertiary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -57,7 +66,9 @@ class _ProfileNotificationsScreenState
                     ),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 8),
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: theme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
@@ -65,8 +76,11 @@ class _ProfileNotificationsScreenState
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.done_all_rounded,
-                              size: 16, color: theme.primary),
+                          Icon(
+                            Icons.done_all_rounded,
+                            size: 16,
+                            color: theme.primary,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             'Read all',
@@ -84,66 +98,66 @@ class _ProfileNotificationsScreenState
               ),
             ),
 
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                const SizedBox(height: 16),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  const SizedBox(height: 16),
 
-                // ── Waves section ──
-                Text('Waves', style: theme.title),
-                const SizedBox(height: 10),
-                for (int i = 0; i < _waveNotifications.length; i++)
-                  _swipeableItem(
-                    context,
-                    theme,
-                    'wave-$i',
-                    _waveNotifications[i].name,
-                    _NotificationItem(
-                      imageUrl: _waveNotifications[i].imageUrl,
-                      title: _waveNotifications[i].name,
-                      description: _waveNotifications[i].isIncoming
-                          ? 'Waved at you'
-                          : 'You waved back',
-                      timeAgo: _waveNotifications[i].timeAgo,
-                      icon: theme.icons.wavingHand,
-                      iconColor: theme.primary,
-                      theme: theme,
+                  // ── Waves section ──
+                  Text('Waves', style: theme.title),
+                  const SizedBox(height: 10),
+                  for (int i = 0; i < _waveNotifications.length; i++)
+                    _swipeableItem(
+                      context,
+                      theme,
+                      'wave-$i',
+                      _waveNotifications[i].name,
+                      _NotificationItem(
+                        imageUrl: _waveNotifications[i].imageUrl,
+                        title: _waveNotifications[i].name,
+                        description: _waveNotifications[i].isIncoming
+                            ? 'Waved at you'
+                            : 'You waved back',
+                        timeAgo: _waveNotifications[i].timeAgo,
+                        icon: theme.icons.wavingHand,
+                        iconColor: theme.primary,
+                        theme: theme,
+                      ),
                     ),
-                  ),
 
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                // ── Activity section ──
-                Text('Activity', style: theme.title),
-                const SizedBox(height: 10),
-                for (int i = 0;
-                    i < _activityNotifications(theme).length;
-                    i++)
-                  _swipeableItem(
-                    context,
-                    theme,
-                    'activity-$i',
-                    _activityNotifications(theme)[i].title,
-                    _NotificationItem(
-                      imageUrl: _activityNotifications(theme)[i].imageUrl,
-                      title: _activityNotifications(theme)[i].title,
-                      description:
-                          _activityNotifications(theme)[i].description,
-                      timeAgo: _activityNotifications(theme)[i].timeAgo,
-                      icon: _activityNotifications(theme)[i].icon,
-                      iconColor:
-                          _activityNotifications(theme)[i].iconColor ??
-                              theme.secondary,
-                      theme: theme,
+                  // ── Activity section ──
+                  Text('Activity', style: theme.title),
+                  const SizedBox(height: 10),
+                  for (int i = 0; i < _activityNotifications(theme).length; i++)
+                    _swipeableItem(
+                      context,
+                      theme,
+                      'activity-$i',
+                      _activityNotifications(theme)[i].title,
+                      _NotificationItem(
+                        imageUrl: _activityNotifications(theme)[i].imageUrl,
+                        title: _activityNotifications(theme)[i].title,
+                        description: _activityNotifications(
+                          theme,
+                        )[i].description,
+                        timeAgo: _activityNotifications(theme)[i].timeAgo,
+                        icon: _activityNotifications(theme)[i].icon,
+                        iconColor:
+                            _activityNotifications(theme)[i].iconColor ??
+                            theme.secondary,
+                        theme: theme,
+                      ),
                     ),
-                  ),
 
-                const SizedBox(height: 24),
-              ],
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -167,15 +181,21 @@ class _ProfileNotificationsScreenState
           color: theme.accent.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
-        child:
-            Icon(Icons.delete_outline_rounded, color: theme.accent, size: 22),
+        child: Icon(
+          Icons.delete_outline_rounded,
+          color: theme.accent,
+          size: 22,
+        ),
       ),
       child: child,
     );
   }
 
   Future<bool> _showDeleteSheet(
-      BuildContext context, ProtoTheme theme, String name) async {
+    BuildContext context,
+    ProtoTheme theme,
+    String name,
+  ) async {
     await showModalBottomSheet(
       context: context,
       backgroundColor: theme.surface,
@@ -211,16 +231,24 @@ class _ProfileNotificationsScreenState
             ProtoPressButton(
               onTap: () {
                 Navigator.pop(ctx);
-                ProtoToast.show(context, Icons.delete_outline_rounded,
-                    'Notification removed');
+                ProtoToast.show(
+                  context,
+                  Icons.delete_outline_rounded,
+                  'Notification removed',
+                );
               },
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 14,
+                ),
                 child: Row(
                   children: [
-                    Icon(Icons.delete_outline_rounded,
-                        size: 22, color: theme.accent),
+                    Icon(
+                      Icons.delete_outline_rounded,
+                      size: 22,
+                      color: theme.accent,
+                    ),
                     const SizedBox(width: 14),
                     Text(
                       'Delete notification',
@@ -251,7 +279,11 @@ class _WaveNotification {
   final String imageUrl;
   final bool isIncoming;
   const _WaveNotification(
-      this.name, this.timeAgo, this.imageUrl, this.isIncoming);
+    this.name,
+    this.timeAgo,
+    this.imageUrl,
+    this.isIncoming,
+  );
 }
 
 const _waveNotifications = [
@@ -287,40 +319,40 @@ class _ActivityNotification {
 }
 
 List<_ActivityNotification> _activityNotifications(ProtoTheme theme) => [
-      _ActivityNotification(
-        title: 'Jordan',
-        description: 'Started following you',
-        timeAgo: '1h ago',
-        imageUrl:
-            'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop',
-        icon: theme.icons.personAdd,
-      ),
-      _ActivityNotification(
-        title: 'Sam',
-        description: 'Liked your post',
-        timeAgo: '3h ago',
-        imageUrl:
-            'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop',
-        icon: theme.icons.favoriteFilled,
-        iconColor: Colors.redAccent,
-      ),
-      _ActivityNotification(
-        title: 'Kai',
-        description: 'Commented on your photo',
-        timeAgo: '5h ago',
-        imageUrl:
-            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
-        icon: theme.icons.comment,
-      ),
-      _ActivityNotification(
-        title: 'Riley',
-        description: 'Started following you',
-        timeAgo: '1d ago',
-        imageUrl:
-            'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop',
-        icon: theme.icons.personAdd,
-      ),
-    ];
+  _ActivityNotification(
+    title: 'Jordan',
+    description: 'Started following you',
+    timeAgo: '1h ago',
+    imageUrl:
+        'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop',
+    icon: theme.icons.personAdd,
+  ),
+  _ActivityNotification(
+    title: 'Sam',
+    description: 'Liked your post',
+    timeAgo: '3h ago',
+    imageUrl:
+        'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop',
+    icon: theme.icons.favoriteFilled,
+    iconColor: Colors.redAccent,
+  ),
+  _ActivityNotification(
+    title: 'Kai',
+    description: 'Commented on your photo',
+    timeAgo: '5h ago',
+    imageUrl:
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
+    icon: theme.icons.comment,
+  ),
+  _ActivityNotification(
+    title: 'Riley',
+    description: 'Started following you',
+    timeAgo: '1d ago',
+    imageUrl:
+        'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop',
+    icon: theme.icons.personAdd,
+  ),
+];
 
 class _NotificationItem extends StatelessWidget {
   final String imageUrl;
@@ -355,10 +387,7 @@ class _NotificationItem extends StatelessWidget {
             height: 44,
             child: Stack(
               children: [
-                ProtoAvatar(
-                  radius: 20,
-                  imageUrl: imageUrl,
-                ),
+                ProtoAvatar(radius: 20, imageUrl: imageUrl),
                 Positioned(
                   right: 0,
                   bottom: 0,
@@ -368,10 +397,7 @@ class _NotificationItem extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: theme.surface,
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: theme.surface,
-                        width: 1.5,
-                      ),
+                      border: Border.all(color: theme.surface, width: 1.5),
                     ),
                     child: Icon(icon, size: 11, color: iconColor),
                   ),

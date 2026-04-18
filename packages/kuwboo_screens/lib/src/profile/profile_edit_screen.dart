@@ -62,11 +62,13 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       final username = _usernameController.text.trim();
       final bio = _bioController.text.trim();
 
-      await usersApi.patchMe(PatchMeDto(
-        displayName: name.isEmpty ? null : name,
-        username: username.isEmpty ? null : username,
-        bio: bio.isEmpty ? null : bio,
-      ));
+      await usersApi.patchMe(
+        PatchMeDto(
+          displayName: name.isEmpty ? null : name,
+          username: username.isEmpty ? null : username,
+          bio: bio.isEmpty ? null : bio,
+        ),
+      );
 
       // Persist interests selection. The selectMany endpoint replaces
       // the full declared set with the ids supplied.
@@ -81,9 +83,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       ref.invalidate(myInterestsProvider);
 
       if (!mounted) return;
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Profile updated')),
-      );
+      messenger.showSnackBar(const SnackBar(content: Text('Profile updated')));
       Navigator.of(context).maybePop();
     } catch (e) {
       if (!mounted) return;
@@ -105,104 +105,117 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     meAsync.whenData(_seedFromUser);
     myInterestsAsync.whenData(_seedInterests);
 
-    return Container(
-      color: theme.surface,
-      child: Column(
-        children: [
-          ProtoSubBar(
-            title: 'Edit Profile',
-            actions: [
-              GestureDetector(
-                onTap: _saving ? null : _onSave,
-                child: _saving
-                    ? SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(theme.primary),
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        color: theme.surface,
+        child: Column(
+          children: [
+            ProtoSubBar(
+              title: 'Edit Profile',
+              actions: [
+                GestureDetector(
+                  onTap: _saving ? null : _onSave,
+                  child: _saving
+                      ? SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(theme.primary),
+                          ),
+                        )
+                      : Text(
+                          'Save',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: theme.primary,
+                          ),
                         ),
-                      )
-                    : Text(
-                        'Save',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: theme.primary,
-                        ),
-                      ),
-              ),
-            ],
-          ),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                // Photos grid
-                SizedBox(
-                  height: 100,
-                  child: Row(
-                    children: List.generate(3, (i) => Expanded(
-                      child: Container(
-                        margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
-                        decoration: BoxDecoration(
-                          color: theme.background,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: theme.text.withValues(alpha: 0.1)),
-                        ),
-                        child: i == 0 && meAsync.valueOrNull?.avatarUrl != null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: ProtoNetworkImage(
-                                  imageUrl: meAsync.valueOrNull!.avatarUrl!,
-                                ),
-                              )
-                            : Icon(theme.icons.add, size: 28, color: theme.textTertiary),
-                      ),
-                    )),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                _EditField(
-                  label: 'Name',
-                  controller: _nameController,
-                  hint: 'Your name',
-                ),
-                _EditField(
-                  label: 'Username',
-                  controller: _usernameController,
-                  hint: 'username',
-                  prefix: '@',
-                ),
-                _EditField(
-                  label: 'Bio',
-                  controller: _bioController,
-                  hint: 'Tell others about yourself',
-                  multiline: true,
-                ),
-
-                const SizedBox(height: 16),
-                Text('Interests', style: theme.title),
-                const SizedBox(height: 8),
-                _InterestsPicker(
-                  catalogueAsync: catalogueAsync,
-                  selectedIds: _selectedInterestIds,
-                  selectedNames: _selectedInterestNames,
-                  onToggleId: (id) {
-                    setState(() {
-                      if (_selectedInterestIds.contains(id)) {
-                        _selectedInterestIds.remove(id);
-                      } else {
-                        _selectedInterestIds.add(id);
-                      }
-                    });
-                  },
                 ),
               ],
             ),
-          ),
-        ],
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // Photos grid
+                  SizedBox(
+                    height: 100,
+                    child: Row(
+                      children: List.generate(
+                        3,
+                        (i) => Expanded(
+                          child: Container(
+                            margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
+                            decoration: BoxDecoration(
+                              color: theme.background,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: theme.text.withValues(alpha: 0.1),
+                              ),
+                            ),
+                            child:
+                                i == 0 && meAsync.valueOrNull?.avatarUrl != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: ProtoNetworkImage(
+                                      imageUrl: meAsync.valueOrNull!.avatarUrl!,
+                                    ),
+                                  )
+                                : Icon(
+                                    theme.icons.add,
+                                    size: 28,
+                                    color: theme.textTertiary,
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  _EditField(
+                    label: 'Name',
+                    controller: _nameController,
+                    hint: 'Your name',
+                  ),
+                  _EditField(
+                    label: 'Username',
+                    controller: _usernameController,
+                    hint: 'username',
+                    prefix: '@',
+                  ),
+                  _EditField(
+                    label: 'Bio',
+                    controller: _bioController,
+                    hint: 'Tell others about yourself',
+                    multiline: true,
+                  ),
+
+                  const SizedBox(height: 16),
+                  Text('Interests', style: theme.title),
+                  const SizedBox(height: 8),
+                  _InterestsPicker(
+                    catalogueAsync: catalogueAsync,
+                    selectedIds: _selectedInterestIds,
+                    selectedNames: _selectedInterestNames,
+                    onToggleId: (id) {
+                      setState(() {
+                        if (_selectedInterestIds.contains(id)) {
+                          _selectedInterestIds.remove(id);
+                        } else {
+                          _selectedInterestIds.add(id);
+                        }
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -211,15 +224,15 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
 /// Catalogue of all available interests (for the editor's chip picker).
 /// Falls back to an empty list on error so the user can still save the
 /// profile form (interests just won't render).
-final _interestCatalogueProvider = FutureProvider.autoDispose<List<Interest>>(
-  (ref) async {
-    try {
-      return await ref.watch(interestsApiProvider).listAll();
-    } catch (_) {
-      return const <Interest>[];
-    }
-  },
-);
+final _interestCatalogueProvider = FutureProvider.autoDispose<List<Interest>>((
+  ref,
+) async {
+  try {
+    return await ref.watch(interestsApiProvider).listAll();
+  } catch (_) {
+    return const <Interest>[];
+  }
+});
 
 class _InterestsPicker extends StatelessWidget {
   final AsyncValue<List<Interest>> catalogueAsync;
@@ -255,12 +268,10 @@ class _InterestsPicker extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: selectedNames
-              .map((name) => _interestChip(
-                    context,
-                    name,
-                    isSelected: true,
-                    onTap: null,
-                  ))
+              .map(
+                (name) =>
+                    _interestChip(context, name, isSelected: true, onTap: null),
+              )
               .toList(),
         );
       },
@@ -302,7 +313,9 @@ class _InterestsPicker extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? theme.primary : theme.background,
           borderRadius: BorderRadius.circular(20),
-          border: isSelected ? null : Border.all(color: theme.text.withValues(alpha: 0.1)),
+          border: isSelected
+              ? null
+              : Border.all(color: theme.text.withValues(alpha: 0.1)),
         ),
         child: Text(
           label,

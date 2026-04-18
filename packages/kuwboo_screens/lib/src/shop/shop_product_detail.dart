@@ -26,55 +26,62 @@ class _ShopProductDetailState extends ConsumerState<ShopProductDetail> {
     final theme = ProtoTheme.of(context);
     final id = widget.productId;
 
-    return Container(
-      color: theme.background,
-      child: Column(
-        children: [
-          ProtoSubBar(
-            title: 'Product',
-            actions: [
-              ProtoPressButton(
-                onTap: () => ProtoShareSheet.show(context),
-                child: Icon(theme.icons.share, size: 20, color: theme.text),
-              ),
-            ],
-          ),
-          Expanded(
-            child: id == null
-                ? const ProtoEmptyState(
-                    icon: Icons.shopping_bag_outlined,
-                    title: 'No product selected',
-                    subtitle: 'Open a listing from the marketplace grid',
-                  )
-                : ref.watch(productDetailProvider(id)).when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (err, _) => ProtoErrorState(
-                        message: 'Could not load product',
-                        onRetry: () =>
-                            ref.invalidate(productDetailProvider(id)),
-                      ),
-                      data: (product) =>
-                          _ProductBody(product: product, theme: theme),
-                    ),
-          ),
-          if (id != null)
-            _BuyActionBar(
-              productId: id,
-              theme: theme,
-              isWishlisted: _isWishlisted,
-              onToggleWishlist: () {
-                setState(() => _isWishlisted = !_isWishlisted);
-                ProtoToast.show(
-                  context,
-                  _isWishlisted
-                      ? theme.icons.favoriteFilled
-                      : theme.icons.favoriteOutline,
-                  _isWishlisted ? 'Added to wishlist' : 'Removed from wishlist',
-                );
-              },
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        color: theme.background,
+        child: Column(
+          children: [
+            ProtoSubBar(
+              title: 'Product',
+              actions: [
+                ProtoPressButton(
+                  onTap: () => ProtoShareSheet.show(context),
+                  child: Icon(theme.icons.share, size: 20, color: theme.text),
+                ),
+              ],
             ),
-        ],
+            Expanded(
+              child: id == null
+                  ? const ProtoEmptyState(
+                      icon: Icons.shopping_bag_outlined,
+                      title: 'No product selected',
+                      subtitle: 'Open a listing from the marketplace grid',
+                    )
+                  : ref
+                        .watch(productDetailProvider(id))
+                        .when(
+                          loading: () =>
+                              const Center(child: CircularProgressIndicator()),
+                          error: (err, _) => ProtoErrorState(
+                            message: 'Could not load product',
+                            onRetry: () =>
+                                ref.invalidate(productDetailProvider(id)),
+                          ),
+                          data: (product) =>
+                              _ProductBody(product: product, theme: theme),
+                        ),
+            ),
+            if (id != null)
+              _BuyActionBar(
+                productId: id,
+                theme: theme,
+                isWishlisted: _isWishlisted,
+                onToggleWishlist: () {
+                  setState(() => _isWishlisted = !_isWishlisted);
+                  ProtoToast.show(
+                    context,
+                    _isWishlisted
+                        ? theme.icons.favoriteFilled
+                        : theme.icons.favoriteOutline,
+                    _isWishlisted
+                        ? 'Added to wishlist'
+                        : 'Removed from wishlist',
+                  );
+                },
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -150,8 +157,10 @@ class _ProductBody extends StatelessWidget {
               Text(title, style: theme.title.copyWith(fontSize: 18)),
               const SizedBox(height: 4),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: theme.secondary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -169,10 +178,9 @@ class _ProductBody extends StatelessWidget {
               ProtoPressButton(
                 onTap: sellerId == null
                     ? null
-                    : () => state.pushWithArgs(
-                          ProtoRoutes.shopSeller,
-                          {'sellerId': sellerId},
-                        ),
+                    : () => state.pushWithArgs(ProtoRoutes.shopSeller, {
+                        'sellerId': sellerId,
+                      }),
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: theme.cardDecoration,
@@ -208,9 +216,7 @@ class _ProductBody extends StatelessWidget {
               Text('Description', style: theme.title),
               const SizedBox(height: 6),
               Text(
-                description.isEmpty
-                    ? 'No description provided.'
-                    : description,
+                description.isEmpty ? 'No description provided.' : description,
                 style: theme.body,
               ),
             ],
