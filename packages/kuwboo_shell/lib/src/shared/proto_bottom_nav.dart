@@ -166,45 +166,81 @@ class _ProtoBottomNavCState extends State<ProtoBottomNavC>
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final isMenuActive = _isExpanded || _animController.isAnimating;
 
-    // Fills parent — parent should use Positioned.fill in its Stack.
-    // Non-interactive areas (above bar, when popup is closed) pass taps
-    // through naturally because no GestureDetector covers them.
-    return Stack(
-      children: [
-        // Layer A: Transparent full-area dismiss target (no visual)
-        if (_isExpanded)
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: _dismiss,
-              behavior: HitTestBehavior.translucent,
-              child: const SizedBox.expand(),
+    // Idle (popup closed): nav is bounded to just the bar + FAB so the
+    // parent Stack's hit tests fall through to the body above for scroll
+    // and tap gestures. A full-bleed Stack here previously swallowed
+    // those gestures even though all of its direct children were bounded
+    // Positioned widgets — issue #146.
+    //
+    // Active (popup open / animating): grow to the full viewport height
+    // so the dismiss target, scrim and stacked service items all lay out
+    // and hit-test correctly.
+    if (!isMenuActive) {
+      return SizedBox(
+        height: _height + bottomInset,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: _buildBar(theme, bottomInset),
             ),
+            Positioned(
+              bottom: bottomInset + _height - _fabSize + _fabOverhang,
+              right: _fabRightOffset,
+              child: _buildFab(theme),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenHeight = MediaQuery.sizeOf(context).height;
+        return SizedBox(
+          height: screenHeight,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Layer A: Transparent full-area dismiss target (no visual)
+              if (_isExpanded)
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: _dismiss,
+                    behavior: HitTestBehavior.translucent,
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+
+              // Layer B: Bounded scrim panel behind popup items only
+              _buildScrimPanel(theme),
+
+              // Service popup menu (above FAB)
+              ..._buildServicePopup(theme),
+
+              // Bottom bar with right-side notch
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: _buildBar(theme, bottomInset),
+              ),
+
+              // FAB sitting in the right-side notch (inline with bar)
+              Positioned(
+                bottom: bottomInset + _height - _fabSize + _fabOverhang,
+                right: _fabRightOffset,
+                child: _buildFab(theme),
+              ),
+            ],
           ),
-
-        // Layer B: Bounded scrim panel behind popup items only
-        if (_isExpanded || _animController.isAnimating)
-          _buildScrimPanel(theme),
-
-        // Service popup menu (above FAB)
-        if (_isExpanded || _animController.isAnimating)
-          ..._buildServicePopup(theme),
-
-        // Bottom bar with right-side notch
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: _buildBar(theme, bottomInset),
-        ),
-
-        // FAB sitting in the right-side notch (inline with bar)
-        Positioned(
-          bottom: bottomInset + _height - _fabSize + _fabOverhang,
-          right: _fabRightOffset,
-          child: _buildFab(theme),
-        ),
-      ],
+        );
+      },
     );
   }
 
