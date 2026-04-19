@@ -20,16 +20,23 @@ class ProtoAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
+    // Empty or whitespace-only URLs fire the `image.dart:545` assertion
+    // inside NetworkImage — show the themed fallback instead. The backend
+    // returns `""` rather than `null` for unset avatars, so this guard
+    // covers the common "brand-new user" path on /users/me.
+    final hasUrl = imageUrl.trim().isNotEmpty;
     return CircleAvatar(
       radius: radius,
       backgroundColor: theme.primary.withValues(alpha: 0.1),
-      backgroundImage: NetworkImage(imageUrl),
-      onBackgroundImageError: (_, __) {},
-      child: _ErrorFallback(
-        imageUrl: imageUrl,
-        icon: fallbackIcon,
-        size: radius,
-      ),
+      backgroundImage: hasUrl ? NetworkImage(imageUrl) : null,
+      onBackgroundImageError: hasUrl ? (_, __) {} : null,
+      child: hasUrl
+          ? _ErrorFallback(imageUrl: imageUrl, icon: fallbackIcon, size: radius)
+          : Icon(
+              fallbackIcon,
+              size: radius,
+              color: theme.primary.withValues(alpha: 0.6),
+            ),
     );
   }
 }
@@ -68,17 +75,19 @@ class _ErrorFallbackState extends State<_ErrorFallback> {
   }
 
   void _checkImage() {
-    final stream = NetworkImage(widget.imageUrl).resolve(
-      ImageConfiguration.empty,
+    final stream = NetworkImage(
+      widget.imageUrl,
+    ).resolve(ImageConfiguration.empty);
+    stream.addListener(
+      ImageStreamListener(
+        (_, __) {
+          if (mounted && _hasError) setState(() => _hasError = false);
+        },
+        onError: (_, __) {
+          if (mounted) setState(() => _hasError = true);
+        },
+      ),
     );
-    stream.addListener(ImageStreamListener(
-      (_, __) {
-        if (mounted && _hasError) setState(() => _hasError = false);
-      },
-      onError: (_, __) {
-        if (mounted) setState(() => _hasError = true);
-      },
-    ));
   }
 
   @override
@@ -116,6 +125,26 @@ class ProtoNetworkImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
 
+    // `Image.network("")` asserts at image.dart:545 — short-circuit to the
+    // broken-image fallback so an empty avatar URL doesn't crash a render.
+    if (imageUrl.trim().isEmpty) {
+      return Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: theme.surface,
+          borderRadius: borderRadius,
+        ),
+        child: Center(
+          child: Icon(
+            Icons.broken_image_outlined,
+            color: theme.textTertiary,
+            size: 24,
+          ),
+        ),
+      );
+    }
+
     Widget image = Image.network(
       imageUrl,
       width: width,
@@ -136,7 +165,7 @@ class ProtoNetworkImage extends StatelessWidget {
                 color: theme.textTertiary,
                 value: progress.expectedTotalBytes != null
                     ? progress.cumulativeBytesLoaded /
-                        progress.expectedTotalBytes!
+                          progress.expectedTotalBytes!
                     : null,
               ),
             ),
@@ -217,30 +246,50 @@ class _ProtoImageContainerState extends State<ProtoImageContainer> {
   }
 
   void _loadImage() {
-    final stream = NetworkImage(widget.imageUrl).resolve(
-      ImageConfiguration.empty,
+    // Guard empty URL — NetworkImage("") asserts at image.dart:545. Jump
+    // straight to the error fallback so we render an unbroken placeholder.
+    if (widget.imageUrl.trim().isEmpty) {
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _isLoading = false;
+        });
+      }
+      return;
+    }
+    final stream = NetworkImage(
+      widget.imageUrl,
+    ).resolve(ImageConfiguration.empty);
+    stream.addListener(
+      ImageStreamListener(
+        (_, __) {
+          if (mounted) setState(() => _isLoading = false);
+        },
+        onError: (_, __) {
+          if (mounted)
+            setState(() {
+              _hasError = true;
+              _isLoading = false;
+            });
+        },
+      ),
     );
-    stream.addListener(ImageStreamListener(
-      (_, __) {
-        if (mounted) setState(() => _isLoading = false);
-      },
-      onError: (_, __) {
-        if (mounted) setState(() { _hasError = true; _isLoading = false; });
-      },
-    ));
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
+    // Defensive: also skip the DecorationImage when the URL is empty, in
+    // case this widget is rebuilt before _loadImage's setState lands.
+    final hasUrl = widget.imageUrl.trim().isNotEmpty;
     return Container(
       width: widget.width,
       height: widget.height,
       alignment: widget.alignment,
       decoration: BoxDecoration(
         borderRadius: widget.borderRadius,
-        color: _hasError || _isLoading ? theme.surface : null,
-        image: _hasError
+        color: _hasError || _isLoading || !hasUrl ? theme.surface : null,
+        image: (!hasUrl || _hasError)
             ? null
             : DecorationImage(
                 image: NetworkImage(widget.imageUrl),

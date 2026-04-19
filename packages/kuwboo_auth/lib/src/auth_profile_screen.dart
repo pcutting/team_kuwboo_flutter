@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +23,13 @@ class _AuthProfileScreenState extends State<AuthProfileScreen> {
   final _usernameController = TextEditingController();
   final _imagePicker = ImagePicker();
   String? _usernameError;
+
+  /// File path on iOS/Android; undefined on web (blob URL). Kept so the
+  /// existing [onSaveProfile] callback signature (photoPath) still works
+  /// for the mobile upload path — but the PREVIEW image uses bytes via
+  /// [_photoBytes] so we don't trigger the `Image.file` kIsWeb assert.
   String? _photoPath;
+  Uint8List? _photoBytes;
   bool _saving = false;
   bool _pickingPhoto = false;
 
@@ -101,20 +106,27 @@ class _AuthProfileScreenState extends State<AuthProfileScreen> {
                                     child: Container(
                                       width: 96,
                                       height: 96,
-                                      color: theme.primary
-                                          .withValues(alpha: 0.1),
-                                      child: _photoPath != null
-                                          ? Image.file(
-                                              File(_photoPath!),
+                                      color: theme.primary.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      // Render via Image.memory on every
+                                      // platform — Image.file asserts on
+                                      // web (the `picked.path` is a blob:
+                                      // URL, not a filesystem path).
+                                      child: _photoBytes != null
+                                          ? Image.memory(
+                                              _photoBytes!,
                                               fit: BoxFit.cover,
                                               width: 96,
                                               height: 96,
+                                              gaplessPlayback: true,
                                             )
                                           : Icon(
                                               Icons.person_rounded,
                                               size: 48,
-                                              color: theme.primary
-                                                  .withValues(alpha: 0.4),
+                                              color: theme.primary.withValues(
+                                                alpha: 0.4,
+                                              ),
                                             ),
                                     ),
                                   ),
@@ -400,7 +412,14 @@ class _AuthProfileScreenState extends State<AuthProfileScreen> {
       );
       if (!mounted) return;
       if (picked == null) return;
-      setState(() => _photoPath = picked.path);
+      // Read bytes (works everywhere) for the preview. Keep picked.path so
+      // the mobile upload path can still treat it as a File reference.
+      final bytes = await picked.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        _photoPath = picked.path;
+        _photoBytes = bytes;
+      });
     } catch (e, stack) {
       if (kDebugMode) {
         debugPrint('[profile] image_picker failed: $e\n$stack');
