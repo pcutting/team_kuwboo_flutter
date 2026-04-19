@@ -128,13 +128,8 @@ class _AuthEmailLoginScreenState extends State<AuthEmailLoginScreen> {
                             button: true,
                             label: 'Forgot password?',
                             child: GestureDetector(
-                              // TODO(pr-c): wire to authEmailPasswordForgot
-                              // once the reset flow screen lands (PR C).
-                              // For now, bounce the user back to this
-                              // screen so the tap target is non-destructive
-                              // and the copy in-place communicates intent.
-                              onTap: () =>
-                                  context.go(ProtoRoutes.authEmailLogin),
+                              onTap: () => context
+                                  .go(ProtoRoutes.authEmailPasswordForgot),
                               child: Text(
                                 'Forgot password?',
                                 style: theme.body.copyWith(

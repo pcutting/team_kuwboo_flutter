@@ -195,6 +195,46 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Request a password-reset code by email. The backend always returns
+  /// 2xx — it sends the reset email only if the address resolves, but
+  /// the response is identical either way so this method never
+  /// propagates an "account-not-found" signal. It only throws on
+  /// genuine failures (network, rate-limit, server error).
+  Future<void> emailPasswordForgot(String email) async {
+    try {
+      await _authApi.forgotEmailPassword(email: email);
+    } on DioException catch (e) {
+      throw _translate(e, fallback: 'Could not send reset code');
+    }
+  }
+
+  /// Submit a password-reset code + new password. On success the
+  /// backend returns a fresh [AuthResponse] and the user is
+  /// effectively logged in — applied via [_applyAuthResponse] so the
+  /// router redirect picks up the new session immediately.
+  Future<AuthResponse> emailPasswordReset({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final response = await _authApi.resetEmailPassword(
+        email: email,
+        code: code,
+        newPassword: newPassword,
+      );
+      await _applyAuthResponse(response);
+      return response;
+    } on DioException catch (e) {
+      state = state.copyWith(isLoading: false);
+      throw _translate(e, fallback: 'Invalid or expired code');
+    } catch (_) {
+      state = state.copyWith(isLoading: false);
+      rethrow;
+    }
+  }
+
   Future<SsoLoginResult> signInWithApple({
     required String identityToken,
     required String authorizationCode,

@@ -75,6 +75,8 @@ class ProtoRoutes {
   static const authLogin = '/auth/login';
   static const authEmailRegister = '/auth/email/register';
   static const authEmailLogin = '/auth/email/login';
+  static const authEmailPasswordForgot = '/auth/email/password/forgot';
+  static const authEmailPasswordReset = '/auth/email/password/reset';
   static const authAgeBlock = '/auth/age-block';
 
   // ── Legal ─────────────────────────────────────────────────────────────

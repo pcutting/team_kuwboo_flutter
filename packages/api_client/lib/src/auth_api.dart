@@ -154,6 +154,41 @@ class AuthApi {
     return auth;
   }
 
+  /// Request a password-reset code. The backend always returns 2xx — it
+  /// sends the reset email only if the address actually resolves to an
+  /// account, but the response shape is identical either way so the
+  /// client can't use this call to enumerate accounts.
+  Future<void> forgotEmailPassword({required String email}) async {
+    await _client.dio.post(
+      '/auth/email/password/forgot',
+      data: {'email': email},
+    );
+  }
+
+  /// Submit a password-reset code along with a new password. On success
+  /// the backend mints a fresh token pair + returns the standard
+  /// [AuthResponse] envelope, so the user is effectively logged in
+  /// once the reset completes. Throws on invalid / expired code.
+  Future<AuthResponse> resetEmailPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    final response = await _client.dio.post(
+      '/auth/email/password/reset',
+      data: {
+        'email': email,
+        'code': code,
+        'newPassword': newPassword,
+      },
+    );
+    final auth = _client.unwrap(response, AuthResponse.fromJson);
+    await _client.saveTokens(
+      TokenPair(accessToken: auth.accessToken, refreshToken: auth.refreshToken),
+    );
+    return auth;
+  }
+
   // ---------------------------------------------------------------------
   // Google SSO
   // ---------------------------------------------------------------------

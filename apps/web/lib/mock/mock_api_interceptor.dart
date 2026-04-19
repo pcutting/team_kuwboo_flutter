@@ -260,6 +260,26 @@ class MockApiInterceptor extends Interceptor {
           'isNewUser': false,
         });
       }
+
+      // Password reset (PR C). Forgot returns an empty body; reset
+      // returns the same mock AuthResponse the login/register paths
+      // use so the prototype lands the user on an "authenticated"
+      // session after demoing the flow.
+      if (path == '/auth/email/password/forgot') {
+        return _envelope(<String, dynamic>{});
+      }
+      if (path == '/auth/email/password/reset') {
+        final raw = options.data;
+        final email = raw is Map ? raw['email'] as String? : null;
+        final user = Map<String, dynamic>.from(_meUser());
+        if (email != null && email.isNotEmpty) user['email'] = email;
+        return _envelope(<String, dynamic>{
+          'accessToken': 'mock-access',
+          'refreshToken': 'mock-refresh',
+          'user': user,
+          'isNewUser': false,
+        });
+      }
     }
 
     if (method == 'PATCH') {
