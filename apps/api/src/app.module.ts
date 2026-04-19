@@ -17,6 +17,7 @@ import databaseConfig from './config/database.config';
 import redisConfig from './config/redis.config';
 import jwtConfig from './config/jwt.config';
 import appleConfig from './config/apple.config';
+import emailConfig from './config/email.config';
 
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -49,12 +50,13 @@ import { InterestsModule } from './modules/interests/interests.module';
 import { DatingModule } from './modules/dating/dating.module';
 import { VideoModule } from './modules/video/video.module';
 import { SocialModule } from './modules/social/social.module';
+import { EmailModule } from './modules/email/email.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, redisConfig, jwtConfig, appleConfig],
+      load: [databaseConfig, redisConfig, jwtConfig, appleConfig, emailConfig],
       envFilePath: '.env',
     }),
 
@@ -170,6 +172,7 @@ import { SocialModule } from './modules/social/social.module';
     DatingModule,
     VideoModule,
     SocialModule,
+    EmailModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

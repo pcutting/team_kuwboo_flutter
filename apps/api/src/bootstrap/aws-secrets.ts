@@ -37,6 +37,16 @@ const SECRET_MAPPINGS: ReadonlyArray<SecretMapping> = [
   { secretId: '/kuwboo/apple/key-id', envKey: 'APPLE_KEY_ID' },
   { secretId: '/kuwboo/apple/private-key', envKey: 'APPLE_PRIVATE_KEY' },
   { secretId: '/kuwboo/apple/client-secret-jwt', envKey: 'APPLE_CLIENT_SECRET' },
+  // SES credentials for the EmailModule (apps/api/src/modules/email).
+  // The secret JSON is {"accessKeyId":"...","secretAccessKey":"..."}; we
+  // fan it out to the SES_* env vars the email.config registerAs reads.
+  {
+    secretId: '/kuwboo/smtp',
+    fields: {
+      accessKeyId: 'SES_ACCESS_KEY_ID',
+      secretAccessKey: 'SES_SECRET_ACCESS_KEY',
+    },
+  },
   // Future: /kuwboo/database, /kuwboo/redis, /kuwboo/jwt can join here
   // once the NestJS config modules are migrated off env-var-per-setting.
 ];
