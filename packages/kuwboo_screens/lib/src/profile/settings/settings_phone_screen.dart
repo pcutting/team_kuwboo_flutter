@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import '../profile_providers.dart';
 import '_settings_page.dart';
 
-class SettingsPhoneScreen extends StatefulWidget {
+class SettingsPhoneScreen extends ConsumerStatefulWidget {
   const SettingsPhoneScreen({super.key});
 
   @override
-  State<SettingsPhoneScreen> createState() => _SettingsPhoneScreenState();
+  ConsumerState<SettingsPhoneScreen> createState() =>
+      _SettingsPhoneScreenState();
 }
 
-class _SettingsPhoneScreenState extends State<SettingsPhoneScreen> {
+class _SettingsPhoneScreenState extends ConsumerState<SettingsPhoneScreen> {
   final _phone = TextEditingController();
 
   @override
@@ -29,9 +32,18 @@ class _SettingsPhoneScreenState extends State<SettingsPhoneScreen> {
     saveAndPop(context, 'Verification code sent');
   }
 
+  /// Mask all but the last 3 digits: +447911000123 → +••••••••••123.
+  String _maskPhone(String phone) {
+    if (phone.length <= 3) return phone;
+    return '${'•' * (phone.length - 3)}${phone.substring(phone.length - 3)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
+    final meAsync = ref.watch(meProvider);
+    final currentPhone = meAsync.valueOrNull?.phone;
+
     return SettingsPage(
       title: 'Phone Number',
       footer: SettingsPrimaryButton(
@@ -53,27 +65,30 @@ class _SettingsPhoneScreenState extends State<SettingsPhoneScreen> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '+44 •••• •••123',
+                    currentPhone == null || currentPhone.isEmpty
+                        ? 'No phone on file'
+                        : _maskPhone(currentPhone),
                     style: theme.body.copyWith(fontSize: 14),
                   ),
                   const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      'Verified',
-                      style: theme.caption.copyWith(
-                        color: theme.primary,
-                        fontWeight: FontWeight.w700,
+                  if (currentPhone != null && currentPhone.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'Verified',
+                        style: theme.caption.copyWith(
+                          color: theme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
@@ -11,14 +12,14 @@ import '_step_chip.dart';
 import 'auth_callbacks.dart';
 import 'auth_test_ids.dart';
 
-class AuthProfileScreen extends StatefulWidget {
+class AuthProfileScreen extends ConsumerStatefulWidget {
   const AuthProfileScreen({super.key});
 
   @override
-  State<AuthProfileScreen> createState() => _AuthProfileScreenState();
+  ConsumerState<AuthProfileScreen> createState() => _AuthProfileScreenState();
 }
 
-class _AuthProfileScreenState extends State<AuthProfileScreen> {
+class _AuthProfileScreenState extends ConsumerState<AuthProfileScreen> {
   final _displayNameController = TextEditingController();
   final _usernameController = TextEditingController();
   final _imagePicker = ImagePicker();
@@ -420,6 +421,10 @@ class _AuthProfileScreenState extends State<AuthProfileScreen> {
         _photoPath = picked.path;
         _photoBytes = bytes;
       });
+      // Propagate to the app-wide local avatar override so Profile > My
+      // and the top-bar avatar render the same photo the user just
+      // picked — even before the backend avatar upload endpoint exists.
+      unawaited(ref.read(localAvatarProvider.notifier).set(bytes));
     } catch (e, stack) {
       if (kDebugMode) {
         debugPrint('[profile] image_picker failed: $e\n$stack');

@@ -90,7 +90,9 @@ class _AuthTutorialScreenState extends State<AuthTutorialScreen> {
                       mainAxisSpacing: 12,
                       crossAxisSpacing: 12,
                       physics: const NeverScrollableScrollPhysics(),
-                      childAspectRatio: 0.95,
+                      // Taller tiles so the Switch tile (icon + label column)
+                      // doesn't clip, and the other tiles feel less cramped.
+                      childAspectRatio: 0.78,
                       children: [
                         _TapTile(
                           done: _completed.contains(_Gesture.tap),
