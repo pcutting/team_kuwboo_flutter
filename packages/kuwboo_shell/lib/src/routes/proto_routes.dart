@@ -63,6 +63,18 @@ class ProtoRoutes {
   static const profileSettings = '/profile/settings';
   static const profileNotifications = '/profile/notifications';
 
+  // ── Settings sub-screens ──────────────────────────────────────────────
+  static const settingsAccountInfo = '/profile/settings/account-info';
+  static const settingsPassword = '/profile/settings/password';
+  static const settingsPhone = '/profile/settings/phone';
+  static const settingsEmail = '/profile/settings/email';
+  static const settingsProfileVisibility = '/profile/settings/visibility';
+  static const settingsBlockedUsers = '/profile/settings/blocked';
+  static const settingsLocationSharing = '/profile/settings/location';
+  static const settingsPushNotifications = '/profile/settings/push';
+  static const settingsMessageNotifications = '/profile/settings/messages';
+  static const settingsMatchNotifications = '/profile/settings/matches';
+
   // ── Auth ───────────────────────────────────────────────────────────────
   static const authWelcome = '/auth/welcome';
   static const authOnboarding = '/auth/onboarding';

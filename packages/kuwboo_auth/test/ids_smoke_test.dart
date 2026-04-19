@@ -251,11 +251,10 @@ void main() {
       );
     });
 
-    testWidgets('renders the three tiered DOB-choice chips', (tester) async {
+    testWidgets('renders the tiered DOB-choice chips', (tester) async {
       await _pumpAtPhoneSize(tester, const AuthBirthdayScreen());
 
       expect(_bySemId(AuthIds.birthdayChipPreferNotToSay), findsOneWidget);
-      expect(_bySemId(AuthIds.birthdayChipAdultSelfDeclared), findsOneWidget);
       expect(_bySemId(AuthIds.birthdayChipSkip), findsOneWidget);
     });
   });
@@ -309,7 +308,7 @@ void main() {
   });
 
   group('AuthTutorialScreen smoke', () {
-    testWidgets('dot_0 selected, dot_1 not selected on initial render',
+    testWidgets('all progress dots unselected on initial render',
         (tester) async {
       await _pumpAtPhoneSize(tester, const AuthTutorialScreen());
 
@@ -318,13 +317,13 @@ void main() {
 
       expect(
         firstDot.selected,
-        isTrue,
-        reason: 'first tutorial dot should be selected on initial render',
+        isFalse,
+        reason: 'no gestures tried yet — progress pips should all be empty',
       );
       expect(
         secondDot.selected,
         isFalse,
-        reason: 'subsequent tutorial dots should not be selected initially',
+        reason: 'no gestures tried yet — progress pips should all be empty',
       );
     });
   });

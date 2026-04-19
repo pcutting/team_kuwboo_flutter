@@ -1,95 +1,136 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_auth/kuwboo_auth.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import '../../providers/api_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../prototype/router.dart';
 
-/// Web-side [AuthCallbacks] wired to the prototype's Riverpod auth
-/// provider. Mirrors `apps/mobile/lib/features/auth/auth_callbacks.dart`
-/// in shape, but with most onboarding/SSO callbacks stubbed because
-/// the web prototype does not exercise those flows — only `onLogout`
-/// is load-bearing (driven by the Settings screen's logout button).
+/// Web-side [AuthCallbacks] wired to the real backend at `api.kuwboo.com`.
 ///
-/// Do not add Firebase / Apple / Google sign-in dependencies to this
-/// file; the web prototype deliberately ships without them.
+/// Mirrors `apps/mobile/lib/features/auth/auth_callbacks.dart`. Apple /
+/// Google SSO are deliberately unwired on web — the web build ships
+/// without the platform SDKs. All other flows (phone OTP, email,
+/// onboarding patches) hit the real backend.
 AuthCallbacks buildWebAuthCallbacks(Ref ref) {
   final authNotifier = ref.read(authProvider.notifier);
+  final usersApi = ref.read(realUsersApiProvider);
+  final interestsApi = ref.read(interestsApiProvider);
 
   return AuthCallbacks(
-    // Web has no router-level auth guard (mobile does), so the
-    // callback itself owns the post-logout navigation.
-    onLogout: () async {
-      await authNotifier.logout();
-      ref.read(routerProvider).go(ProtoRoutes.authWelcome);
-    },
-
-    // ── SSO ───────────────────────────────────────────────────────────
-    // Apple / Google sign-in are platform-only flows. The web prototype
-    // does not render the SSO buttons in a way that would reach these,
-    // but the callback must exist if the screen is ever shown — a
-    // debugPrint + thrown UnimplementedError surfaces the gap loudly
-    // rather than returning a bogus success.
+    // ── SSO (not wired on web) ────────────────────────────────────────
     onSignInWithApple: () async {
-      debugPrint('[web auth] onSignInWithApple invoked — not wired on web');
+      debugPrint('[web auth] onSignInWithApple — not wired on web');
       throw UnimplementedError('Sign in with Apple is not available on web');
     },
     onSignInWithGoogle: () async {
-      debugPrint('[web auth] onSignInWithGoogle invoked — not wired on web');
+      debugPrint('[web auth] onSignInWithGoogle — not wired on web');
       throw UnimplementedError('Google sign-in is not available on web');
     },
     onConfirmSsoChallenge: (challenge, otp) async {
-      debugPrint('[web auth] onConfirmSsoChallenge invoked — not wired on web');
       throw UnimplementedError('SSO challenge confirmation not wired on web');
     },
 
     // ── Phone / Email OTP ─────────────────────────────────────────────
-    // Agent C owns the mock interceptor; until those endpoints are
-    // stubbed we log + no-op so the phone/OTP screens can still be
-    // navigated in the prototype without raising.
     onSendPhoneOtp: (phone) async {
-      debugPrint('[web auth] onSendPhoneOtp($phone) — mock path not wired');
-      return null;
+      final result = await authNotifier.sendPhoneOtp(phone);
+      return result.devCode;
     },
     onSendEmailOtp: (email) async {
-      debugPrint('[web auth] onSendEmailOtp($email) — mock path not wired');
-      return null;
+      final result = await authNotifier.sendEmailOtp(email);
+      return result.devCode;
     },
     onVerifyOtp: (identifier, code, channel) async {
-      debugPrint('[web auth] onVerifyOtp($identifier, …, $channel) — mock path not wired');
-      throw UnimplementedError('OTP verification not wired on web prototype');
+      return authNotifier.verifyOtp(
+        identifier: identifier,
+        code: code,
+        isPhone: channel == AuthOtpChannel.phone,
+      );
     },
     onResendOtp: (identifier, channel) async {
-      debugPrint('[web auth] onResendOtp($identifier, $channel) — no-op on web');
+      if (channel == AuthOtpChannel.phone) {
+        await authNotifier.sendPhoneOtp(identifier);
+      } else {
+        await authNotifier.sendEmailOtp(identifier);
+      }
+    },
+
+    // ── Email + password ──────────────────────────────────────────────
+    onEmailRegister: (req) async {
+      await authNotifier.emailRegister(
+        email: req.email,
+        password: req.password,
+        name: req.name,
+        legalAccepted: req.legalAccepted,
+        ageConfirmed: req.ageConfirmed,
+      );
+    },
+    onEmailLogin: (email, password) async {
+      await authNotifier.emailLogin(email: email, password: password);
+    },
+    onEmailPasswordForgot: (email) async {
+      await authNotifier.emailPasswordForgot(email);
+    },
+    onEmailPasswordReset: (email, code, newPassword) async {
+      await authNotifier.emailPasswordReset(
+        email: email,
+        code: code,
+        newPassword: newPassword,
+      );
     },
 
     // ── Onboarding progress ───────────────────────────────────────────
-    // Onboarding screens in the prototype are visual-only; these
-    // callbacks exist so the screens' own post-save navigation still
-    // fires without hitting a null callback branch.
     onSaveBirthday: (dob) async {
-      debugPrint('[web auth] onSaveBirthday($dob) — no-op on web');
+      final iso =
+          '${dob.year.toString().padLeft(4, '0')}-'
+          '${dob.month.toString().padLeft(2, '0')}-'
+          '${dob.day.toString().padLeft(2, '0')}';
+      await usersApi.patchMe(PatchMeDto(dateOfBirth: iso));
+      await authNotifier.refreshUser();
     },
     onSaveDobChoice: (choice) async {
-      debugPrint('[web auth] onSaveDobChoice($choice) — no-op on web');
+      final wire = switch (choice) {
+        AuthDobChoice.preferNotToSay => 'prefer_not_to_say',
+        AuthDobChoice.adultSelfDeclared => 'adult_self_declared',
+        AuthDobChoice.skipped => 'skipped',
+      };
+      await usersApi.patchMe(PatchMeDto(dobChoice: wire));
+      await authNotifier.refreshUser();
     },
     onSaveProfile: ({displayName, username, avatarUrl, bio, photoPath}) async {
-      debugPrint('[web auth] onSaveProfile(displayName=$displayName, username=$username) — no-op on web');
+      await usersApi.patchMe(
+        PatchMeDto(
+          displayName: displayName,
+          username: username,
+          avatarUrl: avatarUrl,
+          bio: bio,
+        ),
+      );
+      await authNotifier.refreshUser();
     },
     onSaveInterests: (interestIds) async {
-      debugPrint('[web auth] onSaveInterests(${interestIds.length} ids) — no-op on web');
+      await interestsApi.selectMany(
+        SelectInterestsDto(interestIds: interestIds),
+      );
     },
     onCompleteTutorial: () async {
-      debugPrint('[web auth] onCompleteTutorial — no-op on web');
+      await usersApi.completeTutorial(const TutorialCompleteDto(version: 1));
+      await authNotifier.refreshUser();
     },
     onCompleteOnboarding: () async {
-      debugPrint('[web auth] onCompleteOnboarding — no-op on web');
+      authNotifier.markOnboardingComplete();
+    },
+
+    // ── Session ───────────────────────────────────────────────────────
+    onLogout: () async {
+      await authNotifier.logout();
+      ref.read(routerProvider).go(ProtoRoutes.authWelcome);
     },
   );
 }
 
 /// Factory provider — identity is stable because the returned
-/// [AuthCallbacks] closes over the [authProvider] notifier, which is a
-/// StateNotifierProvider (stable across rebuilds).
+/// [AuthCallbacks] closes over the [authProvider] notifier.
 final authCallbacksProvider = Provider<AuthCallbacks>(buildWebAuthCallbacks);

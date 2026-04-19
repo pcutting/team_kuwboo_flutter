@@ -28,6 +28,9 @@ dependencies:
   # dob_skipped). Re-declared here rather than leaning on api_client's
   # transitive dep so the dependency is explicit at the import site.
   dio: ^5.7.0
+  # Avatar picker — web uses the file chooser; mobile uses the native
+  # gallery / camera. Camera on web falls back to file chooser.
+  image_picker: ^1.1.0
 
 dev_dependencies:
   flutter_test:
