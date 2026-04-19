@@ -47,6 +47,8 @@ import { CredentialsModule } from './modules/credentials/credentials.module';
 import { TrustModule } from './modules/trust/trust.module';
 import { InterestsModule } from './modules/interests/interests.module';
 import { DatingModule } from './modules/dating/dating.module';
+import { VideoModule } from './modules/video/video.module';
+import { SocialModule } from './modules/social/social.module';
 
 @Module({
   imports: [
@@ -166,6 +168,8 @@ import { DatingModule } from './modules/dating/dating.module';
     TrustModule,
     InterestsModule,
     DatingModule,
+    VideoModule,
+    SocialModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
