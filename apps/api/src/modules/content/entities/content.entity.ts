@@ -21,11 +21,11 @@ import {
 } from '../../../common/enums';
 
 // discriminatorMap MUST only reference entity classes that actually exist.
-// Event and WantedAd are declared in `ContentType` for forward-compat but
-// have no entity class yet — including them here makes MikroORM's STI
-// metadata resolve to `undefined` during `em.find(Product, …)`, which
-// throws "Cannot read properties of undefined (reading 'extends')" at
-// runtime (the /products 500). Add entries here only when the class lands.
+// WantedAd is declared in `ContentType` for forward-compat but has no
+// entity class yet — including it here makes MikroORM's STI metadata
+// resolve to `undefined` during `em.find(Product, …)`, which throws
+// "Cannot read properties of undefined (reading 'extends')" at runtime
+// (the /products 500). Add entries here only when the class lands.
 @Entity({
   tableName: 'content',
   discriminatorColumn: 'type',
@@ -33,6 +33,7 @@ import {
     VIDEO: 'Video',
     PRODUCT: 'Product',
     POST: 'Post',
+    EVENT: 'Event',
   },
 })
 @Filter({ name: 'notDeleted', cond: { deletedAt: null }, default: true })
