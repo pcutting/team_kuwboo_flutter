@@ -2,20 +2,30 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getSystemHealth } from '../api/client';
 
+interface MemoryUsage {
+  rss: number;
+  heapUsed: number;
+  heapTotal: number;
+  external?: number;
+  arrayBuffers?: number;
+}
+
+interface QueueStats {
+  waiting: number;
+  active: number;
+  completed: number;
+  failed: number;
+  delayed?: number;
+  paused?: number;
+  prioritized?: number;
+  'waiting-children'?: number;
+}
+
 interface HealthData {
   uptime: number;
-  memory: {
-    rss: number;
-    heapUsed: number;
-    heapTotal: number;
-  };
+  memoryUsage: MemoryUsage;
   nodeVersion: string;
-  queue?: {
-    waiting: number;
-    active: number;
-    completed: number;
-    failed: number;
-  };
+  queueStats?: QueueStats;
 }
 
 function formatUptime(seconds: number): string {
@@ -118,37 +128,37 @@ export function SystemHealthPage() {
               <div className="bg-white rounded-xl border border-stone-200 p-5">
                 <p className="text-sm text-stone-500">RSS</p>
                 <p className="mt-1 text-3xl font-bold text-blue-700">
-                  {formatBytes(health.memory.rss)}
+                  {formatBytes(health.memoryUsage.rss)}
                 </p>
               </div>
               <div className="bg-white rounded-xl border border-stone-200 p-5">
                 <p className="text-sm text-stone-500">Heap Used</p>
                 <p className="mt-1 text-3xl font-bold text-amber-700">
-                  {formatBytes(health.memory.heapUsed)}
+                  {formatBytes(health.memoryUsage.heapUsed)}
                 </p>
                 <div className="mt-2 w-full bg-stone-100 rounded-full h-2">
                   <div
                     className="bg-amber-500 h-2 rounded-full transition-all"
                     style={{
-                      width: `${Math.min(100, Math.round((health.memory.heapUsed / health.memory.heapTotal) * 100))}%`,
+                      width: `${Math.min(100, Math.round((health.memoryUsage.heapUsed / health.memoryUsage.heapTotal) * 100))}%`,
                     }}
                   />
                 </div>
                 <p className="mt-1 text-xs text-stone-400">
-                  {Math.round((health.memory.heapUsed / health.memory.heapTotal) * 100)}% of heap
+                  {Math.round((health.memoryUsage.heapUsed / health.memoryUsage.heapTotal) * 100)}% of heap
                 </p>
               </div>
               <div className="bg-white rounded-xl border border-stone-200 p-5">
                 <p className="text-sm text-stone-500">Heap Total</p>
                 <p className="mt-1 text-3xl font-bold text-stone-700">
-                  {formatBytes(health.memory.heapTotal)}
+                  {formatBytes(health.memoryUsage.heapTotal)}
                 </p>
               </div>
             </div>
           </div>
 
           {/* Queue Stats */}
-          {health.queue && (
+          {health.queueStats && (
             <div className="mt-10">
               <h2 className="text-sm font-semibold text-stone-500 uppercase tracking-wider">
                 Queue
@@ -157,25 +167,25 @@ export function SystemHealthPage() {
                 <div className="bg-white rounded-xl border border-stone-200 p-5">
                   <p className="text-sm text-stone-500">Waiting</p>
                   <p className="mt-1 text-3xl font-bold text-yellow-700">
-                    {health.queue.waiting.toLocaleString()}
+                    {health.queueStats.waiting.toLocaleString()}
                   </p>
                 </div>
                 <div className="bg-white rounded-xl border border-stone-200 p-5">
                   <p className="text-sm text-stone-500">Active</p>
                   <p className="mt-1 text-3xl font-bold text-blue-700">
-                    {health.queue.active.toLocaleString()}
+                    {health.queueStats.active.toLocaleString()}
                   </p>
                 </div>
                 <div className="bg-white rounded-xl border border-stone-200 p-5">
                   <p className="text-sm text-stone-500">Completed</p>
                   <p className="mt-1 text-3xl font-bold text-green-700">
-                    {health.queue.completed.toLocaleString()}
+                    {health.queueStats.completed.toLocaleString()}
                   </p>
                 </div>
                 <div className="bg-white rounded-xl border border-stone-200 p-5">
                   <p className="text-sm text-stone-500">Failed</p>
                   <p className="mt-1 text-3xl font-bold text-red-700">
-                    {health.queue.failed.toLocaleString()}
+                    {health.queueStats.failed.toLocaleString()}
                   </p>
                 </div>
               </div>
