@@ -35,6 +35,8 @@ describe('Auth (email + password) e2e', () => {
         password: 'StrongPassword1!',
         name: 'Ada Lovelace',
         dobChoice: DobChoice.ADULT_SELF_DECLARED,
+        legalAccepted: true,
+        ageConfirmed: true,
       })
       .expect(200);
 
@@ -58,12 +60,22 @@ describe('Auth (email + password) e2e', () => {
 
     await http
       .post('/auth/email/register')
-      .send({ email, password: 'StrongPassword1!' })
+      .send({
+        email,
+        password: 'StrongPassword1!',
+        legalAccepted: true,
+        ageConfirmed: true,
+      })
       .expect(200);
 
     const res = await http
       .post('/auth/email/register')
-      .send({ email, password: 'AnotherPass2!' })
+      .send({
+        email,
+        password: 'AnotherPass2!',
+        legalAccepted: true,
+        ageConfirmed: true,
+      })
       .expect(409);
     expect(res.body.code ?? res.body.message?.code).toBeDefined();
   });
@@ -75,7 +87,7 @@ describe('Auth (email + password) e2e', () => {
 
     await http
       .post('/auth/email/register')
-      .send({ email, password })
+      .send({ email, password, legalAccepted: true, ageConfirmed: true })
       .expect(200);
 
     const loginRes = await http
@@ -100,7 +112,12 @@ describe('Auth (email + password) e2e', () => {
 
     await http
       .post('/auth/email/register')
-      .send({ email, password: originalPassword })
+      .send({
+        email,
+        password: originalPassword,
+        legalAccepted: true,
+        ageConfirmed: true,
+      })
       .expect(200);
 
     const forgotRes = await http
@@ -151,7 +168,12 @@ describe('Auth (email + password) e2e', () => {
 
     await http
       .post('/auth/email/register')
-      .send({ email, password: 'Pw123456!' })
+      .send({
+        email,
+        password: 'Pw123456!',
+        legalAccepted: true,
+        ageConfirmed: true,
+      })
       .expect(200);
     await http.post('/auth/email/password/forgot').send({ email }).expect(200);
 
@@ -169,7 +191,12 @@ describe('Auth (email + password) e2e', () => {
 
     const reg = await http
       .post('/auth/email/register')
-      .send({ email, password: 'Pw123456!' })
+      .send({
+        email,
+        password: 'Pw123456!',
+        legalAccepted: true,
+        ageConfirmed: true,
+      })
       .expect(200);
     const { accessToken } = reg.body.data ?? reg.body;
 

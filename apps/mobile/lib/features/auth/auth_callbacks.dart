@@ -83,6 +83,21 @@ AuthCallbacks buildMobileAuthCallbacks(Ref ref) {
       }
     },
 
+    // ── Email + password ──────────────────────────────────────────────
+    onEmailRegister: (req) async {
+      await authNotifier.emailRegister(
+        email: req.email,
+        password: req.password,
+        name: req.name,
+        legalAccepted: req.legalAccepted,
+        ageConfirmed: req.ageConfirmed,
+      );
+    },
+
+    onEmailLogin: (email, password) async {
+      await authNotifier.emailLogin(email: email, password: password);
+    },
+
     // ── Onboarding progress ───────────────────────────────────────────
     onSaveBirthday: (dob) async {
       // Backend's PatchMeDto accepts an ISO-8601 date string.

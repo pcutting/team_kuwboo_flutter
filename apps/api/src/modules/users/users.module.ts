@@ -9,12 +9,14 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { ProfileCompletenessNudgeCron } from './workers/profile-completeness-nudge.cron';
 import { ProfileCompletenessNudgeProcessor } from './workers/profile-completeness-nudge.processor';
 import { PROFILE_COMPLETENESS_NUDGE_QUEUE } from './workers/profile-completeness-nudge.queue';
+import { ConsentModule } from '../consent/consent.module';
 
 @Module({
   imports: [
     MikroOrmModule.forFeature([User, UserPreferences]),
     BullModule.registerQueue({ name: PROFILE_COMPLETENESS_NUDGE_QUEUE }),
     forwardRef(() => NotificationsModule),
+    forwardRef(() => ConsentModule),
   ],
   controllers: [UsersController],
   providers: [

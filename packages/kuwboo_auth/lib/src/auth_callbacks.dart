@@ -54,6 +54,39 @@ class AuthOtpArgs {
   final String? devCode;
 }
 
+/// Arguments the email-register screen supplies to
+/// [AuthCallbacks.onEmailRegister]. Wraps the form values so the callback
+/// contract stays stable as the screen grows (e.g. future marketing
+/// opt-in, referral code, etc.).
+class EmailRegisterRequest {
+  const EmailRegisterRequest({
+    required this.email,
+    required this.password,
+    required this.legalAccepted,
+    required this.ageConfirmed,
+    this.name,
+  });
+
+  /// User-supplied email — lower-cased / trimmed before being passed in.
+  final String email;
+
+  /// Plaintext password — caller is expected to enforce client-side
+  /// strength (8+ chars, non-blocklisted) before invoking.
+  final String password;
+
+  /// Optional display name. Null or empty means "skip" — the mobile
+  /// profile screen collects the definitive value later.
+  final String? name;
+
+  /// Must be true. The form blocks submission otherwise; kept on the
+  /// request payload so the backend has an audit trail for the consent
+  /// check.
+  final bool legalAccepted;
+
+  /// Must be true. Same contract as [legalAccepted].
+  final bool ageConfirmed;
+}
+
 /// Callbacks the host app (mobile) supplies to drive real auth API calls
 /// out of the prototype auth flow. When null (web prototype), the screen
 /// falls back to the existing mock-navigation behaviour.
@@ -73,6 +106,8 @@ class AuthCallbacks {
     this.onSendEmailOtp,
     this.onVerifyOtp,
     this.onResendOtp,
+    this.onEmailRegister,
+    this.onEmailLogin,
     this.onSaveBirthday,
     this.onSaveDobChoice,
     this.onSaveProfile,
@@ -122,6 +157,19 @@ class AuthCallbacks {
   /// Re-trigger sending an OTP (re-uses the appropriate channel).
   final Future<void> Function(String identifier, AuthOtpChannel channel)?
       onResendOtp;
+
+  // ─── Email + password ────────────────────────────────────────────────
+
+  /// Create a new account with email + password. Throws on duplicate
+  /// email, weak password, or rate-limit. On success the host persists
+  /// the returned tokens and updates auth state so the router redirect
+  /// carries the user into the onboarding flow.
+  final Future<void> Function(EmailRegisterRequest req)? onEmailRegister;
+
+  /// Authenticate an existing email + password pair. Throws on unknown
+  /// email, wrong password, or locked account. On success the host
+  /// persists tokens + updates auth state.
+  final Future<void> Function(String email, String password)? onEmailLogin;
 
   // ─── Onboarding progress ─────────────────────────────────────────────
 

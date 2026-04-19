@@ -220,6 +220,38 @@ class MockApiInterceptor extends Interceptor {
       if (path == '/yoyo/location' || path == '/yoyo/wave') {
         return _envelope(<String, dynamic>{'message': 'ok'});
       }
+
+      // Email + password (PR B). The prototype has no real auth store —
+      // any credentials succeed and the canned `_meUser()` payload is
+      // returned alongside mock tokens. The register endpoint echoes the
+      // submitted email / name into the user payload so the subsequent
+      // onboarding screens see what the user typed.
+      if (path == '/auth/email/register') {
+        final raw = options.data;
+        final email = raw is Map ? raw['email'] as String? : null;
+        final name = raw is Map ? raw['name'] as String? : null;
+        final user = Map<String, dynamic>.from(_meUser());
+        if (email != null && email.isNotEmpty) user['email'] = email;
+        if (name != null && name.isNotEmpty) user['name'] = name;
+        return _envelope(<String, dynamic>{
+          'accessToken': 'mock-access',
+          'refreshToken': 'mock-refresh',
+          'user': user,
+          'isNewUser': true,
+        });
+      }
+      if (path == '/auth/email/login') {
+        final raw = options.data;
+        final email = raw is Map ? raw['email'] as String? : null;
+        final user = Map<String, dynamic>.from(_meUser());
+        if (email != null && email.isNotEmpty) user['email'] = email;
+        return _envelope(<String, dynamic>{
+          'accessToken': 'mock-access',
+          'refreshToken': 'mock-refresh',
+          'user': user,
+          'isNewUser': false,
+        });
+      }
     }
 
     if (method == 'PATCH') {
