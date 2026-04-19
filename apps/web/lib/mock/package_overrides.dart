@@ -27,6 +27,7 @@ import 'package:kuwboo_screens/src/social/social_providers.dart' as social;
 import 'package:kuwboo_screens/src/video/video_providers.dart' as video;
 import 'package:kuwboo_screens/src/yoyo/yoyo_providers.dart' as yoyo;
 
+import '../providers/api_provider.dart';
 import 'mock_api_interceptor.dart';
 
 /// Adapter implementing the narrow [yoyo.YoyoApiFacade] in terms of the
@@ -42,18 +43,14 @@ class _MockYoyoApiAdapter implements yoyo.YoyoApiFacade {
   Future<void> updateLocation({
     required double latitude,
     required double longitude,
-  }) =>
-      _api.updateLocation(
-        UpdateLocationDto(lat: latitude, lng: longitude),
-      );
+  }) => _api.updateLocation(UpdateLocationDto(lat: latitude, lng: longitude));
 
   @override
   Future<List<NearbyUser>> getNearbyUsers({
     required double lat,
     required double lng,
     int? radiusKm,
-  }) =>
-      _api.getNearby(lat: lat, lng: lng, radius: radiusKm);
+  }) => _api.getNearby(lat: lat, lng: lng, radius: radiusKm);
 
   @override
   Future<YoyoSettings> getSettings() => _api.getSettings();
@@ -65,16 +62,15 @@ class _MockYoyoApiAdapter implements yoyo.YoyoApiFacade {
     int? ageMin,
     int? ageMax,
     String? genderFilter,
-  }) =>
-      _api.updateSettings(
-        UpdateYoyoSettingsDto(
-          isVisible: isVisible,
-          radiusKm: radiusKm,
-          ageMin: ageMin,
-          ageMax: ageMax,
-          genderFilter: genderFilter,
-        ),
-      );
+  }) => _api.updateSettings(
+    UpdateYoyoSettingsDto(
+      isVisible: isVisible,
+      radiusKm: radiusKm,
+      ageMin: ageMin,
+      ageMax: ageMax,
+      genderFilter: genderFilter,
+    ),
+  );
 
   @override
   Future<Wave> sendWave({required String toUserId, String? message}) =>
@@ -98,7 +94,10 @@ class _MockYoyoApiAdapter implements yoyo.YoyoApiFacade {
 /// Single mocked [KuwbooApiClient] reused across every package override.
 /// Lazy so we only build one Dio instance per app.
 final mockApiClientProvider = Provider<KuwbooApiClient>((ref) {
-  return KuwbooApiClient(baseUrl: 'https://mock.kuwboo.local', dio: buildMockDio());
+  return KuwbooApiClient(
+    baseUrl: 'https://mock.kuwboo.local',
+    dio: buildMockDio(),
+  );
 });
 
 /// All overrides the web prototype needs to wire shared-package providers
@@ -118,8 +117,11 @@ List<Override> buildWebPackageOverrides() {
     ),
 
     // ── kuwboo_screens: profile ──
+    // Profile hits the real backend so the signed-in user sees their
+    // own /users/me data; non-auth content modules below stay on the
+    // mock interceptor until those endpoints are wired.
     profile.apiClientProvider.overrideWith(
-      (ref) => ref.watch(mockApiClientProvider),
+      (ref) => ref.watch(realApiClientProvider),
     ),
 
     // ── kuwboo_screens: video ──

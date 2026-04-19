@@ -1,17 +1,120 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:kuwboo_models/kuwboo_models.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 import '../screens_test_ids.dart';
 import 'profile_providers.dart';
 
-class ProfileMyScreen extends ConsumerWidget {
+class ProfileMyScreen extends ConsumerStatefulWidget {
   const ProfileMyScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileMyScreen> createState() => _ProfileMyScreenState();
+}
+
+class _ProfileMyScreenState extends ConsumerState<ProfileMyScreen> {
+  final ImagePicker _picker = ImagePicker();
+
+  /// Locally-selected avatar bytes (session-only). When non-null, these
+  /// override whatever comes from `meProvider`. Cleared by "Remove photo".
+  Uint8List? _localAvatarBytes;
+
+  /// True when "Remove photo" was tapped in this session — suppresses the
+  /// backend avatar URL and shows the default placeholder instead.
+  bool _avatarRemoved = false;
+
+  Future<void> _showAvatarSheet(BuildContext context) async {
+    final theme = ProtoTheme.of(context);
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: theme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) {
+        return SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.text.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _SheetAction(
+                icon: theme.icons.cameraAlt,
+                label: 'Take photo',
+                onTap: () async {
+                  Navigator.of(sheetCtx).pop();
+                  await _pickFrom(ImageSource.camera);
+                },
+              ),
+              _SheetAction(
+                icon: Icons.photo_library_outlined,
+                label: 'Choose from library',
+                onTap: () async {
+                  Navigator.of(sheetCtx).pop();
+                  await _pickFrom(ImageSource.gallery);
+                },
+              ),
+              _SheetAction(
+                icon: Icons.delete_outline_rounded,
+                label: 'Remove photo',
+                destructive: true,
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  setState(() {
+                    _localAvatarBytes = null;
+                    _avatarRemoved = true;
+                  });
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickFrom(ImageSource source) async {
+    try {
+      final picked = await _picker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 1024,
+        maxHeight: 1024,
+      );
+      if (picked == null) return;
+      final bytes = await picked.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        _localAvatarBytes = bytes;
+        _avatarRemoved = false;
+      });
+      // TODO(auth): POST bytes to /users/me/avatar once the endpoint is
+      // live, then invalidate meProvider on success.
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text('Couldn\'t open picker: $e')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
     final meAsync = ref.watch(meProvider);
     final unreadAsync = ref.watch(unreadNotificationCountProvider);
@@ -38,42 +141,41 @@ class ProfileMyScreen extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   children: [
                     const SizedBox(height: 20),
-                    // Avatar
+                    // Avatar — tap to change (library / camera / remove)
                     Center(
                       child: Semantics(
                         identifier: ScreensIds.profileMyAvatar,
                         image: true,
-                        label: 'Profile photo',
-                        child: Stack(
-                          children: [
-                            ProtoAvatar(
-                              radius: 48,
-                              imageUrl:
-                                  meAsync.valueOrNull?.avatarUrl ??
-                                  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
-                            ),
-                            Positioned(
-                              right: 0,
-                              bottom: 0,
-                              child: Container(
-                                width: 28,
-                                height: 28,
-                                decoration: BoxDecoration(
-                                  color: theme.primary,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: theme.background,
-                                    width: 3,
+                        button: true,
+                        label: 'Profile photo — tap to change',
+                        child: GestureDetector(
+                          onTap: () => _showAvatarSheet(context),
+                          child: Stack(
+                            children: [
+                              _buildAvatar(meAsync.valueOrNull, theme),
+                              Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    color: theme.primary,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: theme.background,
+                                      width: 3,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    theme.icons.cameraAlt,
+                                    size: 14,
+                                    color: Colors.white,
                                   ),
                                 ),
-                                child: Icon(
-                                  theme.icons.cameraAlt,
-                                  size: 14,
-                                  color: Colors.white,
-                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -199,6 +301,28 @@ class ProfileMyScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildAvatar(User? user, ProtoTheme theme) {
+    const fallbackUrl =
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop';
+
+    if (_localAvatarBytes != null) {
+      return Container(
+        width: 96,
+        height: 96,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          image: DecorationImage(
+            image: MemoryImage(_localAvatarBytes!),
+            fit: BoxFit.cover,
+          ),
+        ),
+      );
+    }
+
+    final url = _avatarRemoved ? fallbackUrl : (user?.avatarUrl ?? fallbackUrl);
+    return ProtoAvatar(radius: 48, imageUrl: url);
+  }
+
   String _displayName(User? user) {
     if (user == null) return 'Loading...';
     final name = user.name;
@@ -212,6 +336,42 @@ class ProfileMyScreen extends ConsumerWidget {
     final username = user?.username;
     if (username == null || username.trim().isEmpty) return '';
     return username.startsWith('@') ? username : '@$username';
+  }
+}
+
+class _SheetAction extends StatelessWidget {
+  const _SheetAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.destructive = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool destructive;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ProtoTheme.of(context);
+    final color = destructive ? theme.accent : theme.text;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        child: Row(
+          children: [
+            Icon(icon, size: 22, color: color),
+            const SizedBox(width: 14),
+            Text(
+              label,
+              style: theme.title.copyWith(fontSize: 15, color: color),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

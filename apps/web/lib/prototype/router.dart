@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kuwboo_models/kuwboo_models.dart';
 import 'package:kuwboo_screens/kuwboo_screens.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
+
+import '../providers/auth_provider.dart';
 
 // ─── Navigation Keys ─────────────────────────────────────────────────────
 
@@ -43,10 +46,17 @@ class _ProtoShellWrapper extends ConsumerWidget {
       });
     }
 
+    // Video module uses an overlay (transparent) top bar so the feed
+    // stays edge-to-edge and the gradient shows through behind the
+    // frosted YoYo / chat / profile icons.
+    final useOverlayTopBar = activeModule == ProtoModule.video;
+
     return ProtoScaffold(
       activeModule: activeModule,
       activeTab: activeTab,
       tabBadges: isYoyoNearby ? const {2: 2} : null,
+      overlayTopBar: useOverlayTopBar,
+      backgroundColor: useOverlayTopBar ? Colors.black : null,
       body: child,
     );
   }
@@ -72,9 +82,39 @@ class _ProtoShellWrapper extends ConsumerWidget {
 // ─── Router Provider ─────────────────────────────────────────────────────
 
 final routerProvider = Provider<GoRouter>((ref) {
+  // Rebuild redirects whenever auth state changes, without recreating
+  // the router (which would collide with the mounted shell navigator's
+  // GlobalKey).
+  final refresh = ValueNotifier<int>(0);
+  ref.listen(authProvider, (_, _) => refresh.value++);
+  ref.onDispose(refresh.dispose);
+
   return GoRouter(
     navigatorKey: rootNavigatorKey,
-    initialLocation: ProtoRoutes.yoyoNearby,
+    // Start in the auth sub-tree so unauthenticated refreshes don't
+    // briefly mount shell screens that fire authenticated API calls.
+    // The redirect below bounces authenticated users out to the shell.
+    initialLocation: ProtoRoutes.authWelcome,
+    refreshListenable: refresh,
+    redirect: (context, state) {
+      final auth = ref.read(authProvider);
+      if (auth.isLoading) return null;
+
+      final loc = state.matchedLocation;
+      final onAuthRoute = loc.startsWith('/auth/');
+
+      if (!auth.isAuthenticated) {
+        return onAuthRoute ? null : ProtoRoutes.authWelcome;
+      }
+
+      if (auth.isNewUser) {
+        if (onAuthRoute) return null;
+        return _onboardingResumeRoute(auth.user?.onboardingProgress);
+      }
+
+      if (onAuthRoute) return ProtoRoutes.yoyoNearby;
+      return null;
+    },
     routes: [
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
@@ -85,3 +125,24 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+/// Resume users at the auth step matching their saved onboarding progress.
+String _onboardingResumeRoute(OnboardingProgress? progress) {
+  switch (progress) {
+    case OnboardingProgress.complete:
+      return ProtoRoutes.yoyoNearby;
+    case OnboardingProgress.tutorial:
+      return ProtoRoutes.authTutorial;
+    case OnboardingProgress.profile:
+      return ProtoRoutes.authProfile;
+    case OnboardingProgress.birthday:
+      return ProtoRoutes.authBirthday;
+    case OnboardingProgress.welcome:
+    case OnboardingProgress.method:
+    case OnboardingProgress.phone:
+    case OnboardingProgress.otp:
+    case OnboardingProgress.interests:
+    case null:
+      return ProtoRoutes.authMethod;
+  }
+}

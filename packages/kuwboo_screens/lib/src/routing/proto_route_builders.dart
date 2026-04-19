@@ -14,6 +14,16 @@ import '../profile/profile_edit_screen.dart';
 import '../profile/profile_my_screen.dart';
 import '../profile/profile_notifications_screen.dart';
 import '../profile/profile_settings_screen.dart';
+import '../profile/settings/settings_account_info_screen.dart';
+import '../profile/settings/settings_blocked_users_screen.dart';
+import '../profile/settings/settings_email_screen.dart';
+import '../profile/settings/settings_location_sharing_screen.dart';
+import '../profile/settings/settings_match_notifications_screen.dart';
+import '../profile/settings/settings_message_notifications_screen.dart';
+import '../profile/settings/settings_password_screen.dart';
+import '../profile/settings/settings_phone_screen.dart';
+import '../profile/settings/settings_profile_visibility_screen.dart';
+import '../profile/settings/settings_push_notifications_screen.dart';
 import '../shop/shop_auction_detail.dart';
 import '../shop/shop_browse_screen.dart';
 import '../shop/shop_create_listing.dart';
@@ -54,14 +64,10 @@ List<RouteBase> buildProtoShellRoutes({
   Widget Function()? socialFeedOverride,
   Widget Function()? shopBrowseOverride,
 }) {
-  Widget yoyoNearby() =>
-      yoyoNearbyOverride?.call() ?? const YoyoNearbyScreen();
-  Widget videoFeed() =>
-      videoFeedOverride?.call() ?? const VideoFeedScreen();
-  Widget socialFeed() =>
-      socialFeedOverride?.call() ?? const SocialFeedScreen();
-  Widget shopBrowse() =>
-      shopBrowseOverride?.call() ?? const ShopBrowseScreen();
+  Widget yoyoNearby() => yoyoNearbyOverride?.call() ?? const YoyoNearbyScreen();
+  Widget videoFeed() => videoFeedOverride?.call() ?? const VideoFeedScreen();
+  Widget socialFeed() => socialFeedOverride?.call() ?? const SocialFeedScreen();
+  Widget shopBrowse() => shopBrowseOverride?.call() ?? const ShopBrowseScreen();
 
   return <RouteBase>[
     // YoYo
@@ -71,8 +77,7 @@ List<RouteBase> buildProtoShellRoutes({
     ),
     GoRoute(
       path: ProtoRoutes.yoyoConnect,
-      pageBuilder: (c, s) =>
-          const NoTransitionPage(child: YoyoConnectScreen()),
+      pageBuilder: (c, s) => const NoTransitionPage(child: YoyoConnectScreen()),
     ),
     GoRoute(
       path: ProtoRoutes.yoyoWave,
@@ -90,9 +95,8 @@ List<RouteBase> buildProtoShellRoutes({
     ),
     GoRoute(
       path: ProtoRoutes.videoFollowing,
-      pageBuilder: (c, s) => const NoTransitionPage(
-        child: VideoFeedScreen(isFollowingFeed: true),
-      ),
+      pageBuilder: (c, s) =>
+          const NoTransitionPage(child: VideoFeedScreen(isFollowingFeed: true)),
     ),
     GoRoute(
       path: ProtoRoutes.videoDiscover,
@@ -111,19 +115,16 @@ List<RouteBase> buildProtoShellRoutes({
     ),
     GoRoute(
       path: ProtoRoutes.datingMatches,
-      pageBuilder: (c, s) =>
-          const NoTransitionPage(child: DatingMatchesList()),
+      pageBuilder: (c, s) => const NoTransitionPage(child: DatingMatchesList()),
     ),
     GoRoute(
       path: ProtoRoutes.datingLikes,
-      pageBuilder: (c, s) =>
-          const NoTransitionPage(child: DatingLikesScreen()),
+      pageBuilder: (c, s) => const NoTransitionPage(child: DatingLikesScreen()),
     ),
     GoRoute(
       path: ProtoRoutes.datingChat,
-      pageBuilder: (c, s) => const NoTransitionPage(
-        child: ChatInboxScreen(moduleKey: 'Dating'),
-      ),
+      pageBuilder: (c, s) =>
+          const NoTransitionPage(child: ChatInboxScreen(moduleKey: 'Dating')),
     ),
     // Social
     GoRoute(
@@ -132,8 +133,7 @@ List<RouteBase> buildProtoShellRoutes({
     ),
     GoRoute(
       path: ProtoRoutes.socialFriends,
-      pageBuilder: (c, s) =>
-          const NoTransitionPage(child: SocialFriendsList()),
+      pageBuilder: (c, s) => const NoTransitionPage(child: SocialFriendsList()),
     ),
     GoRoute(
       path: ProtoRoutes.socialEvents,
@@ -157,13 +157,11 @@ List<RouteBase> buildProtoShellRoutes({
     ),
     GoRoute(
       path: ProtoRoutes.shopDeals,
-      pageBuilder: (c, s) =>
-          const NoTransitionPage(child: ShopDealsScreen()),
+      pageBuilder: (c, s) => const NoTransitionPage(child: ShopDealsScreen()),
     ),
     GoRoute(
       path: ProtoRoutes.shopCreate,
-      pageBuilder: (c, s) =>
-          const NoTransitionPage(child: ShopCreateListing()),
+      pageBuilder: (c, s) => const NoTransitionPage(child: ShopCreateListing()),
     ),
     GoRoute(
       path: ProtoRoutes.shopMessages,
@@ -296,6 +294,58 @@ List<RouteBase> buildProtoModalRoutes({
       path: ProtoRoutes.profileNotifications,
       parentNavigatorKey: rootNavigatorKey,
       builder: (c, s) => const ProfileNotificationsScreen(),
+    ),
+
+    // Settings sub-screens — pushed over the shell by go_router.
+    GoRoute(
+      path: ProtoRoutes.settingsAccountInfo,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const SettingsAccountInfoScreen(),
+    ),
+    GoRoute(
+      path: ProtoRoutes.settingsPassword,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const SettingsPasswordScreen(),
+    ),
+    GoRoute(
+      path: ProtoRoutes.settingsPhone,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const SettingsPhoneScreen(),
+    ),
+    GoRoute(
+      path: ProtoRoutes.settingsEmail,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const SettingsEmailScreen(),
+    ),
+    GoRoute(
+      path: ProtoRoutes.settingsProfileVisibility,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const SettingsProfileVisibilityScreen(),
+    ),
+    GoRoute(
+      path: ProtoRoutes.settingsBlockedUsers,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const SettingsBlockedUsersScreen(),
+    ),
+    GoRoute(
+      path: ProtoRoutes.settingsLocationSharing,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const SettingsLocationSharingScreen(),
+    ),
+    GoRoute(
+      path: ProtoRoutes.settingsPushNotifications,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const SettingsPushNotificationsScreen(),
+    ),
+    GoRoute(
+      path: ProtoRoutes.settingsMessageNotifications,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const SettingsMessageNotificationsScreen(),
+    ),
+    GoRoute(
+      path: ProtoRoutes.settingsMatchNotifications,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const SettingsMatchNotificationsScreen(),
     ),
     // Social story viewer (modal overlay)
     GoRoute(

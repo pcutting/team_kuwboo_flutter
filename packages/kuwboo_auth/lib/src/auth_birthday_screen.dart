@@ -158,9 +158,40 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
 
                       const Spacer(),
 
+                      // Alternatives row — low-emphasis chips that open a
+                      // confirmation sheet explaining the trade-off before
+                      // committing. Placed above the primary CTA so the
+                      // secondary paths read as "or…" alternatives.
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12, top: 4),
+                        child: Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _DobChoiceChip(
+                              identifier: AuthIds.birthdayChipPreferNotToSay,
+                              label: 'I prefer not to say',
+                              onTap: () => _openChoiceSheet(
+                                context,
+                                AuthDobChoice.preferNotToSay,
+                              ),
+                            ),
+                            _DobChoiceChip(
+                              identifier: AuthIds.birthdayChipSkip,
+                              label: 'Skip for now',
+                              onTap: () => _openChoiceSheet(
+                                context,
+                                AuthDobChoice.skipped,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
                       // Continue button
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.only(bottom: 28),
                         child: Semantics(
                           identifier: AuthIds.birthdayContinue,
                           button: true,
@@ -184,47 +215,6 @@ class _AuthBirthdayScreenState extends State<AuthBirthdayScreen> {
                               ),
                             ),
                           ),
-                        ),
-                      ),
-
-                      // Alternatives row — three low-emphasis chips that
-                      // each open a confirmation sheet explaining the
-                      // trade-off before committing. Wraps onto two
-                      // lines on narrow devices so labels stay legible.
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 28, top: 4),
-                        child: Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _DobChoiceChip(
-                              identifier:
-                                  AuthIds.birthdayChipPreferNotToSay,
-                              label: 'I prefer not to say',
-                              onTap: () => _openChoiceSheet(
-                                context,
-                                AuthDobChoice.preferNotToSay,
-                              ),
-                            ),
-                            _DobChoiceChip(
-                              identifier:
-                                  AuthIds.birthdayChipAdultSelfDeclared,
-                              label: "I'm 18+",
-                              onTap: () => _openChoiceSheet(
-                                context,
-                                AuthDobChoice.adultSelfDeclared,
-                              ),
-                            ),
-                            _DobChoiceChip(
-                              identifier: AuthIds.birthdayChipSkip,
-                              label: 'Skip for now',
-                              onTap: () => _openChoiceSheet(
-                                context,
-                                AuthDobChoice.skipped,
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ],
@@ -364,9 +354,7 @@ class _DobChoiceChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: theme.text.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(theme.radiusFull),
-            border: Border.all(
-              color: theme.text.withValues(alpha: 0.08),
-            ),
+            border: Border.all(color: theme.text.withValues(alpha: 0.08)),
           ),
           child: Text(
             label,
@@ -394,8 +382,7 @@ class _DobChoiceSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomInset),
       child: Column(
@@ -413,10 +400,7 @@ class _DobChoiceSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Text(
-            copy.title,
-            style: theme.headline.copyWith(fontSize: 20),
-          ),
+          Text(copy.title, style: theme.headline.copyWith(fontSize: 20)),
           const SizedBox(height: 10),
           Text(
             copy.body,
@@ -436,8 +420,7 @@ class _DobChoiceSheet extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       decoration: BoxDecoration(
                         color: theme.background,
-                        borderRadius:
-                            BorderRadius.circular(theme.radiusFull),
+                        borderRadius: BorderRadius.circular(theme.radiusFull),
                         border: Border.all(
                           color: theme.text.withValues(alpha: 0.1),
                         ),
@@ -467,8 +450,7 @@ class _DobChoiceSheet extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       decoration: BoxDecoration(
                         color: theme.primary,
-                        borderRadius:
-                            BorderRadius.circular(theme.radiusFull),
+                        borderRadius: BorderRadius.circular(theme.radiusFull),
                       ),
                       child: Center(
                         child: Text(

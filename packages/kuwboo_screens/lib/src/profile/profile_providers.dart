@@ -43,8 +43,8 @@ final unreadNotificationCountProvider = FutureProvider.autoDispose<int>(
 
 final notificationPreferencesProvider =
     FutureProvider.autoDispose<List<NotificationPreference>>(
-  (ref) => ref.watch(notificationsApiProvider).getPreferences(),
-);
+      (ref) => ref.watch(notificationsApiProvider).getPreferences(),
+    );
 
 // ─── Credentials + Interests (settings) ───────────────────────────────
 

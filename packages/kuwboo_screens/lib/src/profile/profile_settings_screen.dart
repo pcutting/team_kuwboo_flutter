@@ -28,18 +28,23 @@ class ProfileSettingsScreen extends StatelessWidget {
                       _SettingsItem(
                         icon: theme.icons.personOutline,
                         label: 'Account Info',
+                        onTap: () =>
+                            context.push(ProtoRoutes.settingsAccountInfo),
                       ),
                       _SettingsItem(
                         icon: theme.icons.lockOutline,
                         label: 'Password',
+                        onTap: () => context.push(ProtoRoutes.settingsPassword),
                       ),
                       _SettingsItem(
                         icon: theme.icons.phoneOutline,
                         label: 'Phone Number',
+                        onTap: () => context.push(ProtoRoutes.settingsPhone),
                       ),
                       _SettingsItem(
                         icon: theme.icons.emailOutline,
                         label: 'Email',
+                        onTap: () => context.push(ProtoRoutes.settingsEmail),
                       ),
                     ],
                   ),
@@ -50,14 +55,20 @@ class ProfileSettingsScreen extends StatelessWidget {
                       _SettingsItem(
                         icon: theme.icons.visibilityOff,
                         label: 'Profile Visibility',
+                        onTap: () =>
+                            context.push(ProtoRoutes.settingsProfileVisibility),
                       ),
                       _SettingsItem(
                         icon: theme.icons.blockOutline,
                         label: 'Blocked Users',
+                        onTap: () =>
+                            context.push(ProtoRoutes.settingsBlockedUsers),
                       ),
                       _SettingsItem(
                         icon: theme.icons.locationOff,
                         label: 'Location Sharing',
+                        onTap: () =>
+                            context.push(ProtoRoutes.settingsLocationSharing),
                       ),
                     ],
                   ),
@@ -68,14 +79,22 @@ class ProfileSettingsScreen extends StatelessWidget {
                       _SettingsItem(
                         icon: theme.icons.notificationsOutline,
                         label: 'Push Notifications',
+                        onTap: () =>
+                            context.push(ProtoRoutes.settingsPushNotifications),
                       ),
                       _SettingsItem(
                         icon: Icons.message_outlined,
                         label: 'Message Notifications',
+                        onTap: () => context.push(
+                          ProtoRoutes.settingsMessageNotifications,
+                        ),
                       ),
                       _SettingsItem(
                         icon: theme.icons.favoriteOutline,
                         label: 'Match Notifications',
+                        onTap: () => context.push(
+                          ProtoRoutes.settingsMatchNotifications,
+                        ),
                       ),
                     ],
                   ),
@@ -159,33 +178,44 @@ class _SettingsSection extends StatelessWidget {
 class _SettingsItem extends StatelessWidget {
   final IconData icon;
   final String label;
-  const _SettingsItem({required this.icon, required this.label});
+  final VoidCallback? onTap;
+  const _SettingsItem({required this.icon, required this.label, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: theme.text.withValues(alpha: 0.04)),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: theme.textSecondary),
-          const SizedBox(width: 14),
-          Text(
-            label,
-            style: theme.body.copyWith(
-              color: theme.text,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: theme.text.withValues(alpha: 0.04)),
             ),
           ),
-          const Spacer(),
-          Icon(theme.icons.chevronRight, size: 20, color: theme.textTertiary),
-        ],
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: theme.textSecondary),
+              const SizedBox(width: 14),
+              Text(
+                label,
+                style: theme.body.copyWith(
+                  color: theme.text,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                theme.icons.chevronRight,
+                size: 20,
+                color: theme.textTertiary,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

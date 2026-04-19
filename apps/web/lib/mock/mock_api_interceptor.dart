@@ -194,9 +194,8 @@ class MockApiInterceptor extends Interceptor {
       if (RegExp(r'^/content/[^/]+/comments$').hasMatch(path)) {
         // Echo the submitted text back so the caller sees the comment it
         // just posted appear in the list, rather than a canned reply.
-        final contentId = RegExp(r'^/content/([^/]+)/comments$')
-                .firstMatch(path)
-                ?.group(1) ??
+        final contentId =
+            RegExp(r'^/content/([^/]+)/comments$').firstMatch(path)?.group(1) ??
             'demo-content-1';
         final raw = options.data;
         String text = '';
@@ -308,7 +307,9 @@ class MockApiInterceptor extends Interceptor {
 
   // ─── Helpers ───────────────────────────────────────────────────────────
 
-  Map<String, dynamic> _envelope(dynamic data) => <String, dynamic>{'data': data};
+  Map<String, dynamic> _envelope(dynamic data) => <String, dynamic>{
+    'data': data,
+  };
 
   // ─── Demo data ─────────────────────────────────────────────────────────
 
@@ -346,22 +347,22 @@ class MockApiInterceptor extends Interceptor {
   ];
 
   Map<String, dynamic> _meUser() => <String, dynamic>{
-        'id': 'demo-user-me',
-        'name': 'Demo User',
-        'username': 'demo',
-        'email': 'demo@kuwboo.app',
-        'phone': '+447000000000',
-        'avatarUrl': _avatars[4],
-        'bio': 'Exploring Kuwboo. Founder of nothing yet.',
-        'profileCompletenessPct': 65,
-        'tutorialVersion': 1,
-        'birthdaySkipped': false,
-        'isBot': false,
-        'appleEmailIsPrivateRelay': false,
-        'createdAt': DateTime.now()
-            .subtract(const Duration(days: 30))
-            .toIso8601String(),
-      };
+    'id': 'demo-user-me',
+    'name': 'Demo User',
+    'username': 'demo',
+    'email': 'demo@kuwboo.app',
+    'phone': '+447000000000',
+    'avatarUrl': _avatars[4],
+    'bio': 'Exploring Kuwboo. Founder of nothing yet.',
+    'profileCompletenessPct': 65,
+    'tutorialVersion': 1,
+    'birthdaySkipped': false,
+    'isBot': false,
+    'appleEmailIsPrivateRelay': false,
+    'createdAt': DateTime.now()
+        .subtract(const Duration(days: 30))
+        .toIso8601String(),
+  };
 
   Map<String, dynamic> _feedResponse(String tab) {
     final type = switch (tab) {
@@ -448,7 +449,7 @@ class MockApiInterceptor extends Interceptor {
           'label': slugs[i][0].toUpperCase() + slugs[i].substring(1),
           'displayOrder': i,
           'isActive': true,
-        }
+        },
     ];
   }
 
@@ -490,9 +491,7 @@ class MockApiInterceptor extends Interceptor {
       'startsAt': DateTime.now()
           .subtract(const Duration(hours: 6))
           .toIso8601String(),
-      'endsAt': DateTime.now()
-          .add(const Duration(hours: 18))
-          .toIso8601String(),
+      'endsAt': DateTime.now().add(const Duration(hours: 18)).toIso8601String(),
       'status': 'ACTIVE',
       'createdAt': DateTime.now()
           .subtract(const Duration(hours: 6))
@@ -585,7 +584,7 @@ class MockApiInterceptor extends Interceptor {
           'createdAt': DateTime.now()
               .subtract(Duration(minutes: 30 - i * 5))
               .toIso8601String(),
-        }
+        },
     ];
   }
 

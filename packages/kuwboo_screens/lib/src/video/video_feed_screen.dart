@@ -21,7 +21,8 @@ DemoVideo _contentToDemoVideo(Content c) {
     likes: c.likeCount,
     comments: c.commentCount,
     shares: c.shareCount,
-    avatarUrl: c.creator?.avatarUrl ??
+    avatarUrl:
+        c.creator?.avatarUrl ??
         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
   );
 }
@@ -71,10 +72,6 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
   // Heart burst animation
   bool _showHeartBurst = false;
   Offset _heartPosition = Offset.zero;
-
-  // Mute icon overlay
-  bool _showMuteIcon = false;
-  Timer? _muteIconTimer;
 
   // Overlay entry animation
   late AnimationController _overlayController;
@@ -145,18 +142,20 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _likeBounceScale = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.3), weight: 40),
-      TweenSequenceItem(tween: Tween(begin: 1.3, end: 1.0), weight: 60),
-    ]).animate(CurvedAnimation(
-      parent: _likeBounceController,
-      curve: Curves.elasticOut,
-    ));
+    _likeBounceScale =
+        TweenSequence<double>([
+          TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.3), weight: 40),
+          TweenSequenceItem(tween: Tween(begin: 1.3, end: 1.0), weight: 60),
+        ]).animate(
+          CurvedAnimation(
+            parent: _likeBounceController,
+            curve: Curves.elasticOut,
+          ),
+        );
   }
 
   @override
   void dispose() {
-    _muteIconTimer?.cancel();
     _pageController.dispose();
     _overlayController.dispose();
     _discController.dispose();
@@ -205,17 +204,6 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
     });
   }
 
-  void _handleSingleTap() {
-    setState(() {
-      _isMuted = !_isMuted;
-      _showMuteIcon = true;
-    });
-    _muteIconTimer?.cancel();
-    _muteIconTimer = Timer(const Duration(milliseconds: 1000), () {
-      if (mounted) setState(() => _showMuteIcon = false);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final kind = widget.isFollowingFeed
@@ -224,9 +212,8 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
     final feedAsync = ref.watch(videoFeedProvider(kind));
 
     return feedAsync.when(
-      loading: () => const Center(
-        child: CircularProgressIndicator(color: Colors.white),
-      ),
+      loading: () =>
+          const Center(child: CircularProgressIndicator(color: Colors.white)),
       error: (err, _) => Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -249,32 +236,29 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
           );
         }
         return Stack(
-        children: [
-          // Vertical swipeable feed
-          PageView.builder(
-            controller: _pageController,
-            scrollDirection: Axis.vertical,
-            itemCount: _totalPages,
-            onPageChanged: _onPageChanged,
-            itemBuilder: (context, index) {
-              if (index >= _videos.length && _hasEndCard) {
-                return _buildEndCard(context);
-              }
-              return Semantics(
-                identifier: ScreensIds.videoFeedCard(index),
-                label: 'Video ${index + 1}',
-                child: _buildVideoPage(context, index),
-              );
-            },
-          ),
+          children: [
+            // Vertical swipeable feed
+            PageView.builder(
+              controller: _pageController,
+              scrollDirection: Axis.vertical,
+              itemCount: _totalPages,
+              onPageChanged: _onPageChanged,
+              itemBuilder: (context, index) {
+                if (index >= _videos.length && _hasEndCard) {
+                  return _buildEndCard(context);
+                }
+                return Semantics(
+                  identifier: ScreensIds.videoFeedCard(index),
+                  label: 'Video ${index + 1}',
+                  child: _buildVideoPage(context, index),
+                );
+              },
+            ),
 
-          // Position dots (left edge)
-          if (_totalPages > 1) _buildPositionDots(),
-
-          // YoYo icon (left) + chat & profile (right) — at bevel level
-          _buildTopBar(context),
-        ],
-      );
+            // Position dots (left edge)
+            if (_totalPages > 1) _buildPositionDots(),
+          ],
+        );
       },
     );
   }
@@ -305,11 +289,12 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
           ),
         ),
 
-        // Tappable video area
+        // Tappable video area — double-tap to like; single-tap is a no-op
+        // so it doesn't silently toggle mute. Mute lives on its own
+        // speaker button in the action column.
         Positioned.fill(
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
-            onTap: _handleSingleTap,
             onDoubleTapDown: _handleDoubleTap,
             onDoubleTap: () {},
             child: Center(
@@ -332,45 +317,19 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
               duration: const Duration(milliseconds: 700),
               curve: Curves.easeOut,
               builder: (context, scale, child) {
-                final opacity =
-                    (1.0 - ((scale - 0.3) / 1.5)).clamp(0.0, 1.0);
+                final opacity = (1.0 - ((scale - 0.3) / 1.5)).clamp(0.0, 1.0);
                 return Transform.scale(
                   scale: scale,
                   child: Opacity(
                     opacity: opacity,
-                    child: Icon(theme.icons.favoriteFilled,
-                        size: 160, color: theme.accent),
+                    child: Icon(
+                      theme.icons.favoriteFilled,
+                      size: 160,
+                      color: theme.accent,
+                    ),
                   ),
                 );
               },
-            ),
-          ),
-
-        // Mute icon overlay (center)
-        if (_showMuteIcon && _currentPage == index)
-          Center(
-            child: Semantics(
-              identifier: ScreensIds.videoFeedMute,
-              label: _isMuted ? 'Muted' : 'Unmuted',
-              child: AnimatedOpacity(
-                opacity: _showMuteIcon ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 200),
-                child: Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    _isMuted
-                        ? Icons.volume_off_rounded
-                        : Icons.volume_up_rounded,
-                    size: 32,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
             ),
           ),
 
@@ -412,13 +371,15 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
           child: AnimatedBuilder(
             animation: _overlayController,
             builder: (context, child) => _currentPage == index
-                ? Transform.scale(
-                    scale: _actionScale.value,
-                    child: child,
-                  )
+                ? Transform.scale(scale: _actionScale.value, child: child)
                 : child!,
             child: _buildActionColumn(
-                context, video, videoState, likeCount, index),
+              context,
+              video,
+              videoState,
+              likeCount,
+              index,
+            ),
           ),
         ),
 
@@ -428,21 +389,22 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
     );
   }
 
-  Widget _buildCreatorInfo(BuildContext context, DemoVideo video,
-      _VideoInteractionState videoState, int index) {
+  Widget _buildCreatorInfo(
+    BuildContext context,
+    DemoVideo video,
+    _VideoInteractionState videoState,
+    int index,
+  ) {
     final theme = ProtoTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
-          onTap: () => PrototypeStateProvider.of(context)
-              .push(ProtoRoutes.videoCreator),
+          onTap: () =>
+              PrototypeStateProvider.of(context).push(ProtoRoutes.videoCreator),
           child: Row(
             children: [
-              ProtoAvatar(
-                radius: 18,
-                imageUrl: video.avatarUrl,
-              ),
+              ProtoAvatar(radius: 18, imageUrl: video.avatarUrl),
               const SizedBox(width: 10),
               Text(
                 video.creator,
@@ -460,10 +422,13 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                 label: videoState.isFollowing ? 'Following' : 'Follow',
                 child: ProtoPressButton(
                   onTap: () => setState(
-                      () => videoState.isFollowing = !videoState.isFollowing),
+                    () => videoState.isFollowing = !videoState.isFollowing,
+                  ),
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: videoState.isFollowing
                           ? theme.primary
@@ -492,20 +457,26 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
         const SizedBox(height: 10),
         Text(
           video.caption,
-          style:
-              const TextStyle(fontSize: 13, color: Colors.white, height: 1.4),
+          style: const TextStyle(
+            fontSize: 13,
+            color: Colors.white,
+            height: 1.4,
+          ),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 8),
         // Music track with marquee
         GestureDetector(
-          onTap: () => PrototypeStateProvider.of(context)
-              .push(ProtoRoutes.videoSound),
+          onTap: () =>
+              PrototypeStateProvider.of(context).push(ProtoRoutes.videoSound),
           child: Row(
             children: [
-              const Icon(Icons.music_note_rounded,
-                  size: 14, color: Colors.white70),
+              const Icon(
+                Icons.music_note_rounded,
+                size: 14,
+                color: Colors.white70,
+              ),
               const SizedBox(width: 6),
               Expanded(child: _buildMarqueeText(video.musicTrack)),
             ],
@@ -523,8 +494,7 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
           final textPainter = TextPainter(
             text: TextSpan(
               text: text,
-              style:
-                  const TextStyle(fontSize: 12, color: Colors.white70),
+              style: const TextStyle(fontSize: 12, color: Colors.white70),
             ),
             maxLines: 1,
             textDirection: TextDirection.ltr,
@@ -533,8 +503,7 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
           if (textPainter.width <= constraints.maxWidth) {
             return Text(
               text,
-              style:
-                  const TextStyle(fontSize: 12, color: Colors.white70),
+              style: const TextStyle(fontSize: 12, color: Colors.white70),
               overflow: TextOverflow.ellipsis,
             );
           }
@@ -550,13 +519,21 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(text,
-                          style: const TextStyle(
-                              fontSize: 12, color: Colors.white70)),
+                      Text(
+                        text,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.white70,
+                        ),
+                      ),
                       const SizedBox(width: 40),
-                      Text(text,
-                          style: const TextStyle(
-                              fontSize: 12, color: Colors.white70)),
+                      Text(
+                        text,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.white70,
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -568,8 +545,13 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
     );
   }
 
-  Widget _buildActionColumn(BuildContext context, DemoVideo video,
-      _VideoInteractionState videoState, int likeCount, int index) {
+  Widget _buildActionColumn(
+    BuildContext context,
+    DemoVideo video,
+    _VideoInteractionState videoState,
+    int likeCount,
+    int index,
+  ) {
     final theme = ProtoTheme.of(context);
     return Center(
       child: Padding(
@@ -577,10 +559,39 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Mute / unmute button — dedicated control so single-tap on
+            // the video doesn't silently toggle audio.
+            Semantics(
+              identifier: ScreensIds.videoFeedMute,
+              button: true,
+              selected: _isMuted,
+              label: _isMuted ? 'Unmute' : 'Mute',
+              child: ProtoPressButton(
+                onTap: () => setState(() => _isMuted = !_isMuted),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _isMuted
+                        ? Icons.volume_off_rounded
+                        : Icons.volume_up_rounded,
+                    size: 22,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             // Like button
             Semantics(
               identifier: ScreensIds.videoFeedLike,
-              label: videoState.isLiked ? 'Unlike, ${_formatCount(likeCount)} likes' : 'Like, ${_formatCount(likeCount)} likes',
+              label: videoState.isLiked
+                  ? 'Unlike, ${_formatCount(likeCount)} likes'
+                  : 'Like, ${_formatCount(likeCount)} likes',
               button: true,
               selected: videoState.isLiked,
               child: ProtoPressButton(
@@ -594,9 +605,9 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                   if (index < _contents.length) {
                     final id = _contents[index].id;
                     if (id != null) {
-                      unawaited(ref
-                          .read(interactionsApiProvider)
-                          .likeContent(id));
+                      unawaited(
+                        ref.read(interactionsApiProvider).likeContent(id),
+                      );
                     }
                   }
                 },
@@ -607,8 +618,7 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                           ? theme.icons.favoriteFilled
                           : theme.icons.favoriteOutline,
                       size: 36,
-                      color:
-                          videoState.isLiked ? theme.accent : Colors.white,
+                      color: videoState.isLiked ? theme.accent : Colors.white,
                     ),
                     const SizedBox(height: 4),
                     // Like count with bounce
@@ -622,29 +632,31 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                             child: Text(
                               _formatCount(likeCount),
                               style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500),
+                                fontSize: 11,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           )
                         : Text(
                             _formatCount(likeCount),
                             style: const TextStyle(
-                                fontSize: 11,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500),
+                              fontSize: 11,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                   ],
                 ),
               ),
-              ),
-              const SizedBox(height: 20),
-              // Comment button
-              Semantics(
-                identifier: ScreensIds.videoFeedComment,
-                label: 'Comments, ${_formatCount(video.comments)}',
-                button: true,
-                child: ProtoPressButton(
+            ),
+            const SizedBox(height: 20),
+            // Comment button
+            Semantics(
+              identifier: ScreensIds.videoFeedComment,
+              label: 'Comments, ${_formatCount(video.comments)}',
+              button: true,
+              child: ProtoPressButton(
                 onTap: () {
                   final contentId = index < _contents.length
                       ? _contents[index].id
@@ -655,33 +667,42 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                       {'contentId': contentId},
                     );
                   } else {
-                    PrototypeStateProvider.of(context)
-                        .push(ProtoRoutes.videoComments);
+                    PrototypeStateProvider.of(
+                      context,
+                    ).push(ProtoRoutes.videoComments);
                   }
                 },
                 child: Column(
                   children: [
-                    Icon(theme.icons.chatBubbleOutline,
-                        size: 28, color: Colors.white),
+                    Icon(
+                      theme.icons.chatBubbleOutline,
+                      size: 28,
+                      color: Colors.white,
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       _formatCount(video.comments),
                       style: const TextStyle(
-                          fontSize: 11,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500),
+                        fontSize: 11,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
               ),
-              ),
-              const SizedBox(height: 20),
-              // Repost button
-              Semantics(
-                label: 'Repost video',
-                button: true,
-                child: ProtoPressButton(
-                onTap: () => _showRepostSheet(context, video, index % _videoGradients.length),
+            ),
+            const SizedBox(height: 20),
+            // Repost button
+            Semantics(
+              label: 'Repost video',
+              button: true,
+              child: ProtoPressButton(
+                onTap: () => _showRepostSheet(
+                  context,
+                  video,
+                  index % _videoGradients.length,
+                ),
                 child: const Column(
                   children: [
                     Icon(Icons.repeat_rounded, size: 28, color: Colors.white),
@@ -689,29 +710,28 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                     Text(
                       'Repost',
                       style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500),
+                        fontSize: 11,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
               ),
-              ),
-              const SizedBox(height: 20),
-              // Share button
-              Semantics(
-                identifier: ScreensIds.videoFeedShare,
-                label: 'Share, ${_formatCount(video.shares)} shares',
-                button: true,
-                child: ProtoPressButton(
+            ),
+            const SizedBox(height: 20),
+            // Share button
+            Semantics(
+              identifier: ScreensIds.videoFeedShare,
+              label: 'Share, ${_formatCount(video.shares)} shares',
+              button: true,
+              child: ProtoPressButton(
                 onTap: () {
                   ProtoShareSheet.show(context);
                   if (index < _contents.length) {
                     final id = _contents[index].id;
                     if (id != null) {
-                      unawaited(ref
-                          .read(interactionsApiProvider)
-                          .logShare(id));
+                      unawaited(ref.read(interactionsApiProvider).logShare(id));
                     }
                   }
                 },
@@ -722,34 +742,40 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                     Text(
                       _formatCount(video.shares),
                       style: const TextStyle(
-                          fontSize: 11,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500),
+                        fontSize: 11,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
               ),
-              ),
-              const SizedBox(height: 20),
-              // Save/bookmark button
-              Semantics(
-                label: videoState.isSaved ? 'Remove from saved' : 'Save to favorites',
-                button: true,
-                child: ProtoPressButton(
+            ),
+            const SizedBox(height: 20),
+            // Save/bookmark button
+            Semantics(
+              label: videoState.isSaved
+                  ? 'Remove from saved'
+                  : 'Save to favorites',
+              button: true,
+              child: ProtoPressButton(
                 onTap: () {
                   setState(() {
                     videoState.isSaved = !videoState.isSaved;
                     if (videoState.isSaved) {
                       ProtoToast.show(
-                          context, theme.icons.bookmarkFilled, 'Saved to favorites');
+                        context,
+                        theme.icons.bookmarkFilled,
+                        'Saved to favorites',
+                      );
                     }
                   });
                   if (index < _contents.length) {
                     final id = _contents[index].id;
                     if (id != null) {
-                      unawaited(ref
-                          .read(interactionsApiProvider)
-                          .saveContent(id));
+                      unawaited(
+                        ref.read(interactionsApiProvider).saveContent(id),
+                      );
                     }
                   }
                 },
@@ -760,25 +786,25 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                           ? theme.icons.bookmarkFilled
                           : theme.icons.bookmarkOutline,
                       size: 28,
-                      color:
-                          videoState.isSaved ? theme.primary : Colors.white,
+                      color: videoState.isSaved ? theme.primary : Colors.white,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       videoState.isSaved ? 'Saved' : 'Save',
                       style: const TextStyle(
-                          fontSize: 11,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500),
+                        fontSize: 11,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
               ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
+      ),
+    );
   }
 
   Widget _buildMusicDisc(BuildContext context, DemoVideo video) {
@@ -821,7 +847,9 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                     color: Colors.black.withValues(alpha: 0.7),
                     shape: BoxShape.circle,
                     border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.5), width: 1),
+                      color: Colors.white.withValues(alpha: 0.5),
+                      width: 1,
+                    ),
                   ),
                 ),
               ),
@@ -862,128 +890,6 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
     );
   }
 
-  Widget _buildTopBar(BuildContext context) {
-    final theme = ProtoTheme.of(context);
-    return Positioned(
-      top: 12,
-      left: 12,
-      right: 12,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // YoYo compass icon
-          GestureDetector(
-            onTap: () => PrototypeStateProvider.of(context)
-                .switchModule(ProtoModule.yoyo),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.explore_rounded,
-                  size: 20, color: Colors.white70),
-            ),
-          ),
-
-          // Chat + Profile cluster
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Chat icon with badge
-              GestureDetector(
-                onTap: () => PrototypeStateProvider.of(context)
-                    .push(ProtoRoutes.chatInbox),
-                child: SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: Stack(
-                    children: [
-                      Center(
-                        child: Icon(theme.icons.chatBubbleOutline,
-                            size: 22, color: Colors.white70),
-                      ),
-                      Positioned(
-                        right: 2,
-                        top: 4,
-                        child: Container(
-                          width: 14,
-                          height: 14,
-                          decoration: BoxDecoration(
-                            color: theme.accent,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                                color: Colors.black.withValues(alpha: 0.5),
-                                width: 1.5),
-                          ),
-                          child: const Center(
-                            child: Text('3',
-                                style: TextStyle(
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-
-              // Profile avatar with notification dot
-              GestureDetector(
-                onTap: () => PrototypeStateProvider.of(context)
-                    .push(ProtoRoutes.profileMy),
-                child: SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: Stack(
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                width: 2),
-                            image: const DecorationImage(
-                              image: NetworkImage(
-                                  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop'),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        right: 0,
-                        top: 2,
-                        child: Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: theme.accent,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                                color: Colors.black.withValues(alpha: 0.5),
-                                width: 1.5),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildEndCard(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
@@ -1001,8 +907,11 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_circle_outline_rounded,
-                size: 48, color: Colors.white),
+            Icon(
+              Icons.check_circle_outline_rounded,
+              size: 48,
+              color: Colors.white,
+            ),
             SizedBox(height: 16),
             Text(
               "You're all caught up!",
@@ -1028,7 +937,11 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
     );
   }
 
-  void _showRepostSheet(BuildContext context, DemoVideo video, int gradientIndex) {
+  void _showRepostSheet(
+    BuildContext context,
+    DemoVideo video,
+    int gradientIndex,
+  ) {
     final theme = ProtoTheme.of(context);
     final state = PrototypeStateProvider.of(context);
 
@@ -1036,7 +949,9 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
       context: context,
       backgroundColor: theme.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(theme.radiusLg)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(theme.radiusLg),
+        ),
       ),
       builder: (ctx) {
         return SafeArea(
@@ -1070,18 +985,26 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
                     Navigator.pop(ctx);
-                    ProtoToast.show(context, Icons.repeat_rounded,
-                        'Reposted to your social feed');
+                    ProtoToast.show(
+                      context,
+                      Icons.repeat_rounded,
+                      'Reposted to your social feed',
+                    );
                     // Switch to social feed to show the repost
                     Future.delayed(const Duration(milliseconds: 600), () {
                       if (mounted) state.switchModule(ProtoModule.social);
                     });
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                      horizontal: 16,
+                    ),
                     decoration: BoxDecoration(
                       border: Border(
-                        bottom: BorderSide(color: theme.text.withValues(alpha: 0.06)),
+                        bottom: BorderSide(
+                          color: theme.text.withValues(alpha: 0.06),
+                        ),
                       ),
                     ),
                     child: Row(
@@ -1093,25 +1016,40 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                             color: theme.primary.withValues(alpha: 0.12),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.repeat_rounded, color: theme.primary, size: 22),
+                          child: Icon(
+                            Icons.repeat_rounded,
+                            color: theme.primary,
+                            size: 22,
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Repost to Feed',
-                                  style: theme.body.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: theme.text)),
+                              Text(
+                                'Repost to Feed',
+                                style: theme.body.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.text,
+                                ),
+                              ),
                               const SizedBox(height: 2),
-                              Text('Share instantly to your social feed',
-                                  style: theme.caption.copyWith(
-                                      color: theme.textSecondary, fontSize: 12)),
+                              Text(
+                                'Share instantly to your social feed',
+                                style: theme.caption.copyWith(
+                                  color: theme.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                        Icon(theme.icons.chevronRight, size: 18, color: theme.textTertiary),
+                        Icon(
+                          theme.icons.chevronRight,
+                          size: 18,
+                          color: theme.textTertiary,
+                        ),
                       ],
                     ),
                   ),
@@ -1129,7 +1067,10 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                     });
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                      horizontal: 16,
+                    ),
                     child: Row(
                       children: [
                         Container(
@@ -1139,26 +1080,40 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                             color: theme.secondary.withValues(alpha: 0.12),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.edit_note_rounded,
-                              color: theme.secondary, size: 22),
+                          child: Icon(
+                            Icons.edit_note_rounded,
+                            color: theme.secondary,
+                            size: 22,
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Quote & Repost',
-                                  style: theme.body.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: theme.text)),
+                              Text(
+                                'Quote & Repost',
+                                style: theme.body.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.text,
+                                ),
+                              ),
                               const SizedBox(height: 2),
-                              Text('Add your thoughts with the video',
-                                  style: theme.caption.copyWith(
-                                      color: theme.textSecondary, fontSize: 12)),
+                              Text(
+                                'Add your thoughts with the video',
+                                style: theme.caption.copyWith(
+                                  color: theme.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                        Icon(theme.icons.chevronRight, size: 18, color: theme.textTertiary),
+                        Icon(
+                          theme.icons.chevronRight,
+                          size: 18,
+                          color: theme.textTertiary,
+                        ),
                       ],
                     ),
                   ),

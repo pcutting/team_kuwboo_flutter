@@ -52,6 +52,16 @@ export 'src/profile/profile_edit_screen.dart';
 export 'src/profile/profile_settings_screen.dart';
 export 'src/profile/profile_notifications_screen.dart';
 export 'src/profile/profile_providers.dart';
+export 'src/profile/settings/settings_account_info_screen.dart';
+export 'src/profile/settings/settings_password_screen.dart';
+export 'src/profile/settings/settings_phone_screen.dart';
+export 'src/profile/settings/settings_email_screen.dart';
+export 'src/profile/settings/settings_profile_visibility_screen.dart';
+export 'src/profile/settings/settings_blocked_users_screen.dart';
+export 'src/profile/settings/settings_location_sharing_screen.dart';
+export 'src/profile/settings/settings_push_notifications_screen.dart';
+export 'src/profile/settings/settings_message_notifications_screen.dart';
+export 'src/profile/settings/settings_match_notifications_screen.dart';
 
 // Sponsored
 export 'src/sponsored/sponsored_inline.dart';
