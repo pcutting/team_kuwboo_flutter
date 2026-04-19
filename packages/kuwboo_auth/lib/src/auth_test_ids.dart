@@ -48,6 +48,19 @@ abstract class AuthIds {
   static const loginRegisterLink = 'auth.login.registerLink';
   static const loginSubmit = 'auth.login.submit';
 
+  // auth_email_password_forgot_screen
+  static const forgotEmailField = 'auth.forgot.email';
+  static const forgotSubmit = 'auth.forgot.submit';
+  static const forgotSuccessAdvance = 'auth.forgot.advance';
+
+  // auth_email_password_reset_screen
+  static const resetEmailField = 'auth.reset.email';
+  static const resetCodeField = 'auth.reset.code';
+  static const resetPasswordField = 'auth.reset.password';
+  static const resetConfirmPasswordField = 'auth.reset.confirmPassword';
+  static const resetSubmit = 'auth.reset.submit';
+  static const resetResendLink = 'auth.reset.resend';
+
   // auth_otp_screen
   static const otpBanner = 'auth.otp.banner_dev_code';
   static const otpIdentifier = 'auth.otp.text_identifier';

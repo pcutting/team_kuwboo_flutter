@@ -356,6 +356,18 @@ List<RouteBase> buildProtoModalRoutes({
       builder: (c, s) => const AuthEmailLoginScreen(),
     ),
     GoRoute(
+      path: ProtoRoutes.authEmailPasswordForgot,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => const AuthEmailPasswordForgotScreen(),
+    ),
+    GoRoute(
+      path: ProtoRoutes.authEmailPasswordReset,
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (c, s) => AuthEmailPasswordResetScreen(
+        initialEmail: s.uri.queryParameters['email'],
+      ),
+    ),
+    GoRoute(
       path: ProtoRoutes.authPhone,
       parentNavigatorKey: rootNavigatorKey,
       builder: (c, s) => const AuthPhoneScreen(),

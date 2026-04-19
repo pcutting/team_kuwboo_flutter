@@ -108,6 +108,8 @@ class AuthCallbacks {
     this.onResendOtp,
     this.onEmailRegister,
     this.onEmailLogin,
+    this.onEmailPasswordForgot,
+    this.onEmailPasswordReset,
     this.onSaveBirthday,
     this.onSaveDobChoice,
     this.onSaveProfile,
@@ -170,6 +172,23 @@ class AuthCallbacks {
   /// email, wrong password, or locked account. On success the host
   /// persists tokens + updates auth state.
   final Future<void> Function(String email, String password)? onEmailLogin;
+
+  /// Request a password-reset code by email. Backend always returns 2xx
+  /// regardless of whether the email is on file, so this callback never
+  /// throws on "unknown email" — it only throws on genuine failures
+  /// (network, rate-limit). The UI must advance to a neutral success
+  /// state rather than leaking the existence check.
+  final Future<void> Function(String email)? onEmailPasswordForgot;
+
+  /// Submit a password-reset code alongside the user's chosen new
+  /// password. Throws on invalid / expired code so the screen can show
+  /// an inline error. On success the host persists the returned tokens
+  /// and updates auth state — the router redirect advances the user.
+  final Future<void> Function(
+    String email,
+    String code,
+    String newPassword,
+  )? onEmailPasswordReset;
 
   // ─── Onboarding progress ─────────────────────────────────────────────
 
