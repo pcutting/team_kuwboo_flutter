@@ -138,13 +138,17 @@ export class ConsentService {
     consentType: ConsentType,
   ): Promise<Omit<ConsentSummaryEntry, 'isCurrent'>> {
     const conn = this.em.getConnection();
+    // MikroORM's conn.execute runs through Knex, which expects `?` positional
+    // placeholders — using `$1`/`$2` directly leaves literal dollar-markers in
+    // the SQL while Knex sends zero bindings, producing the runtime error
+    // "there is no parameter $1" from pg.
     const rows = (await conn.execute(
       `select
          min("granted_at") as "first",
          max("granted_at") as "last",
          max("version")    as "version"
        from "user_consents"
-       where "user_id" = $1 and "consent_type" = $2`,
+       where "user_id" = ? and "consent_type" = ?`,
       [userId, consentType],
     )) as Array<{ first: Date | null; last: Date | null; version: string | null }>;
 
