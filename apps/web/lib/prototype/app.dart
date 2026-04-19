@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kuwboo_auth/kuwboo_auth.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import '../features/auth/auth_callbacks.dart';
 import 'router.dart';
 
 /// Root widget for the Kuwboo web prototype.
@@ -43,13 +45,18 @@ class _ProtoStateBridge extends ConsumerWidget {
     final shellNotifier = ref.read(shellStateProvider.notifier);
     final yoyoNotifier = ref.read(yoyoStateProvider.notifier);
 
+    final authCallbacks = ref.watch(authCallbacksProvider);
+
     return ProtoStateAccess(
       shell: shell,
       yoyo: yoyo,
       shellNotifier: shellNotifier,
       yoyoNotifier: yoyoNotifier,
       navigatorKey: rootNavigatorKey,
-      child: child,
+      child: KuwbooAuthFlow(
+        callbacks: authCallbacks,
+        child: child,
+      ),
     );
   }
 }
