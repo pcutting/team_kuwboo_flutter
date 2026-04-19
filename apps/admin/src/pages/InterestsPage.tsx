@@ -29,8 +29,8 @@ export function InterestsPage() {
     setLoading(true);
     listInterests(accessToken)
       .then((res) => {
-        const sorted = [...res.interests].sort(
-          (a, b) => a.display_order - b.display_order,
+        const sorted = [...res.data.interests].sort(
+          (a, b) => a.displayOrder - b.displayOrder,
         );
         setItems(sorted);
       })
@@ -97,7 +97,7 @@ export function InterestsPage() {
       [next[index], next[target]] = [next[target], next[index]];
       const orderedIds = next.map((i) => i.id);
       // Optimistic update
-      setItems(next.map((it, idx) => ({ ...it, display_order: idx })));
+      setItems(next.map((it, idx) => ({ ...it, displayOrder: idx })));
       try {
         await reorderInterests(accessToken, orderedIds);
         refresh();
@@ -116,7 +116,7 @@ export function InterestsPage() {
           <h1 className="text-2xl font-bold text-stone-900">Interests</h1>
           <p className="mt-1 text-sm text-stone-500">
             {items.length} interest{items.length !== 1 ? 's' : ''} &middot;{' '}
-            {items.filter((i) => i.is_active).length} active
+            {items.filter((i) => i.isActive).length} active
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -183,7 +183,7 @@ export function InterestsPage() {
               return (
                 <tr key={interest.id} className="hover:bg-stone-50/50">
                   <td className="px-4 py-3 text-sm text-stone-500 font-mono">
-                    {interest.display_order}
+                    {interest.displayOrder}
                   </td>
                   <td className="px-4 py-3 text-sm font-medium text-stone-900">
                     {interest.label}
@@ -195,7 +195,7 @@ export function InterestsPage() {
                     {interest.category || '\u2014'}
                   </td>
                   <td className="px-4 py-3">
-                    {interest.is_active ? (
+                    {interest.isActive ? (
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700">
                         Active
                       </span>
@@ -241,7 +241,7 @@ export function InterestsPage() {
                       >
                         Edit
                       </button>
-                      {interest.is_active ? (
+                      {interest.isActive ? (
                         <button
                           onClick={() => handleDelete(interest)}
                           className="px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 rounded"
@@ -291,7 +291,7 @@ export function InterestsPage() {
           existingCategories={categories}
           existingSlugs={items.map((i) => i.slug)}
           maxOrder={items.reduce(
-            (acc, i) => Math.max(acc, i.display_order),
+            (acc, i) => Math.max(acc, i.displayOrder),
             -1,
           )}
           onClose={() => setDrawer({ kind: 'closed' })}
@@ -330,16 +330,16 @@ function InterestDrawer({
           slug: '',
           label: '',
           category: '',
-          display_order: maxOrder + 1,
+          displayOrder: maxOrder + 1,
         };
   const [slug, setSlug] = useState(initial.slug);
   const [label, setLabel] = useState(initial.label);
   const [category, setCategory] = useState(initial.category || '');
   const [displayOrder, setDisplayOrder] = useState(
-    String(initial.display_order ?? maxOrder + 1),
+    String(initial.displayOrder ?? maxOrder + 1),
   );
   const [isActive, setIsActive] = useState(
-    mode.kind === 'edit' ? mode.interest.is_active : true,
+    mode.kind === 'edit' ? mode.interest.isActive : true,
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');

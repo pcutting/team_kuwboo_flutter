@@ -15,9 +15,10 @@ import {
 
 interface UserDetail {
   id: string;
-  name: string;
-  phone?: string;
-  email?: string;
+  name?: string | null;
+  username?: string | null;
+  phone?: string | null;
+  email?: string | null;
   role: string;
   status: string;
   isBot: boolean;
@@ -216,7 +217,7 @@ export function UserDetailPage() {
           Users
         </Link>
         <span>/</span>
-        <span className="text-stone-900">{user?.name || 'User'}</span>
+        <span className="text-stone-900">{user?.name || user?.username || user?.email || user?.phone || 'User'}</span>
       </div>
 
       {error && (
@@ -232,12 +233,16 @@ export function UserDetailPage() {
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-stone-200 rounded-full flex items-center justify-center text-xl font-bold text-stone-600">
-                  {user.name.charAt(0).toUpperCase()}
+                  {(user.name?.charAt(0) ??
+                    user.username?.charAt(0) ??
+                    user.email?.charAt(0) ??
+                    user.phone?.charAt(0) ??
+                    '?').toUpperCase()}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-bold text-stone-900">
-                      {user.name}
+                      {user.name || user.username || user.email || user.phone || 'Unnamed user'}
                     </h1>
                     <StatusBadge status={user.status} />
                     {user.isBot && (

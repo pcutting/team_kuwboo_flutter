@@ -448,14 +448,16 @@ export interface AdminInterest {
   slug: string;
   label: string;
   category?: string | null;
-  display_order: number;
-  is_active: boolean;
-  created_at?: string;
-  updated_at?: string;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export function listInterests(token: string) {
-  return request<{ interests: AdminInterest[] }>('/admin/interests', { token });
+  return request<{ data: { interests: AdminInterest[] } }>('/admin/interests', {
+    token,
+  });
 }
 
 export function createInterest(
@@ -467,7 +469,7 @@ export function createInterest(
     display_order?: number;
   },
 ) {
-  return request<AdminInterest>('/admin/interests', {
+  return request<{ data: AdminInterest }>('/admin/interests', {
     method: 'POST',
     body,
     token,
@@ -484,7 +486,7 @@ export function updateInterest(
     is_active?: boolean;
   },
 ) {
-  return request<AdminInterest>(`/admin/interests/${id}`, {
+  return request<{ data: AdminInterest }>(`/admin/interests/${id}`, {
     method: 'PATCH',
     body,
     token,
@@ -499,11 +501,14 @@ export function deleteInterest(token: string, id: string) {
 }
 
 export function reorderInterests(token: string, orderedIds: string[]) {
-  return request<{ interests: AdminInterest[] }>('/admin/interests/reorder', {
-    method: 'POST',
-    body: { ordered_ids: orderedIds },
-    token,
-  });
+  return request<{ data: { interests: AdminInterest[] } }>(
+    '/admin/interests/reorder',
+    {
+      method: 'POST',
+      body: { ordered_ids: orderedIds },
+      token,
+    },
+  );
 }
 
 // Credentials (admin scope — backend endpoint TODO)
