@@ -67,14 +67,14 @@ class _AuthPhoneScreenState extends State<AuthPhoneScreen>
                   child: Row(
                     children: [
                       _TabPill(
-                        identifier: AuthIds.phoneTabPhone,
-                        label: 'Phone',
+                        identifier: AuthIds.phoneTabEmail,
+                        label: 'Email',
                         active: _tabController.index == 0,
                         onTap: () => _tabController.animateTo(0),
                       ),
                       _TabPill(
-                        identifier: AuthIds.phoneTabEmail,
-                        label: 'Email',
+                        identifier: AuthIds.phoneTabPhone,
+                        label: 'Phone',
                         active: _tabController.index == 1,
                         onTap: () => _tabController.animateTo(1),
                       ),
@@ -88,8 +88,8 @@ class _AuthPhoneScreenState extends State<AuthPhoneScreen>
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    _PhoneTab(theme: theme),
                     _EmailTab(theme: theme),
+                    _PhoneTab(theme: theme),
                   ],
                 ),
               ),
