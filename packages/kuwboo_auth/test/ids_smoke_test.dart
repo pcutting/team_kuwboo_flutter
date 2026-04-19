@@ -107,8 +107,15 @@ void main() {
       (tester) async {
         await _pumpAtPhoneSize(tester, const AuthPhoneScreen());
 
+        // Both pills are present on initial render regardless of active
+        // tab; the phone-tab body widgets only mount when Phone is the
+        // active tab (Email is the default), so switch to Phone first.
         expect(_bySemId(AuthIds.phoneTabPhone), findsOneWidget);
         expect(_bySemId(AuthIds.phoneTabEmail), findsOneWidget);
+
+        await tester.tap(find.text('Phone'));
+        await tester.pumpAndSettle();
+
         expect(_bySemId(AuthIds.phoneField), findsOneWidget);
         expect(_bySemId(AuthIds.phoneHeaderLabel), findsOneWidget);
         expect(_bySemId(AuthIds.phoneSendCode), findsOneWidget);
@@ -121,6 +128,9 @@ void main() {
         (tester) async {
       await _pumpAtPhoneSize(tester, const AuthPhoneScreen());
 
+      await tester.tap(find.text('Phone'));
+      await tester.pumpAndSettle();
+
       final props = _props(tester, AuthIds.phoneSendCode);
       expect(
         props.enabled,
@@ -132,6 +142,9 @@ void main() {
     testWidgets('Send Code becomes enabled once 10 digits are entered',
         (tester) async {
       await _pumpAtPhoneSize(tester, const AuthPhoneScreen());
+
+      await tester.tap(find.text('Phone'));
+      await tester.pumpAndSettle();
 
       // IntlPhoneField wraps a TextField — the only TextField on the
       // active phone tab is the phone number input. Type into it.
@@ -150,28 +163,26 @@ void main() {
     });
 
     testWidgets(
-      'tap Email tab → email tab is selected, phone tab is not',
+      'tap Phone tab → phone tab is selected, email tab is not',
       (tester) async {
         await _pumpAtPhoneSize(tester, const AuthPhoneScreen());
 
-        // Both tab pills carry visible "Phone" / "Email" Text. Tap on
-        // the Email visible label — the wrapping GestureDetector still
-        // dispatches the tap.
-        await tester.tap(find.text('Email'));
+        // Email is the default tab now; tap Phone to switch.
+        await tester.tap(find.text('Phone'));
         await tester.pumpAndSettle();
 
         final emailProps = _props(tester, AuthIds.phoneTabEmail);
         final phoneProps = _props(tester, AuthIds.phoneTabPhone);
 
         expect(
-          emailProps.selected,
+          phoneProps.selected,
           isTrue,
-          reason: 'email tab should carry selected:true after tap',
+          reason: 'phone tab should carry selected:true after tap',
         );
         expect(
-          phoneProps.selected,
+          emailProps.selected,
           isFalse,
-          reason: 'phone tab must lose selected:true when email tab is active',
+          reason: 'email tab must lose selected:true when phone tab is active',
         );
       },
     );
