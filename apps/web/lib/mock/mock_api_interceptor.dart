@@ -24,6 +24,14 @@ class MockApiInterceptor extends Interceptor {
     final method = options.method.toUpperCase();
     final path = options.path;
 
+    if (method == 'POST' && path == '/auth/logout') {
+      return Response<dynamic>(
+        requestOptions: options,
+        statusCode: 204,
+        data: null,
+      );
+    }
+
     final body = _route(method, path, options);
     return Response<dynamic>(
       requestOptions: options,

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:kuwboo_auth/kuwboo_auth.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
 class ProfileSettingsScreen extends StatelessWidget {
@@ -79,20 +81,33 @@ class ProfileSettingsScreen extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 20),
-                  // Logout
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: theme.accent.withValues(alpha: 0.1),
+                  Material(
+                    color: theme.accent.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
                       borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'Log Out',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: theme.accent,
+                      onTap: () async {
+                        final callbacks = AuthCallbacksScope.maybeOf(context);
+                        final onLogout = callbacks?.onLogout;
+                        if (onLogout != null) {
+                          await onLogout();
+                        } else {
+                          if (!context.mounted) return;
+                          context.go(ProtoRoutes.authWelcome);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        child: Center(
+                          child: Text(
+                            'Log Out',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: theme.accent,
+                            ),
+                          ),
                         ),
                       ),
                     ),
