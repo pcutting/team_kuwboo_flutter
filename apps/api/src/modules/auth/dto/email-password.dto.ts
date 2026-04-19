@@ -1,4 +1,6 @@
 import {
+  Equals,
+  IsBoolean,
   IsEmail,
   IsEnum,
   IsISO8601,
@@ -36,6 +38,34 @@ export class EmailRegisterDto {
   @IsOptional()
   @IsEnum(DobChoice)
   dobChoice?: DobChoice;
+
+  /**
+   * Hard gate — the checkbox covering "I agree to the Terms and Privacy
+   * Policy". The request is rejected at 400 if missing or false so no
+   * user row is written without an accompanying consent audit entry.
+   * The TERMS and PRIVACY consent rows (both at the current document
+   * versions) are written atomically alongside the user in
+   * `AuthService.emailRegister`.
+   */
+  @IsBoolean()
+  @Equals(true, {
+    message: 'You must agree to the Terms and Privacy Policy to register',
+  })
+  legalAccepted!: boolean;
+
+  /**
+   * Hard gate — the "I am 18 or older" self-attestation. Rejected at
+   * 400 if missing or false. Deliberately NOT persisted as a
+   * `UserConsent` row (this is an attestation, and the full DOB flow
+   * already drives the `ageVerificationStatus` field); if a separate
+   * audit of the tick-box is needed later, introduce an
+   * `AGE_ATTESTATION` ConsentType.
+   */
+  @IsBoolean()
+  @Equals(true, {
+    message: 'You must confirm you are 18 or older',
+  })
+  ageConfirmed!: boolean;
 }
 
 export class EmailLoginDto {

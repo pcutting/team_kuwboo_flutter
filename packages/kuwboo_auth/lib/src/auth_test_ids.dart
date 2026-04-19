@@ -24,6 +24,30 @@ abstract class AuthIds {
   static const emailNext = 'auth.email.next';
   static const phoneHeaderLabel = 'auth.phone.label_phone';
 
+  // auth_phone_screen: _EmailTab entry (re-purposed to push into the
+  // email+password register / login screens).
+  static const emailTabCreateAccount = 'auth.email.btn_create_account';
+  static const emailTabLogin = 'auth.email.btn_login';
+
+  // auth_email_register_screen
+  static const registerAgeConfirm = 'auth.register.ageConfirm';
+  static const registerConfirmPasswordField = 'auth.register.confirmPassword';
+  static const registerEmailField = 'auth.register.email';
+  static const registerLegalAccept = 'auth.register.legalAccept';
+  static const registerLegalPrivacyLink = 'auth.register.legalPrivacyLink';
+  static const registerLegalTermsLink = 'auth.register.legalTermsLink';
+  static const registerLoginLink = 'auth.register.loginLink';
+  static const registerNameField = 'auth.register.name';
+  static const registerPasswordField = 'auth.register.password';
+  static const registerSubmit = 'auth.register.submit';
+
+  // auth_email_login_screen
+  static const loginEmailField = 'auth.login.email';
+  static const loginForgotPassword = 'auth.login.forgotPassword';
+  static const loginPasswordField = 'auth.login.password';
+  static const loginRegisterLink = 'auth.login.registerLink';
+  static const loginSubmit = 'auth.login.submit';
+
   // auth_otp_screen
   static const otpBanner = 'auth.otp.banner_dev_code';
   static const otpIdentifier = 'auth.otp.text_identifier';

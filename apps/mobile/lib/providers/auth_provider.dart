@@ -138,6 +138,63 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Register a new email+password account. On success persists tokens
+  /// and updates [state] — the router redirect picks up `isNewUser` and
+  /// routes the user into onboarding.
+  Future<AuthResponse> emailRegister({
+    required String email,
+    required String password,
+    String? name,
+    required bool legalAccepted,
+    required bool ageConfirmed,
+  }) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final response = await _authApi.registerWithEmail(
+        email: email,
+        password: password,
+        name: name,
+        legalAccepted: legalAccepted,
+        ageConfirmed: ageConfirmed,
+      );
+      await _applyAuthResponse(response);
+      return response;
+    } on DioException catch (e) {
+      state = state.copyWith(isLoading: false);
+      // Use a deliberately vague message so a duplicate-email response
+      // can't be used to enumerate accounts. The screen still surfaces
+      // the underlying server message via [_translate] for other
+      // error shapes (e.g. validation failures).
+      throw _translate(e, fallback: 'Could not create account');
+    } catch (_) {
+      state = state.copyWith(isLoading: false);
+      rethrow;
+    }
+  }
+
+  /// Authenticate with an existing email+password pair. Persists tokens
+  /// + updates [state] on success.
+  Future<AuthResponse> emailLogin({
+    required String email,
+    required String password,
+  }) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final response = await _authApi.loginWithEmail(
+        email: email,
+        password: password,
+      );
+      await _applyAuthResponse(response);
+      return response;
+    } on DioException catch (e) {
+      state = state.copyWith(isLoading: false);
+      throw _translate(e, fallback: 'Invalid email or password');
+    } catch (_) {
+      state = state.copyWith(isLoading: false);
+      rethrow;
+    }
+  }
+
   Future<SsoLoginResult> signInWithApple({
     required String identityToken,
     required String authorizationCode,

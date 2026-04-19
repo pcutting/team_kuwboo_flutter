@@ -2,30 +2,47 @@ import {
   Body,
   Controller,
   Get,
+  Inject,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
   Query,
   BadRequestException,
+  forwardRef,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { wrap } from '@mikro-orm/core';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { PatchMeDto } from './dto/patch-me.dto';
 import { TutorialCompleteDto } from './dto/tutorial-complete.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { ConsentService } from '../consent/consent.service';
 
 @ApiTags('users')
 @ApiBearerAuth()
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    @Inject(forwardRef(() => ConsentService))
+    private readonly consentService: ConsentService,
+  ) {}
 
   @Get('me')
   async getMe(@CurrentUser('id') userId: string) {
-    return this.usersService.findById(userId);
+    const [user, consentStatus] = await Promise.all([
+      this.usersService.findById(userId),
+      this.consentService.getCurrencyFlags(userId),
+    ]);
+    // Serialise via the entity wrap/toJSON first so MikroORM's
+    // `hidden: true` fields (e.g. passwordHash) are stripped, then
+    // merge the out-of-band consentStatus summary. Spreading the
+    // managed entity directly would bypass toJSON and leak
+    // passwordHash.
+    return { ...wrap(user).toJSON(), consentStatus };
   }
 
   @Patch('me')

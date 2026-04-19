@@ -17,6 +17,7 @@ import { VerificationService } from '../verification/verification.service';
 import { AppleJwksService } from './apple/apple-jwks.service';
 import { CredentialsService } from '../credentials/credentials.service';
 import { TrustService } from '../trust/trust.service';
+import { ConsentService } from '../consent/consent.service';
 import { User } from '../users/entities/user.entity';
 import {
   AgeVerificationStatus,
@@ -34,6 +35,14 @@ export interface EmailRegisterInput {
   name?: string;
   dateOfBirth?: string;
   dobChoice?: DobChoice;
+  /**
+   * Hard-gated at the DTO level — the service assumes these have
+   * already been validated as `true`. Including them on the input
+   * type keeps the call-site self-documenting and lets tests call
+   * the service directly with the same shape the controller passes.
+   */
+  legalAccepted?: boolean;
+  ageConfirmed?: boolean;
 }
 
 export interface AuthTokens {
@@ -85,6 +94,7 @@ export class AuthService {
     private readonly appleJwks: AppleJwksService,
     private readonly credentialsService: CredentialsService,
     private readonly trustService: TrustService,
+    private readonly consentService: ConsentService,
   ) {
     this.googleClient = new OAuth2Client();
   }
@@ -498,6 +508,14 @@ export class AuthService {
       type: CredentialType.EMAIL,
       identifier: email,
     });
+
+    // Stamp TERMS + PRIVACY consents for the legal-acceptance audit
+    // trail. The DTO hard-gates `legalAccepted` / `ageConfirmed` to
+    // true, so reaching this point implies both were affirmed — we
+    // only persist the two real consent rows, not the age
+    // self-attestation (IDENTITY_CONTRACT doesn't currently audit
+    // the 18+ checkbox; can be added as its own ConsentType later).
+    await this.consentService.recordRegistrationConsents(user, meta);
 
     user.lastLoginAt = new Date();
     const tokens = await this.issueTokens(user, meta);

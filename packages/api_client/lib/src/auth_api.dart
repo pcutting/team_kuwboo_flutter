@@ -100,6 +100,61 @@ class AuthApi {
   }
 
   // ---------------------------------------------------------------------
+  // Email + password (PR B)
+  // ---------------------------------------------------------------------
+
+  /// Register a new account with email + password. The backend mints a
+  /// token pair and returns the standard [AuthResponse] envelope on
+  /// success. The user's email is not yet verified at this point — a
+  /// follow-up OTP step is triggered by the backend asynchronously (see
+  /// identity contract §11.email-password).
+  ///
+  /// [legalAccepted] and [ageConfirmed] are recorded alongside the new
+  /// account for auditability — both must be true for the backend to
+  /// accept the request.
+  Future<AuthResponse> registerWithEmail({
+    required String email,
+    required String password,
+    String? name,
+    required bool legalAccepted,
+    required bool ageConfirmed,
+  }) async {
+    final response = await _client.dio.post(
+      '/auth/email/register',
+      data: {
+        'email': email,
+        'password': password,
+        if (name != null && name.isNotEmpty) 'name': name,
+        'legalAccepted': legalAccepted,
+        'ageConfirmed': ageConfirmed,
+      },
+    );
+    final auth = _client.unwrap(response, AuthResponse.fromJson);
+    await _client.saveTokens(
+      TokenPair(accessToken: auth.accessToken, refreshToken: auth.refreshToken),
+    );
+    return auth;
+  }
+
+  /// Authenticate an existing account via email + password. Returns the
+  /// standard [AuthResponse] envelope on success; throws [DioException]
+  /// on 401 (wrong credentials) or 423 (locked).
+  Future<AuthResponse> loginWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    final response = await _client.dio.post(
+      '/auth/email/login',
+      data: {'email': email, 'password': password},
+    );
+    final auth = _client.unwrap(response, AuthResponse.fromJson);
+    await _client.saveTokens(
+      TokenPair(accessToken: auth.accessToken, refreshToken: auth.refreshToken),
+    );
+    return auth;
+  }
+
+  // ---------------------------------------------------------------------
   // Google SSO
   // ---------------------------------------------------------------------
 

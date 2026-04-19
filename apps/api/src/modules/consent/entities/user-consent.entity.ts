@@ -31,4 +31,13 @@ export class UserConsent {
 
   @Property({ type: 'varchar', length: 45, nullable: true })
   ipAddress?: string;
+
+  /**
+   * Captured at grant time for audit. Optional — older rows (predating
+   * the 2026-04-19 migration) have null. 512 chars is well above the
+   * practical UA header length; we truncate aggressively if needed
+   * rather than risk DB errors.
+   */
+  @Property({ type: 'varchar', length: 512, nullable: true })
+  userAgent?: string;
 }
