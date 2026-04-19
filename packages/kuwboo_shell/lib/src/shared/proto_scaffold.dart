@@ -79,7 +79,10 @@ class ProtoScaffold extends StatelessWidget {
               child: ProtoTopBar(activeModule: activeModule, transparent: true),
             ),
             if (showBottomNav)
-              Positioned.fill(
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
                 child: ProtoBottomNavC(
                   activeModule: activeModule,
                   activeTab: activeTab,
@@ -114,10 +117,18 @@ class ProtoScaffold extends StatelessWidget {
                     child: body,
                   ),
                 ),
-                // Bottom nav fills the Stack area so popup items can receive
-                // taps above the bar. Non-interactive areas pass taps through.
+                // Bottom nav — anchored to the bottom without a top
+                // constraint so ProtoBottomNavC controls its own height.
+                // Previously Positioned.fill here forced the nav's Stack
+                // to cover the full body area, swallowing scroll and tap
+                // gestures on feed screens (issue #146). ProtoBottomNavC
+                // expands itself to full-viewport when the service popup
+                // is active.
                 if (showBottomNav)
-                  Positioned.fill(
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
                     child: ProtoBottomNavC(
                       activeModule: activeModule,
                       activeTab: activeTab,
