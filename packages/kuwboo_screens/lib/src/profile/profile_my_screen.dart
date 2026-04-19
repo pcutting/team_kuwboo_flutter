@@ -78,6 +78,9 @@ class _ProfileMyScreenState extends ConsumerState<ProfileMyScreen> {
                     _localAvatarBytes = null;
                     _avatarRemoved = true;
                   });
+                  // Also drop the app-wide override so other avatar sites
+                  // stop showing the stale picked image.
+                  ref.read(localAvatarProvider.notifier).clear();
                 },
               ),
               const SizedBox(height: 8),
@@ -103,6 +106,9 @@ class _ProfileMyScreenState extends ConsumerState<ProfileMyScreen> {
         _localAvatarBytes = bytes;
         _avatarRemoved = false;
       });
+      // Push to the app-wide override so the top bar, chat, and any
+      // future avatar-rendering surface see the new photo immediately.
+      await ref.read(localAvatarProvider.notifier).set(bytes);
       // TODO(auth): POST bytes to /users/me/avatar once the endpoint is
       // live, then invalidate meProvider on success.
     } catch (e) {
@@ -305,18 +311,20 @@ class _ProfileMyScreenState extends ConsumerState<ProfileMyScreen> {
     const fallbackUrl =
         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop';
 
+    // Preference order:
+    // 1. In-session picked bytes (from this screen's sheet) — fresh
+    //    user action, show immediately.
+    // 2. Shared local avatar provider bytes (picked during registration
+    //    or in a previous session, hydrated from secure storage).
+    // 3. Backend avatarUrl.
+    // 4. Demo fallback URL for visual continuity in the prototype.
     if (_localAvatarBytes != null) {
-      return Container(
-        width: 96,
-        height: 96,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          image: DecorationImage(
-            image: MemoryImage(_localAvatarBytes!),
-            fit: BoxFit.cover,
-          ),
-        ),
-      );
+      return _MemoryCircleAvatar(bytes: _localAvatarBytes!, radius: 48);
+    }
+
+    final sharedBytes = ref.watch(localAvatarProvider);
+    if (sharedBytes != null && !_avatarRemoved) {
+      return _MemoryCircleAvatar(bytes: sharedBytes, radius: 48);
     }
 
     final url = _avatarRemoved ? fallbackUrl : (user?.avatarUrl ?? fallbackUrl);
@@ -336,6 +344,26 @@ class _ProfileMyScreenState extends ConsumerState<ProfileMyScreen> {
     final username = user?.username;
     if (username == null || username.trim().isEmpty) return '';
     return username.startsWith('@') ? username : '@$username';
+  }
+}
+
+class _MemoryCircleAvatar extends StatelessWidget {
+  const _MemoryCircleAvatar({required this.bytes, required this.radius});
+
+  final Uint8List bytes;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = radius * 2;
+    return Container(
+      width: d,
+      height: d,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        image: DecorationImage(image: MemoryImage(bytes), fit: BoxFit.cover),
+      ),
+    );
   }
 }
 

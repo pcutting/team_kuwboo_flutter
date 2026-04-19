@@ -23,6 +23,7 @@ export 'src/shared/feature_flags.dart';
 // State
 export 'src/state/proto_state_provider.dart';
 export 'src/state/proto_module.dart';
+export 'src/state/local_avatar_provider.dart';
 
 // Routes
 export 'src/routes/proto_routes.dart';

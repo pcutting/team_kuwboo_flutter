@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
+import '../profile_providers.dart';
 import '_settings_page.dart';
 
-class SettingsEmailScreen extends StatefulWidget {
+class SettingsEmailScreen extends ConsumerStatefulWidget {
   const SettingsEmailScreen({super.key});
 
   @override
-  State<SettingsEmailScreen> createState() => _SettingsEmailScreenState();
+  ConsumerState<SettingsEmailScreen> createState() =>
+      _SettingsEmailScreenState();
 }
 
-class _SettingsEmailScreenState extends State<SettingsEmailScreen> {
+class _SettingsEmailScreenState extends ConsumerState<SettingsEmailScreen> {
   final _email = TextEditingController();
 
   @override
@@ -31,9 +34,23 @@ class _SettingsEmailScreenState extends State<SettingsEmailScreen> {
     saveAndPop(context, 'Verification email sent');
   }
 
+  /// Mask the local part so "foo@bar.com" → "f••@bar.com".
+  String _maskEmail(String email) {
+    final at = email.indexOf('@');
+    if (at <= 1) return email;
+    final local = email.substring(0, at);
+    final domain = email.substring(at);
+    final keep = local[0];
+    final masked = '•' * (local.length - 1).clamp(1, 8);
+    return '$keep$masked$domain';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
+    final meAsync = ref.watch(meProvider);
+    final currentEmail = meAsync.valueOrNull?.email;
+
     return SettingsPage(
       title: 'Email',
       footer: SettingsPrimaryButton(
@@ -54,28 +71,33 @@ class _SettingsEmailScreenState extends State<SettingsEmailScreen> {
                     color: theme.textSecondary,
                   ),
                   const SizedBox(width: 12),
-                  Text(
-                    'y••••@example.com',
-                    style: theme.body.copyWith(fontSize: 14),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
+                  Expanded(
                     child: Text(
-                      'Verified',
-                      style: theme.caption.copyWith(
-                        color: theme.primary,
-                        fontWeight: FontWeight.w700,
+                      currentEmail == null || currentEmail.isEmpty
+                          ? 'No email on file'
+                          : _maskEmail(currentEmail),
+                      style: theme.body.copyWith(fontSize: 14),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (currentEmail != null && currentEmail.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'On file',
+                        style: theme.caption.copyWith(
+                          color: theme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
