@@ -36,13 +36,15 @@ export class InterestSignalDecayCron {
     return this.em.transactional(async (fork) => {
       const conn = fork.getConnection();
 
+      // conn.execute uses Knex positional bindings (`?`); `$n` in the SQL
+      // leaves dollar-markers unbound and pg errors "there is no parameter $1".
       const decayRes = (await conn.execute(
-        `update "interest_signals" set "weight" = "weight" * $1;`,
+        `update "interest_signals" set "weight" = "weight" * ?;`,
         [DECAY_FACTOR],
       )) as { affectedRows?: number } | unknown;
 
       const pruneRes = (await conn.execute(
-        `delete from "interest_signals" where "weight" < $1;`,
+        `delete from "interest_signals" where "weight" < ?;`,
         [PRUNE_THRESHOLD],
       )) as { affectedRows?: number } | unknown;
 
