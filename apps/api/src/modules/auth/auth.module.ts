@@ -10,6 +10,7 @@ import { SessionsModule } from '../sessions/sessions.module';
 import { VerificationModule } from '../verification/verification.module';
 import { CredentialsModule } from '../credentials/credentials.module';
 import { TrustModule } from '../trust/trust.module';
+import { ConsentModule } from '../consent/consent.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { TrustModule } from '../trust/trust.module';
     VerificationModule,
     CredentialsModule,
     TrustModule,
+    ConsentModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

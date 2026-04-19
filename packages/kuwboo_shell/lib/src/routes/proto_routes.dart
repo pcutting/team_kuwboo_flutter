@@ -73,6 +73,8 @@ class ProtoRoutes {
   static const authBirthday = '/auth/birthday';
   static const authProfile = '/auth/profile';
   static const authLogin = '/auth/login';
+  static const authEmailRegister = '/auth/email/register';
+  static const authEmailLogin = '/auth/email/login';
   static const authAgeBlock = '/auth/age-block';
 
   // ── Legal ─────────────────────────────────────────────────────────────

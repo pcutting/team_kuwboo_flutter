@@ -340,137 +340,88 @@ class _PhoneTabState extends State<_PhoneTab> {
   }
 }
 
-class _EmailTab extends StatefulWidget {
+/// Email-tab body on the phone-or-email sign-up screen.
+///
+/// Previously this tab collected an email and fired an OTP. PR B moves
+/// email onto a dedicated email+password flow, so this tab is now a
+/// two-button router into the new register / login screens.
+class _EmailTab extends StatelessWidget {
   final ProtoTheme theme;
   const _EmailTab({required this.theme});
 
   @override
-  State<_EmailTab> createState() => _EmailTabState();
-}
-
-class _EmailTabState extends State<_EmailTab> {
-  final TextEditingController _emailController = TextEditingController();
-  String? _error;
-  bool _valid = false;
-  bool _submitting = false;
-
-  // Pragmatic email regex — same shape backend's class-validator uses.
-  static final RegExp _emailRe = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
-  }
-
-  void _onChanged(String value) {
-    setState(() {
-      _valid = _emailRe.hasMatch(value.trim());
-      _error = null;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final theme = widget.theme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const SizedBox(height: 8),
           Text(
-            'Email',
-            style: theme.caption.copyWith(fontWeight: FontWeight.w600),
+            'Sign up or log in with email',
+            style: theme.headline.copyWith(fontSize: 18),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
+          Text(
+            "Use your email and password. We'll ask you to verify your "
+            'email after.',
+            style: theme.body.copyWith(color: theme.textSecondary),
+          ),
+          const SizedBox(height: 24),
           Semantics(
-            identifier: AuthIds.emailField,
-            textField: true,
-            child: TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              autocorrect: false,
-              enableSuggestions: false,
-              textCapitalization: TextCapitalization.none,
-              style: theme.body,
-              onChanged: _onChanged,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: theme.background,
-                hintText: 'you@example.com',
-                hintStyle: theme.body.copyWith(color: theme.textTertiary),
-                prefixIcon: Icon(
-                  Icons.email_outlined,
-                  size: 20,
-                  color: theme.textTertiary,
+            identifier: AuthIds.emailTabCreateAccount,
+            container: true,
+            button: true,
+            label: 'Create account',
+            child: GestureDetector(
+              onTap: () => context.go(ProtoRoutes.authEmailRegister),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: theme.primary,
+                  borderRadius: BorderRadius.circular(theme.radiusFull),
                 ),
-                errorText: _error,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 14,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: theme.text.withValues(alpha: 0.08),
+                child: Center(
+                  child: Text(
+                    'Create account',
+                    style: theme.button.copyWith(fontSize: 16),
                   ),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: theme.text.withValues(alpha: 0.08),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Semantics(
+            identifier: AuthIds.emailTabLogin,
+            container: true,
+            button: true,
+            label: 'Log in',
+            child: GestureDetector(
+              onTap: () => context.go(ProtoRoutes.authEmailLogin),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(theme.radiusFull),
+                  border: Border.all(
+                    color: theme.text.withValues(alpha: 0.15),
+                    width: 1.5,
                   ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: theme.primary, width: 2),
+                child: Center(
+                  child: Text(
+                    'Log in',
+                    style: theme.button.copyWith(
+                      fontSize: 16,
+                      color: theme.text,
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
           const Spacer(),
-          _BottomAction(
-            identifier: AuthIds.emailNext,
-            label: _submitting ? 'Sending…' : 'Next',
-            enabled: _valid && !_submitting,
-            busy: _submitting,
-            onTap: () => _submit(context),
-            theme: theme,
-          ),
         ],
-      ),
-    );
-  }
-
-  Future<void> _submit(BuildContext context) async {
-    FocusScope.of(context).unfocus();
-    final email = _emailController.text.trim();
-    if (!_emailRe.hasMatch(email)) {
-      setState(() => _error = 'Enter a valid email address');
-      return;
-    }
-    setState(() => _submitting = true);
-    final callbacks = AuthCallbacksScope.maybeOf(context);
-    String? devCode;
-    if (callbacks?.onSendEmailOtp != null) {
-      try {
-        devCode = await callbacks!.onSendEmailOtp!(email);
-      } catch (e, st) {
-        debugLogAuthError('auth/email-send', e, st);
-        if (!context.mounted) return;
-        setState(() => _submitting = false);
-        showAuthError(context, 'Could not send code: $e');
-        return;
-      }
-    }
-    if (!context.mounted) return;
-    setState(() => _submitting = false);
-    context.go(
-      ProtoRoutes.authOtp,
-      extra: AuthOtpArgs(
-        identifier: email,
-        channel: AuthOtpChannel.email,
-        devCode: devCode,
       ),
     );
   }

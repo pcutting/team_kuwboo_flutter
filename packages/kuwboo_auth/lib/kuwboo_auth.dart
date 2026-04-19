@@ -13,6 +13,8 @@ export 'src/auth_tutorial_screen.dart';
 export 'src/auth_method_screen.dart';
 export 'src/auth_login_screen.dart';
 export 'src/auth_phone_screen.dart';
+export 'src/auth_email_register_screen.dart';
+export 'src/auth_email_login_screen.dart';
 export 'src/auth_otp_screen.dart';
 export 'src/auth_birthday_screen.dart';
 export 'src/auth_profile_screen.dart';
