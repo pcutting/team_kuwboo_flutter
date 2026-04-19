@@ -1,23 +1,27 @@
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EntityManager } from '@mikro-orm/postgresql';
 import * as bcrypt from 'bcrypt';
 import { Verification } from './entities/verification.entity';
 import { VerificationType } from '../../common/enums';
+import { EmailService } from '../email/email.service';
 
 const OTP_LENGTH = 6;
 const OTP_EXPIRY_MINUTES = 10;
 const MAX_ATTEMPTS = 5;
 const BCRYPT_ROUNDS = 10;
+const PASSWORD_RESET_EXPIRY_MINUTES = 15;
 
 @Injectable()
 export class VerificationService {
+  private readonly logger = new Logger(VerificationService.name);
   private readonly twilioClient: any;
   private readonly verifySid: string;
 
   constructor(
     private readonly em: EntityManager,
     private readonly config: ConfigService,
+    private readonly email: EmailService,
   ) {
     const accountSid = this.config.get<string>('TWILIO_ACCOUNT_SID');
     const authToken = this.config.get<string>('TWILIO_AUTH_TOKEN');
@@ -28,6 +32,21 @@ export class VerificationService {
       const twilio = require('twilio');
       this.twilioClient = twilio(accountSid, authToken);
     }
+  }
+
+  /**
+   * In non-prod environments, callers can opt into receiving the plaintext
+   * code in the response (so the on-device OTP banner can render it and
+   * devs don't have to wait on real email delivery). Gated by the
+   * `ENABLE_DEV_OTP_ECHO` env var (matches the "1/true/yes" style the
+   * rest of the codebase uses — see NUDGES_ENABLED in .env.example).
+   *
+   * Returns false in production regardless of the flag.
+   */
+  private isDevOtpEchoEnabled(): boolean {
+    if (process.env.NODE_ENV === 'production') return false;
+    const raw = (process.env.ENABLE_DEV_OTP_ECHO || '').toLowerCase();
+    return raw === '1' || raw === 'true' || raw === 'yes';
   }
 
   async sendPhoneOtp(phone: string): Promise<{ devCode?: string }> {
@@ -115,35 +134,44 @@ export class VerificationService {
    * `type=EMAIL_VERIFY`. Email is normalised by the caller (lowercased,
    * dot-stripped for Gmail) before reaching this method.
    *
-   * Third-party integration (AWS SES) is stubbed here: if
-   * SES_EMAIL_ENABLED=1 and an SES client is wired, send; otherwise the
-   * dev fallback logs the code to stdout. A clean seam for D3's
-   * EmailTransport service is left as a TODO.
+   * Delivery is delegated to `EmailService`, which is wired to the
+   * currently-configured provider adapter (SES today). If delivery
+   * throws — upstream outage, rejected recipient, misconfig — the
+   * verification row has already been persisted and we swallow the error
+   * here so the auth endpoint still returns 2xx. Leaking the failure
+   * through an unusual status code would give enumeration oracles
+   * (valid vs invalid recipient) for free.
    */
-  async sendEmailOtp(email: string): Promise<{ devCode?: string }> {
+  async sendEmailOtp(emailAddress: string): Promise<{ devCode?: string }> {
     const code = this.generateCode();
     const codeHash = await bcrypt.hash(code, BCRYPT_ROUNDS);
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + OTP_EXPIRY_MINUTES);
 
     this.em.create(Verification, {
-      identifier: email,
+      identifier: emailAddress,
       codeHash,
       type: VerificationType.EMAIL_VERIFY,
       expiresAt,
     } as any);
     await this.em.flush();
 
-    // TODO(D3): replace with SES transport once the infra is wired.
-    if (this.config.get('NODE_ENV') !== 'production') {
-      console.log(`[DEV] Email OTP for ${email}: ${code}`);
+    try {
+      await this.email.sendOtp({
+        to: emailAddress,
+        code,
+        purpose: 'verify-email',
+        expiresInMinutes: OTP_EXPIRY_MINUTES,
+      });
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : 'unknown error';
+      this.logger.warn(
+        `Email OTP delivery failed for ${emailAddress}: ${reason} — caller will still receive 2xx`,
+      );
     }
 
-    // Return the plaintext code in non-production environments so the mobile
-    // client can render it in the on-screen OTP banner. Email OTP has no
-    // Twilio branch — the local-fallback is the only path until SES lands —
-    // so gating purely on NODE_ENV is sufficient.
-    if (process.env.NODE_ENV !== 'production') {
+    if (this.isDevOtpEchoEnabled()) {
+      this.logger.debug(`[DEV] Email OTP for ${emailAddress}: ${code}`);
       return { devCode: code };
     }
     return {};
@@ -195,23 +223,40 @@ export class VerificationService {
    * Password-reset OTP. Shares the `verifications` table with email OTP
    * but uses the `PASSWORD_RESET` discriminator so the two code streams
    * cannot be confused and each is consumed exactly once.
+   *
+   * Delivery failures are swallowed (and logged) for the same
+   * enumeration-oracle reason documented on `sendEmailOtp`.
    */
-  async sendPasswordResetOtp(email: string): Promise<{ devCode?: string }> {
+  async sendPasswordResetOtp(emailAddress: string): Promise<{ devCode?: string }> {
     const code = this.generateCode();
     const codeHash = await bcrypt.hash(code, BCRYPT_ROUNDS);
     const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+    expiresAt.setMinutes(expiresAt.getMinutes() + PASSWORD_RESET_EXPIRY_MINUTES);
 
     this.em.create(Verification, {
-      identifier: email,
+      identifier: emailAddress,
       codeHash,
       type: VerificationType.PASSWORD_RESET,
       expiresAt,
     } as any);
     await this.em.flush();
 
-    if (this.config.get('NODE_ENV') !== 'production') {
-      console.log(`[DEV] Password reset OTP for ${email}: ${code}`);
+    try {
+      await this.email.sendOtp({
+        to: emailAddress,
+        code,
+        purpose: 'password-reset',
+        expiresInMinutes: PASSWORD_RESET_EXPIRY_MINUTES,
+      });
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : 'unknown error';
+      this.logger.warn(
+        `Password reset OTP delivery failed for ${emailAddress}: ${reason} — caller will still receive 2xx`,
+      );
+    }
+
+    if (this.isDevOtpEchoEnabled()) {
+      this.logger.debug(`[DEV] Password reset OTP for ${emailAddress}: ${code}`);
       return { devCode: code };
     }
     return {};
