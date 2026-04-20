@@ -141,12 +141,18 @@ class SettingsToggleRow extends StatelessWidget {
 }
 
 /// Labelled text input row (used by AccountInfo, Password, etc).
+///
+/// [prefixText] renders a non-editable prefix inside the field (e.g. `@`
+/// for usernames) so the visible value matches the stored value minus
+/// the prefix — stops users typing the prefix as part of the handle.
 class SettingsTextField extends StatelessWidget {
   const SettingsTextField({
     super.key,
     required this.label,
     required this.controller,
     this.hint,
+    this.helper,
+    this.prefixText,
     this.obscureText = false,
     this.maxLines = 1,
     this.keyboardType,
@@ -154,6 +160,8 @@ class SettingsTextField extends StatelessWidget {
 
   final String label;
   final String? hint;
+  final String? helper;
+  final String? prefixText;
   final TextEditingController controller;
   final bool obscureText;
   final int maxLines;
@@ -184,6 +192,12 @@ class SettingsTextField extends StatelessWidget {
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: theme.body.copyWith(color: theme.textTertiary),
+              prefixText: prefixText,
+              prefixStyle: theme.body.copyWith(
+                fontSize: 14,
+                color: theme.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
               filled: true,
               fillColor: theme.surface,
               border: OutlineInputBorder(
@@ -208,6 +222,13 @@ class SettingsTextField extends StatelessWidget {
               ),
             ),
           ),
+          if (helper != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              helper!,
+              style: theme.caption.copyWith(color: theme.textTertiary),
+            ),
+          ],
         ],
       ),
     );
