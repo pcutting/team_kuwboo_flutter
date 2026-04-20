@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kuwboo_models/kuwboo_models.dart';
@@ -38,28 +39,50 @@ class _SettingsAccountInfoScreenState
   void _seedFrom(User user) {
     if (_seeded) return;
     _name.text = user.name ?? '';
-    _username.text = user.username ?? '';
+    // Strip any stored leading `@` — canonical form is without prefix,
+    // and the field now renders `@` as a decoration so showing `@@phil`
+    // would be confusing.
+    _username.text = _normalizeUsername(user.username ?? '');
     _bio.text = user.bio ?? '';
     _seeded = true;
+  }
+
+  /// Strip a leading `@` if present — users habitually type it because
+  /// the handle renders as `@phil_admin` elsewhere, but the backend regex
+  /// `[a-zA-Z0-9_.]` rejects `@` and 409s with `invalid_username`.
+  String _normalizeUsername(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.startsWith('@')) return trimmed.substring(1);
+    return trimmed;
   }
 
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
+      final username = _normalizeUsername(_username.text);
       await ref
           .read(usersApiProvider)
           .patchMe(
             PatchMeDto(
               displayName: _name.text.trim(),
-              username: _username.text.trim().isEmpty
-                  ? null
-                  : _username.text.trim(),
+              username: username.isEmpty ? null : username,
               bio: _bio.text.trim(),
             ),
           );
+      // Await the refetched user so we don't pop while meProvider is still
+      // loading — otherwise callers that re-watch immediately after us
+      // (e.g. the settings list, top nav) may render stale values until
+      // their own rebuild arrives.
       ref.invalidate(meProvider);
+      await ref.read(meProvider.future);
       if (!mounted) return;
       saveAndPop(context, 'Account info saved');
+    } on DioException catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(_friendlyError(e))));
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
@@ -67,6 +90,28 @@ class _SettingsAccountInfoScreenState
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(content: Text('Save failed: $e')));
     }
+  }
+
+  /// Map backend validation codes to copy the user can actually act on.
+  /// The raw DioException toString exposes HTTP internals that read as
+  /// "something broke" rather than "fix your input".
+  String _friendlyError(DioException e) {
+    final data = e.response?.data;
+    if (data is Map) {
+      final code = data['code'];
+      final msg = data['message'];
+      if (code == 'invalid_username') {
+        return 'Username must be 3–30 characters, letters / digits / _ / . only.';
+      }
+      if (code == 'username_taken') {
+        return 'That username is already taken.';
+      }
+      if (msg is String && msg.isNotEmpty) return msg;
+      if (msg is List && msg.isNotEmpty) return msg.first.toString();
+    }
+    final status = e.response?.statusCode;
+    if (status == 401 || status == 403) return 'Session expired — sign in again.';
+    return 'Save failed — please try again.';
   }
 
   @override
@@ -108,7 +153,9 @@ class _SettingsAccountInfoScreenState
             SettingsTextField(
               label: 'Username',
               controller: _username,
-              hint: '3–20 letters / numbers / underscores',
+              prefixText: '@',
+              hint: 'phil_admin',
+              helper: '3–30 characters. Letters, digits, underscores, dots.',
             ),
             SettingsTextField(
               label: 'Bio',
