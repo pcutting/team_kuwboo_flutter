@@ -4,6 +4,16 @@ import 'enums.dart';
 part 'content.freezed.dart';
 part 'content.g.dart';
 
+// The backend serializes MikroORM rows with a populated `creator: {id, ...}`
+// object and no flat `creatorId` field. Accept either shape.
+Object? _readCreatorId(Map input, String key) {
+  final direct = input['creatorId'];
+  if (direct != null) return direct;
+  final creator = input['creator'];
+  if (creator is Map) return creator['id'];
+  return null;
+}
+
 /// Slim creator info attached to a feed item when the backend populates
 /// `creator` on a Content row (feed, trending, discover endpoints).
 @freezed
@@ -36,7 +46,7 @@ abstract class Content with _$Content {
     // or used as a stable widget key.
     String? id,
     required ContentType type,
-    String? creatorId,
+    @JsonKey(readValue: _readCreatorId) String? creatorId,
     FeedCreator? creator,
     @Default(Visibility.public_) Visibility visibility,
     @Default(ContentTier.free) ContentTier tier,
@@ -71,7 +81,7 @@ abstract class Video with _$Video {
   const factory Video({
     required String id,
     @Default(ContentType.video) ContentType type,
-    required String creatorId,
+    @JsonKey(readValue: _readCreatorId) required String creatorId,
     @Default(Visibility.public_) Visibility visibility,
     @Default(ContentTier.free) ContentTier tier,
     @Default(ContentStatus.active) ContentStatus status,
@@ -95,7 +105,7 @@ abstract class Post with _$Post {
   const factory Post({
     required String id,
     @Default(ContentType.post) ContentType type,
-    required String creatorId,
+    @JsonKey(readValue: _readCreatorId) required String creatorId,
     @Default(Visibility.public_) Visibility visibility,
     @Default(ContentTier.free) ContentTier tier,
     @Default(ContentStatus.active) ContentStatus status,

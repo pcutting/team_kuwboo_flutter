@@ -294,7 +294,7 @@ mixin _$Content {
 // `_$ContentFromJson`. Rows with a null id are filtered out upstream
 // in the mobile feed provider because they can't be liked, opened,
 // or used as a stable widget key.
- String? get id; ContentType get type; String? get creatorId; FeedCreator? get creator; Visibility get visibility; ContentTier get tier; ContentStatus get status; int get likeCount; int get commentCount; int get viewCount; int get shareCount; int get saveCount; DateTime? get createdAt;// Video subtype
+ String? get id; ContentType get type;@JsonKey(readValue: _readCreatorId) String? get creatorId; FeedCreator? get creator; Visibility get visibility; ContentTier get tier; ContentStatus get status; int get likeCount; int get commentCount; int get viewCount; int get shareCount; int get saveCount; DateTime? get createdAt;// Video subtype
  String? get videoUrl; String? get thumbnailUrl; int? get durationSeconds; String? get caption;// Post subtype
  String? get text; PostSubType? get subType;// Product subtype (also surfaced as `Product` for the marketplace API)
  String? get title; int? get priceCents; String get currency; String? get condition;
@@ -330,7 +330,7 @@ abstract mixin class $ContentCopyWith<$Res>  {
   factory $ContentCopyWith(Content value, $Res Function(Content) _then) = _$ContentCopyWithImpl;
 @useResult
 $Res call({
- String? id, ContentType type, String? creatorId, FeedCreator? creator, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, DateTime? createdAt, String? videoUrl, String? thumbnailUrl, int? durationSeconds, String? caption, String? text, PostSubType? subType, String? title, int? priceCents, String currency, String? condition
+ String? id, ContentType type,@JsonKey(readValue: _readCreatorId) String? creatorId, FeedCreator? creator, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, DateTime? createdAt, String? videoUrl, String? thumbnailUrl, int? durationSeconds, String? caption, String? text, PostSubType? subType, String? title, int? priceCents, String currency, String? condition
 });
 
 
@@ -469,7 +469,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? id,  ContentType type,  String? creatorId,  FeedCreator? creator,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime? createdAt,  String? videoUrl,  String? thumbnailUrl,  int? durationSeconds,  String? caption,  String? text,  PostSubType? subType,  String? title,  int? priceCents,  String currency,  String? condition)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? id,  ContentType type, @JsonKey(readValue: _readCreatorId)  String? creatorId,  FeedCreator? creator,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime? createdAt,  String? videoUrl,  String? thumbnailUrl,  int? durationSeconds,  String? caption,  String? text,  PostSubType? subType,  String? title,  int? priceCents,  String currency,  String? condition)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Content() when $default != null:
 return $default(_that.id,_that.type,_that.creatorId,_that.creator,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.createdAt,_that.videoUrl,_that.thumbnailUrl,_that.durationSeconds,_that.caption,_that.text,_that.subType,_that.title,_that.priceCents,_that.currency,_that.condition);case _:
@@ -490,7 +490,7 @@ return $default(_that.id,_that.type,_that.creatorId,_that.creator,_that.visibili
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? id,  ContentType type,  String? creatorId,  FeedCreator? creator,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime? createdAt,  String? videoUrl,  String? thumbnailUrl,  int? durationSeconds,  String? caption,  String? text,  PostSubType? subType,  String? title,  int? priceCents,  String currency,  String? condition)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? id,  ContentType type, @JsonKey(readValue: _readCreatorId)  String? creatorId,  FeedCreator? creator,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime? createdAt,  String? videoUrl,  String? thumbnailUrl,  int? durationSeconds,  String? caption,  String? text,  PostSubType? subType,  String? title,  int? priceCents,  String currency,  String? condition)  $default,) {final _that = this;
 switch (_that) {
 case _Content():
 return $default(_that.id,_that.type,_that.creatorId,_that.creator,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.createdAt,_that.videoUrl,_that.thumbnailUrl,_that.durationSeconds,_that.caption,_that.text,_that.subType,_that.title,_that.priceCents,_that.currency,_that.condition);case _:
@@ -510,7 +510,7 @@ return $default(_that.id,_that.type,_that.creatorId,_that.creator,_that.visibili
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? id,  ContentType type,  String? creatorId,  FeedCreator? creator,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime? createdAt,  String? videoUrl,  String? thumbnailUrl,  int? durationSeconds,  String? caption,  String? text,  PostSubType? subType,  String? title,  int? priceCents,  String currency,  String? condition)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? id,  ContentType type, @JsonKey(readValue: _readCreatorId)  String? creatorId,  FeedCreator? creator,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  DateTime? createdAt,  String? videoUrl,  String? thumbnailUrl,  int? durationSeconds,  String? caption,  String? text,  PostSubType? subType,  String? title,  int? priceCents,  String currency,  String? condition)?  $default,) {final _that = this;
 switch (_that) {
 case _Content() when $default != null:
 return $default(_that.id,_that.type,_that.creatorId,_that.creator,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.createdAt,_that.videoUrl,_that.thumbnailUrl,_that.durationSeconds,_that.caption,_that.text,_that.subType,_that.title,_that.priceCents,_that.currency,_that.condition);case _:
@@ -525,7 +525,7 @@ return $default(_that.id,_that.type,_that.creatorId,_that.creator,_that.visibili
 @JsonSerializable()
 
 class _Content implements Content {
-  const _Content({this.id, required this.type, this.creatorId, this.creator, this.visibility = Visibility.public_, this.tier = ContentTier.free, this.status = ContentStatus.active, this.likeCount = 0, this.commentCount = 0, this.viewCount = 0, this.shareCount = 0, this.saveCount = 0, this.createdAt, this.videoUrl, this.thumbnailUrl, this.durationSeconds, this.caption, this.text, this.subType, this.title, this.priceCents, this.currency = 'GBP', this.condition});
+  const _Content({this.id, required this.type, @JsonKey(readValue: _readCreatorId) this.creatorId, this.creator, this.visibility = Visibility.public_, this.tier = ContentTier.free, this.status = ContentStatus.active, this.likeCount = 0, this.commentCount = 0, this.viewCount = 0, this.shareCount = 0, this.saveCount = 0, this.createdAt, this.videoUrl, this.thumbnailUrl, this.durationSeconds, this.caption, this.text, this.subType, this.title, this.priceCents, this.currency = 'GBP', this.condition});
   factory _Content.fromJson(Map<String, dynamic> json) => _$ContentFromJson(json);
 
 // `id`, `creatorId`, and `createdAt` are nullable because the backend
@@ -537,7 +537,7 @@ class _Content implements Content {
 // or used as a stable widget key.
 @override final  String? id;
 @override final  ContentType type;
-@override final  String? creatorId;
+@override@JsonKey(readValue: _readCreatorId) final  String? creatorId;
 @override final  FeedCreator? creator;
 @override@JsonKey() final  Visibility visibility;
 @override@JsonKey() final  ContentTier tier;
@@ -595,7 +595,7 @@ abstract mixin class _$ContentCopyWith<$Res> implements $ContentCopyWith<$Res> {
   factory _$ContentCopyWith(_Content value, $Res Function(_Content) _then) = __$ContentCopyWithImpl;
 @override @useResult
 $Res call({
- String? id, ContentType type, String? creatorId, FeedCreator? creator, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, DateTime? createdAt, String? videoUrl, String? thumbnailUrl, int? durationSeconds, String? caption, String? text, PostSubType? subType, String? title, int? priceCents, String currency, String? condition
+ String? id, ContentType type,@JsonKey(readValue: _readCreatorId) String? creatorId, FeedCreator? creator, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, DateTime? createdAt, String? videoUrl, String? thumbnailUrl, int? durationSeconds, String? caption, String? text, PostSubType? subType, String? title, int? priceCents, String currency, String? condition
 });
 
 
@@ -660,7 +660,7 @@ $FeedCreatorCopyWith<$Res>? get creator {
 /// @nodoc
 mixin _$Video {
 
- String get id; ContentType get type; String get creatorId; Visibility get visibility; ContentTier get tier; ContentStatus get status; int get likeCount; int get commentCount; int get viewCount; int get shareCount; int get saveCount; String get videoUrl; String? get thumbnailUrl; int get durationSeconds; String? get caption; DateTime get createdAt;
+ String get id; ContentType get type;@JsonKey(readValue: _readCreatorId) String get creatorId; Visibility get visibility; ContentTier get tier; ContentStatus get status; int get likeCount; int get commentCount; int get viewCount; int get shareCount; int get saveCount; String get videoUrl; String? get thumbnailUrl; int get durationSeconds; String? get caption; DateTime get createdAt;
 /// Create a copy of Video
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -693,7 +693,7 @@ abstract mixin class $VideoCopyWith<$Res>  {
   factory $VideoCopyWith(Video value, $Res Function(Video) _then) = _$VideoCopyWithImpl;
 @useResult
 $Res call({
- String id, ContentType type, String creatorId, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, String videoUrl, String? thumbnailUrl, int durationSeconds, String? caption, DateTime createdAt
+ String id, ContentType type,@JsonKey(readValue: _readCreatorId) String creatorId, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, String videoUrl, String? thumbnailUrl, int durationSeconds, String? caption, DateTime createdAt
 });
 
 
@@ -813,7 +813,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  ContentType type,  String creatorId,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  String videoUrl,  String? thumbnailUrl,  int durationSeconds,  String? caption,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  ContentType type, @JsonKey(readValue: _readCreatorId)  String creatorId,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  String videoUrl,  String? thumbnailUrl,  int durationSeconds,  String? caption,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Video() when $default != null:
 return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.videoUrl,_that.thumbnailUrl,_that.durationSeconds,_that.caption,_that.createdAt);case _:
@@ -834,7 +834,7 @@ return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  ContentType type,  String creatorId,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  String videoUrl,  String? thumbnailUrl,  int durationSeconds,  String? caption,  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  ContentType type, @JsonKey(readValue: _readCreatorId)  String creatorId,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  String videoUrl,  String? thumbnailUrl,  int durationSeconds,  String? caption,  DateTime createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _Video():
 return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.videoUrl,_that.thumbnailUrl,_that.durationSeconds,_that.caption,_that.createdAt);case _:
@@ -854,7 +854,7 @@ return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  ContentType type,  String creatorId,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  String videoUrl,  String? thumbnailUrl,  int durationSeconds,  String? caption,  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  ContentType type, @JsonKey(readValue: _readCreatorId)  String creatorId,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  String videoUrl,  String? thumbnailUrl,  int durationSeconds,  String? caption,  DateTime createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Video() when $default != null:
 return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.videoUrl,_that.thumbnailUrl,_that.durationSeconds,_that.caption,_that.createdAt);case _:
@@ -869,12 +869,12 @@ return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,
 @JsonSerializable()
 
 class _Video implements Video {
-  const _Video({required this.id, this.type = ContentType.video, required this.creatorId, this.visibility = Visibility.public_, this.tier = ContentTier.free, this.status = ContentStatus.active, this.likeCount = 0, this.commentCount = 0, this.viewCount = 0, this.shareCount = 0, this.saveCount = 0, required this.videoUrl, this.thumbnailUrl, required this.durationSeconds, this.caption, required this.createdAt});
+  const _Video({required this.id, this.type = ContentType.video, @JsonKey(readValue: _readCreatorId) required this.creatorId, this.visibility = Visibility.public_, this.tier = ContentTier.free, this.status = ContentStatus.active, this.likeCount = 0, this.commentCount = 0, this.viewCount = 0, this.shareCount = 0, this.saveCount = 0, required this.videoUrl, this.thumbnailUrl, required this.durationSeconds, this.caption, required this.createdAt});
   factory _Video.fromJson(Map<String, dynamic> json) => _$VideoFromJson(json);
 
 @override final  String id;
 @override@JsonKey() final  ContentType type;
-@override final  String creatorId;
+@override@JsonKey(readValue: _readCreatorId) final  String creatorId;
 @override@JsonKey() final  Visibility visibility;
 @override@JsonKey() final  ContentTier tier;
 @override@JsonKey() final  ContentStatus status;
@@ -922,7 +922,7 @@ abstract mixin class _$VideoCopyWith<$Res> implements $VideoCopyWith<$Res> {
   factory _$VideoCopyWith(_Video value, $Res Function(_Video) _then) = __$VideoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, ContentType type, String creatorId, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, String videoUrl, String? thumbnailUrl, int durationSeconds, String? caption, DateTime createdAt
+ String id, ContentType type,@JsonKey(readValue: _readCreatorId) String creatorId, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, String videoUrl, String? thumbnailUrl, int durationSeconds, String? caption, DateTime createdAt
 });
 
 
@@ -968,7 +968,7 @@ as DateTime,
 /// @nodoc
 mixin _$Post {
 
- String get id; ContentType get type; String get creatorId; Visibility get visibility; ContentTier get tier; ContentStatus get status; int get likeCount; int get commentCount; int get viewCount; int get shareCount; int get saveCount; String get text; PostSubType get subType; DateTime get createdAt;
+ String get id; ContentType get type;@JsonKey(readValue: _readCreatorId) String get creatorId; Visibility get visibility; ContentTier get tier; ContentStatus get status; int get likeCount; int get commentCount; int get viewCount; int get shareCount; int get saveCount; String get text; PostSubType get subType; DateTime get createdAt;
 /// Create a copy of Post
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1001,7 +1001,7 @@ abstract mixin class $PostCopyWith<$Res>  {
   factory $PostCopyWith(Post value, $Res Function(Post) _then) = _$PostCopyWithImpl;
 @useResult
 $Res call({
- String id, ContentType type, String creatorId, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, String text, PostSubType subType, DateTime createdAt
+ String id, ContentType type,@JsonKey(readValue: _readCreatorId) String creatorId, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, String text, PostSubType subType, DateTime createdAt
 });
 
 
@@ -1119,7 +1119,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  ContentType type,  String creatorId,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  String text,  PostSubType subType,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  ContentType type, @JsonKey(readValue: _readCreatorId)  String creatorId,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  String text,  PostSubType subType,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Post() when $default != null:
 return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.text,_that.subType,_that.createdAt);case _:
@@ -1140,7 +1140,7 @@ return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  ContentType type,  String creatorId,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  String text,  PostSubType subType,  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  ContentType type, @JsonKey(readValue: _readCreatorId)  String creatorId,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  String text,  PostSubType subType,  DateTime createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _Post():
 return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.text,_that.subType,_that.createdAt);case _:
@@ -1160,7 +1160,7 @@ return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  ContentType type,  String creatorId,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  String text,  PostSubType subType,  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  ContentType type, @JsonKey(readValue: _readCreatorId)  String creatorId,  Visibility visibility,  ContentTier tier,  ContentStatus status,  int likeCount,  int commentCount,  int viewCount,  int shareCount,  int saveCount,  String text,  PostSubType subType,  DateTime createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Post() when $default != null:
 return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,_that.status,_that.likeCount,_that.commentCount,_that.viewCount,_that.shareCount,_that.saveCount,_that.text,_that.subType,_that.createdAt);case _:
@@ -1175,12 +1175,12 @@ return $default(_that.id,_that.type,_that.creatorId,_that.visibility,_that.tier,
 @JsonSerializable()
 
 class _Post implements Post {
-  const _Post({required this.id, this.type = ContentType.post, required this.creatorId, this.visibility = Visibility.public_, this.tier = ContentTier.free, this.status = ContentStatus.active, this.likeCount = 0, this.commentCount = 0, this.viewCount = 0, this.shareCount = 0, this.saveCount = 0, required this.text, this.subType = PostSubType.standard, required this.createdAt});
+  const _Post({required this.id, this.type = ContentType.post, @JsonKey(readValue: _readCreatorId) required this.creatorId, this.visibility = Visibility.public_, this.tier = ContentTier.free, this.status = ContentStatus.active, this.likeCount = 0, this.commentCount = 0, this.viewCount = 0, this.shareCount = 0, this.saveCount = 0, required this.text, this.subType = PostSubType.standard, required this.createdAt});
   factory _Post.fromJson(Map<String, dynamic> json) => _$PostFromJson(json);
 
 @override final  String id;
 @override@JsonKey() final  ContentType type;
-@override final  String creatorId;
+@override@JsonKey(readValue: _readCreatorId) final  String creatorId;
 @override@JsonKey() final  Visibility visibility;
 @override@JsonKey() final  ContentTier tier;
 @override@JsonKey() final  ContentStatus status;
@@ -1226,7 +1226,7 @@ abstract mixin class _$PostCopyWith<$Res> implements $PostCopyWith<$Res> {
   factory _$PostCopyWith(_Post value, $Res Function(_Post) _then) = __$PostCopyWithImpl;
 @override @useResult
 $Res call({
- String id, ContentType type, String creatorId, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, String text, PostSubType subType, DateTime createdAt
+ String id, ContentType type,@JsonKey(readValue: _readCreatorId) String creatorId, Visibility visibility, ContentTier tier, ContentStatus status, int likeCount, int commentCount, int viewCount, int shareCount, int saveCount, String text, PostSubType subType, DateTime createdAt
 });
 
 
