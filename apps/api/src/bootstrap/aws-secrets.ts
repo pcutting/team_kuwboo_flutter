@@ -47,6 +47,16 @@ const SECRET_MAPPINGS: ReadonlyArray<SecretMapping> = [
       secretAccessKey: 'SES_SECRET_ACCESS_KEY',
     },
   },
+  // Media pipeline: S3 bucket + CloudFront domain consumed by
+  // apps/api/src/modules/media/providers/s3.provider.ts. JSON keys already
+  // match the env-var names, so the mapping is an identity.
+  {
+    secretId: '/kuwboo/media',
+    fields: {
+      AWS_S3_BUCKET: 'AWS_S3_BUCKET',
+      AWS_CLOUDFRONT_DOMAIN: 'AWS_CLOUDFRONT_DOMAIN',
+    },
+  },
   // Future: /kuwboo/database, /kuwboo/redis, /kuwboo/jwt can join here
   // once the NestJS config modules are migrated off env-var-per-setting.
 ];
