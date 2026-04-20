@@ -18,11 +18,17 @@ export class SellerRating {
   @PrimaryKey({ type: 'uuid' })
   id: string = randomUUID();
 
-  @ManyToOne(() => User)
-  seller!: User;
+  /**
+   * Nullable so marketplace reputation survives a hard-purge of either
+   * party (Migration20260420_account_deletion_financial_fk_nullability
+   * widens both FKs to ON DELETE SET NULL). In practice both fields
+   * are set on every new row.
+   */
+  @ManyToOne(() => User, { nullable: true })
+  seller?: User;
 
-  @ManyToOne(() => User)
-  buyer!: User;
+  @ManyToOne(() => User, { nullable: true })
+  buyer?: User;
 
   @ManyToOne(() => Content)
   product!: Content;

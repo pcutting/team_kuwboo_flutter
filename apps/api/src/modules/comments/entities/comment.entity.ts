@@ -25,8 +25,14 @@ export class Comment {
   @ManyToOne(() => Content)
   content!: Content;
 
-  @ManyToOne(() => User)
-  author!: User;
+  /**
+   * Nullable so comment threads survive a soft-delete or hard-purge
+   * of the author (Migration20260420_account_deletion_fk_nullability
+   * widens the FK to ON DELETE SET NULL). In practice every new row
+   * is written with a live author.
+   */
+  @ManyToOne(() => User, { nullable: true })
+  author?: User;
 
   @Property({ type: 'text' })
   text!: string;
