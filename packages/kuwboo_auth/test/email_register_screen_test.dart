@@ -121,102 +121,11 @@ void main() {
       );
     });
 
-    // Skipped: flaky in the widget-test harness — TextFormField +
-    // AutofillHints + multiple password fields trips a FocusScope dispose
-    // assertion. Feature is exercised end-to-end; stabilise harness in
-    // follow-up.
-    testWidgets(
-        'Create Account enables once email, passwords, and both '
-        'checkboxes are satisfied',
-        skip: true,
-        (tester) async {
-      await _pumpAtPhoneSize(tester, const AuthEmailRegisterScreen());
-
-      final fields = find.byType(TextFormField);
-      // Order: email, password, confirm password, name.
-      expect(fields, findsNWidgets(4));
-
-      await tester.enterText(fields.at(0), 'phil@example.com');
-      await tester.enterText(fields.at(1), 'correcthorse1');
-      await tester.enterText(fields.at(2), 'correcthorse1');
-      await tester.pump();
-
-      // Still disabled — checkboxes are unticked.
-      expect(
-        _props(tester, AuthIds.registerSubmit).enabled,
-        isFalse,
-        reason:
-            'Submit should stay disabled with valid form but unticked consents',
-      );
-
-      await tester.tap(_bySemId(AuthIds.registerAgeConfirm).first);
-      await tester.pump();
-      await tester.tap(_bySemId(AuthIds.registerLegalAccept).first);
-      await tester.pump();
-
-      expect(
-        _props(tester, AuthIds.registerSubmit).enabled,
-        isTrue,
-        reason:
-            'Submit must enable once both checkboxes are ticked and the '
-            'form is valid.',
-      );
-    });
-
-    // Skipped: same focus-scope harness flake as the enable-check test.
-    testWidgets(
-        'tapping Submit dispatches onEmailRegister with the entered '
-        'values',
-        skip: true,
-        (tester) async {
-      EmailRegisterRequest? captured;
-      final callbacks = AuthCallbacks(
-        onEmailRegister: (req) async => captured = req,
-      );
-
-      await _pumpAtPhoneSize(
-        tester,
-        const AuthEmailRegisterScreen(),
-        callbacks: callbacks,
-      );
-
-      final fields = find.byType(TextFormField);
-      await tester.enterText(fields.at(0), 'phil@example.com');
-      await tester.enterText(fields.at(1), 'correcthorse1');
-      await tester.enterText(fields.at(2), 'correcthorse1');
-      await tester.enterText(fields.at(3), 'Phil');
-      await tester.pump();
-
-      await tester.tap(_bySemId(AuthIds.registerAgeConfirm).first);
-      await tester.pump();
-      await tester.tap(_bySemId(AuthIds.registerLegalAccept).first);
-      await tester.pump();
-
-      await tester.tap(_bySemId(AuthIds.registerSubmit).first);
-      await tester.pumpAndSettle();
-
-      expect(captured, isNotNull);
-      expect(captured!.email, 'phil@example.com');
-      expect(captured!.password, 'correcthorse1');
-      expect(captured!.name, 'Phil');
-      expect(captured!.ageConfirmed, isTrue);
-      expect(captured!.legalAccepted, isTrue);
-    });
-
-    // Skipped: GoRouter page replacement after context.go trips a
-    // deactivated-ancestor lookup on focus nodes in the test harness.
-    // Feature works; stabilise harness in follow-up.
-    testWidgets('tapping the "Log in" link navigates to login screen',
-        skip: true,
-        (tester) async {
-      await _pumpAtPhoneSize(tester, const AuthEmailRegisterScreen());
-
-      await tester.ensureVisible(_bySemId(AuthIds.registerLoginLink).first);
-      await tester.pumpAndSettle();
-      await tester.tap(_bySemId(AuthIds.registerLoginLink).first);
-      await tester.pumpAndSettle();
-
-      expect(find.text('login-screen'), findsOneWidget);
-    });
+    // Three additional tests — enable-on-consent, submit-dispatch, and
+    // "Log in" navigation — live in
+    // `apps/mobile/integration_test/auth_email_register_test.dart`.
+    // Under `flutter test`, `TextFormField` + `AutofillHints` + GoRouter
+    // page replacement trips a `_FocusInheritedScope` dispose assertion
+    // that doesn't reproduce under the real integration-test binding.
   });
 }
