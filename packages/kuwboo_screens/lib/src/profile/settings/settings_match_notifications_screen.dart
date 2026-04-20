@@ -18,11 +18,19 @@ class _SettingsMatchNotificationsScreenState
   bool _likedYou = false;
   bool _superLike = true;
 
+  void _save() {
+    // TODO(api): wire to /users/me/preferences once the UserPreferences
+    // schema has per-match-event fields.
+    saveAndPop(context, 'Saved on this device');
+  }
+
   @override
   Widget build(BuildContext context) {
     return SettingsPage(
       title: 'Match Notifications',
+      footer: SettingsPrimaryButton(label: 'Save', onTap: _save),
       children: [
+        const SettingsPendingBackendNotice(),
         const SettingsSectionLabel('Match activity'),
         SettingsCard(
           children: [

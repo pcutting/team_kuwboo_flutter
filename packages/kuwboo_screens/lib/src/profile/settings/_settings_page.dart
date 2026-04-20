@@ -45,6 +45,47 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
+/// Honest banner for settings screens whose changes aren't persisted to
+/// the backend yet. Displayed at the top of the screen. Keeps the
+/// prototype coherent — users don't assume the toggle they just flipped
+/// travelled with them across devices.
+class SettingsPendingBackendNotice extends StatelessWidget {
+  const SettingsPendingBackendNotice({super.key, this.message});
+
+  /// Override copy — defaults to a generic "device-local" note suitable
+  /// for every notifications / preferences screen.
+  final String? message;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ProtoTheme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: theme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(theme.radiusLg),
+        border: Border.all(color: theme.primary.withValues(alpha: 0.20)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline_rounded, size: 18, color: theme.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message ??
+                  'Preferences sync is rolling out this month. Your choices '
+                  'here are remembered on this device for now.',
+              style: theme.caption.copyWith(color: theme.text),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Group header above a card section (matches the Profile > Settings look).
 class SettingsSectionLabel extends StatelessWidget {
   const SettingsSectionLabel(this.label, {super.key});

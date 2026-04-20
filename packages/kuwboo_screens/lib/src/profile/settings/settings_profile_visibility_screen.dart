@@ -28,6 +28,7 @@ class _SettingsProfileVisibilityScreenState
       title: 'Profile Visibility',
       footer: SettingsPrimaryButton(label: 'Save', onTap: _save),
       children: [
+        const SettingsPendingBackendNotice(),
         _RadioTile(
           label: 'Public',
           caption: 'Anyone can see your profile and posts.',

@@ -18,11 +18,19 @@ class _SettingsMessageNotificationsScreenState
   bool _previewContent = true;
   bool _sound = true;
 
+  void _save() {
+    // TODO(api): wire to /users/me/preferences once the UserPreferences
+    // schema has the per-message-type + sound/preview fields.
+    saveAndPop(context, 'Saved on this device');
+  }
+
   @override
   Widget build(BuildContext context) {
     return SettingsPage(
       title: 'Message Notifications',
+      footer: SettingsPrimaryButton(label: 'Save', onTap: _save),
       children: [
+        const SettingsPendingBackendNotice(),
         const SettingsSectionLabel('Deliver notifications for'),
         SettingsCard(
           children: [

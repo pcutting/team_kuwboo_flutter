@@ -29,6 +29,11 @@ class _SettingsBlockedUsersScreenState
     return SettingsPage(
       title: 'Blocked Users',
       children: [
+        const SettingsPendingBackendNotice(
+          message:
+              'Blocking is in design. Use "Report" on a profile in the '
+              'meantime — it reaches the safety team directly.',
+        ),
         if (_blocked.isEmpty)
           Container(
             margin: const EdgeInsets.only(top: 40),
