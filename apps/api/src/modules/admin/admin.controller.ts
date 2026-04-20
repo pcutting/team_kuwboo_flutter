@@ -199,6 +199,14 @@ export class AdminController {
     return this.adminService.restoreContent(id, adminUserId);
   }
 
+  @Post('users/:id/restore')
+  async restoreUser(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('id') adminUserId: string,
+  ) {
+    return this.adminService.restoreUser(adminUserId, id);
+  }
+
   // --- Comment Moderation ---
 
   @Get('comments')

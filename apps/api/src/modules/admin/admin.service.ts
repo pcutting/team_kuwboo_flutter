@@ -1,6 +1,19 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+  ConflictException,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import {
+  ACCOUNT_ANONYMIZE_QUEUE,
+  ACCOUNT_ANONYMIZE_DELAY_MS,
+} from '../users/workers/account-anonymize.queue';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { User } from '../users/entities/user.entity';
 import { Media } from '../media/entities/media.entity';
@@ -23,6 +36,7 @@ import { EnforceAction } from './dto/enforce-report.dto';
 export class AdminService {
   constructor(
     @InjectQueue('bot-actions') private readonly botQueue: Queue,
+    @InjectQueue(ACCOUNT_ANONYMIZE_QUEUE) private readonly anonymizeQueue: Queue,
     private readonly em: EntityManager,
     private readonly auditService: AdminAuditService,
     private readonly sessionsService: SessionsService,
@@ -690,5 +704,68 @@ export class AdminService {
     );
 
     return { notifiedCount: users.length };
+  }
+
+  // --- Grace-period user restore ---
+
+  async restoreUser(adminId: string, userId: string): Promise<User> {
+    const logger = new Logger('AdminService.restoreUser');
+
+    const user = await this.em.findOne(
+      User,
+      { id: userId },
+      { filters: { notDeleted: false } },
+    );
+    if (!user) throw new NotFoundException('User not found');
+    if (!user.deletedAt) throw new ConflictException('User is not pending deletion');
+
+    const graceCutoff = new Date(Date.now() - ACCOUNT_ANONYMIZE_DELAY_MS);
+    if (user.deletedAt < graceCutoff) {
+      throw new HttpException(
+        'Grace period has expired; account is not recoverable',
+        HttpStatus.GONE,
+      );
+    }
+
+    const userDeletedAt = user.deletedAt;
+    const jobId = `anon-${userId}`;
+    try {
+      const job = await this.anonymizeQueue.getJob(jobId);
+      if (job) {
+        await job.remove();
+        logger.log(`Cancelled anonymize job ${jobId}`);
+      } else {
+        logger.warn(`Job ${jobId} not found — proceeding with restore`);
+      }
+    } catch (err) {
+      logger.warn(
+        `Failed to remove job ${jobId}: ${(err as Error).message} — proceeding`,
+      );
+    }
+
+    user.deletedAt = undefined;
+
+    const windowStart = new Date(userDeletedAt.getTime() - 5 * 60 * 1000);
+    const windowEnd = new Date(userDeletedAt.getTime() + 5 * 60 * 1000);
+    const softDeletedContent = await this.em.find(
+      Content,
+      {
+        creator: userId,
+        deletedAt: { $gte: windowStart, $lte: windowEnd },
+      },
+      { filters: { notDeleted: false } },
+    );
+    for (const c of softDeletedContent) {
+      c.deletedAt = undefined;
+      c.status = ContentStatus.ACTIVE;
+    }
+
+    await this.em.flush();
+    await this.auditService.log(adminId, 'RESTORE_USER', 'USER', userId, {
+      restoredAt: new Date().toISOString(),
+      contentRestoredCount: softDeletedContent.length,
+    });
+
+    return user;
   }
 }
