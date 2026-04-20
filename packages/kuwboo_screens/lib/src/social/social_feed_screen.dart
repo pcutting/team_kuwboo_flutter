@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kuwboo_models/kuwboo_models.dart';
 import 'package:kuwboo_shell/kuwboo_shell.dart';
 
@@ -525,8 +526,14 @@ class _PostCardState extends ConsumerState<_PostCard> {
                   label: 'Comment',
                   value: '${post.commentCount}',
                   child: ProtoPressButton(
-                    onTap: () => ProtoToast.show(
-                        context, theme.icons.chatBubbleOutline, 'Comments'),
+                    // Reuse the video comments sheet — it already handles
+                    // the `{'contentId': ...}` extra param and speaks the
+                    // same CommentsApi. Using GoRouter directly because
+                    // PrototypeStateProvider.push doesn't plumb `extra`.
+                    onTap: () => GoRouter.of(context).push(
+                      ProtoRoutes.videoComments,
+                      extra: {'contentId': post.id},
+                    ),
                     child: Row(
                       children: [
                         Icon(theme.icons.chatBubbleOutline,
