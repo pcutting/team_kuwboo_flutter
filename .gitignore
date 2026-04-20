@@ -34,10 +34,15 @@ coverage/
 .dart_tool/
 .vercel
 
-# Node.js (apps/api)
-apps/api/node_modules/
+# Node.js (apps/api, apps/admin, apps/slack-bridge, infrastructure/slack-runner)
+apps/*/node_modules/
+infrastructure/*/node_modules/
 apps/api/dist/
+*.tsbuildinfo
 .claude/
+
+# Playwright MCP session artefacts
+.playwright-mcp/
 
 # Apple signing keys — NEVER COMMIT
 *.p8
