@@ -38,14 +38,16 @@ describe('InterestSignalDecayCron', () => {
 
     expect(execute).toHaveBeenCalledTimes(2);
 
+    // MikroORM's Knex connection uses `?` positional bindings, not `$n` —
+    // see the comment in interest-signal-decay.cron.ts::decayOnce.
     const [decaySql, decayParams] = execute.mock.calls[0];
     expect(decaySql).toMatch(/update "interest_signals"/);
-    expect(decaySql).toMatch(/set "weight" = "weight" \* \$1/);
+    expect(decaySql).toMatch(/set "weight" = "weight" \* \?/);
     expect(decayParams).toEqual([DECAY_FACTOR]);
 
     const [pruneSql, pruneParams] = execute.mock.calls[1];
     expect(pruneSql).toMatch(/delete from "interest_signals"/);
-    expect(pruneSql).toMatch(/"weight" < \$1/);
+    expect(pruneSql).toMatch(/"weight" < \?/);
     expect(pruneParams).toEqual([PRUNE_THRESHOLD]);
 
     expect(result).toEqual({ decayed: 10, pruned: 2 });
