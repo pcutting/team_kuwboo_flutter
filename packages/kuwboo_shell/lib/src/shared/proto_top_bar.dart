@@ -1,13 +1,22 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/proto_theme.dart';
 import '../data/proto_demo_data.dart';
+import '../state/local_avatar_provider.dart';
 import '../state/proto_state_provider.dart';
 import '../routes/proto_routes.dart';
 import '../testing/shell_test_ids.dart';
 
 /// Interactive top bar matching the Kuwboo design.
 /// YoYo icon LEFT (doubles as area/list toggle), Profile avatar RIGHT, Chat with badge.
-class ProtoTopBar extends StatelessWidget {
+///
+/// [ConsumerWidget] so the profile avatar can watch [localAvatarProvider]
+/// and surface the registration-picked photo instead of the stock demo
+/// image. Keeps the signed-in user's face on screen everywhere the top
+/// bar appears, without threading the bytes through every caller.
+class ProtoTopBar extends ConsumerWidget {
   final ProtoModule activeModule;
   final bool transparent;
 
@@ -33,17 +42,18 @@ class ProtoTopBar extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final state = PrototypeStateProvider.of(context);
     final theme = ProtoTheme.of(context);
     final safeTop = MediaQuery.paddingOf(context).top;
+    final localAvatarBytes = ref.watch(localAvatarProvider);
 
     // In transparent/overlay mode, no background — radar flows behind everything.
     // Icons get frosted backings so they remain legible over arbitrary backgrounds.
     if (transparent) {
       return Padding(
         padding: EdgeInsets.only(top: safeTop + 6, left: 16, right: 16, bottom: 6),
-        child: _buildNavContent(context, state, theme, withShadows: true),
+        child: _buildNavContent(context, state, theme, localAvatarBytes, withShadows: true),
       );
     }
 
@@ -57,14 +67,15 @@ class ProtoTopBar extends StatelessWidget {
           ),
         ),
       ),
-      child: _buildNavContent(context, state, theme),
+      child: _buildNavContent(context, state, theme, localAvatarBytes),
     );
   }
 
   Widget _buildNavContent(
     BuildContext context,
     PrototypeStateProvider state,
-    ProtoTheme theme, {
+    ProtoTheme theme,
+    Uint8List? localAvatarBytes, {
     bool withShadows = false,
   }) {
     // When transparent, give icons a subtle frosted backing so they pop over radar
@@ -204,10 +215,12 @@ class ProtoTopBar extends StatelessWidget {
                               : theme.primary.withValues(alpha: 0.3),
                           width: 2,
                         ),
-                        image: const DecorationImage(
-                          image: NetworkImage(
-                            ProtoDemoData.currentUserAvatar,
-                          ),
+                        image: DecorationImage(
+                          image: localAvatarBytes != null
+                              ? MemoryImage(localAvatarBytes) as ImageProvider
+                              : const NetworkImage(
+                                  ProtoDemoData.currentUserAvatar,
+                                ),
                           fit: BoxFit.cover,
                         ),
                       ),
