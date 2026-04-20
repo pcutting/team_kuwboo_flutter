@@ -32,6 +32,13 @@ class KuwbooApiClient {
   final Dio _dio;
   final FlutterSecureStorage _secureStorage;
 
+  /// Invoked whenever [clearTokens] runs — explicit logout, refresh failure,
+  /// or storage purge. Lets an auth-state holder (e.g. AuthNotifier on web)
+  /// snap its in-memory `isAuthenticated` view to `false` immediately instead
+  /// of silently 401-ing on every subsequent call while the UI still thinks
+  /// it's signed in.
+  VoidCallback? onTokensCleared;
+
   // In-memory fallback for environments where secure storage is broken
   // (notably the iOS Simulator, where flutter_secure_storage throws
   // PlatformException -34018 because the simulator process lacks a
@@ -94,6 +101,9 @@ class KuwbooApiClient {
         _secureStorage.delete(key: _kRefreshTokenKey),
       ]);
     } catch (_) {/* see saveTokens — storage may be unavailable */}
+    try {
+      onTokensCleared?.call();
+    } catch (_) {/* never let a listener throw poison the clear path */}
   }
 
   /// Read the current access token. Prefers in-memory (set by the most

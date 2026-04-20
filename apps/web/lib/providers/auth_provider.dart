@@ -56,19 +56,37 @@ class AuthState {
 /// silently "succeeding".
 class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier(this._ref) : super(const AuthState(isLoading: true)) {
-    _init();
+    // Install the token-cleared hook BEFORE kicking off hydration so the
+    // interceptor can't fire a refresh failure between construction and
+    // the hook being wired up.
+    _client.onTokensCleared = _handleTokensCleared;
+    ready = _init();
   }
 
   final Ref _ref;
+
+  /// Completes once the initial localStorage hydrate + /users/me probe has
+  /// finished. `main()` awaits this before `runApp()` so the router's very
+  /// first redirect evaluation sees populated auth state instead of the
+  /// `isLoading: true` sentinel — killing the welcome-screen flash on
+  /// refresh.
+  late final Future<void> ready;
 
   AuthApi get _authApi => _ref.read(authApiProvider);
   UsersApi get _usersApi => _ref.read(realUsersApiProvider);
   KuwbooApiClient get _client => _ref.read(realApiClientProvider);
 
-  /// Hydrate auth state from secure storage on startup. If a valid token
-  /// pair is present, fetch the current user to populate onboarding
-  /// progress. A 401 here will clear tokens on the next authenticated
-  /// call via the interceptor; we degrade silently so startup never hangs.
+  /// Hydrate auth state from secure storage on startup.
+  ///
+  /// Distinguishes three outcomes:
+  /// - No stored tokens → unauthenticated.
+  /// - Stored tokens + /users/me 401/404 → token is invalid; the interceptor
+  ///   has already tried (and failed) to refresh, so we drop to unauth.
+  /// - Stored tokens + /users/me 5xx / network / timeout → the token is
+  ///   probably fine, backend is just unreachable. Stay authenticated with
+  ///   `user: null` and `isNewUser: false` so the router sends us to the
+  ///   home screen instead of booting us into onboarding with a null user.
+  ///   The next authenticated action (or `refreshUser()`) reconciles.
   Future<void> _init() async {
     try {
       final access = await _client.getAccessToken();
@@ -77,22 +95,55 @@ class AuthNotifier extends StateNotifier<AuthState> {
         state = AuthState.unauthenticated;
         return;
       }
+
       User? user;
+      var transientMeFailure = false;
       try {
         user = await _usersApi.me();
+      } on DioException catch (e) {
+        final status = e.response?.statusCode;
+        if (status == 401 || status == 404) {
+          // Token bad AND refresh failed (the interceptor would have
+          // retried on 401 before bubbling here). Tokens have already
+          // been cleared by _refreshTokens() on its way out.
+          state = AuthState.unauthenticated;
+          return;
+        }
+        transientMeFailure = true;
       } catch (_) {
-        // Stay authenticated on transient errors; a real 401 will clear
-        // tokens on the next call.
+        transientMeFailure = true;
       }
+
+      // Belt-and-braces: if the interceptor cleared tokens during me()
+      // via a refresh failure, our onTokensCleared hook has already
+      // snapped state to unauthenticated. Respect that instead of
+      // clobbering it with a stale read of `access`/`refresh`.
+      final accessAfter = await _client.getAccessToken();
+      if (accessAfter == null) {
+        state = AuthState.unauthenticated;
+        return;
+      }
+
       state = AuthState(
         accessToken: access,
         refreshToken: refresh,
         user: user,
-        isNewUser: user?.onboardingProgress != OnboardingProgress.complete,
+        isNewUser: !transientMeFailure &&
+            user?.onboardingProgress != OnboardingProgress.complete,
       );
     } catch (_) {
       state = AuthState.unauthenticated;
     }
+  }
+
+  /// Fires when the API client's interceptor clears tokens (refresh failed
+  /// or a manual storage purge). Without this hook, a stale token that
+  /// silently invalidates leaves the UI stuck in an "authenticated" view
+  /// while every call 401s — Phil's #3 session-loss mode.
+  void _handleTokensCleared() {
+    if (!mounted) return;
+    if (!state.isAuthenticated) return;
+    state = AuthState.unauthenticated;
   }
 
   Future<SendOtpResult> sendPhoneOtp(String phone) async {
