@@ -1019,7 +1019,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "unique": false,
           "length": null,
           "precision": null,
@@ -1102,7 +1102,7 @@
             "id"
           ],
           "updateRule": "cascade",
-          "deleteRule": "no action"
+          "deleteRule": "set null"
         }
       },
       "nativeEnums": {},
@@ -1930,7 +1930,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "unique": false,
           "length": null,
           "precision": null,
@@ -2091,7 +2091,7 @@
             "id"
           ],
           "updateRule": "cascade",
-          "deleteRule": "no action"
+          "deleteRule": "set null"
         },
         "comments_content_id_foreign": {
           "columnNames": [
@@ -4677,6 +4677,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "transcoded_url": {
+          "name": "transcoded_url",
+          "type": "varchar(1024)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 1024,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
         }
       },
       "name": "media",
@@ -4752,7 +4768,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "unique": false,
           "length": null,
           "precision": null,
@@ -4849,7 +4865,7 @@
             "id"
           ],
           "updateRule": "cascade",
-          "deleteRule": "no action"
+          "deleteRule": "set null"
         },
         "messages_thread_id_foreign": {
           "columnNames": [
@@ -5570,7 +5586,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "unique": false,
           "length": null,
           "precision": null,
@@ -5586,7 +5602,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "unique": true,
           "length": null,
           "precision": null,
@@ -5699,7 +5715,7 @@
             "id"
           ],
           "updateRule": "cascade",
-          "deleteRule": "no action"
+          "deleteRule": "set null"
         },
         "seller_ratings_product_id_foreign": {
           "columnNames": [
@@ -5725,7 +5741,7 @@
             "id"
           ],
           "updateRule": "cascade",
-          "deleteRule": "no action"
+          "deleteRule": "set null"
         }
       },
       "nativeEnums": {},
@@ -6737,7 +6753,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "unique": true,
           "length": null,
           "precision": null,
@@ -6911,7 +6927,7 @@
             "id"
           ],
           "updateRule": "cascade",
-          "deleteRule": "no action"
+          "deleteRule": "set null"
         }
       },
       "nativeEnums": {},

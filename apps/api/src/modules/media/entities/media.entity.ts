@@ -19,6 +19,9 @@ export class Media {
   @Property({ type: 'varchar', length: 1024, nullable: true })
   thumbnailUrl?: string;
 
+  @Property({ type: 'varchar', length: 1024, nullable: true })
+  transcodedUrl?: string;
+
   @Enum({ items: () => MediaType })
   type!: MediaType;
 
