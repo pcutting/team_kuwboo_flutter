@@ -1,7 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  HeadObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { Readable } from 'stream';
 
 @Injectable()
 export class S3Provider {
@@ -40,6 +46,54 @@ export class S3Provider {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * Upload a derivative asset (thumbnail, transcode, etc.) to S3.
+   * Used by the media processing worker after it generates artifacts
+   * from the original upload. Swallows nothing — callers must surface
+   * failures so BullMQ retry logic fires.
+   */
+  async putObject(
+    key: string,
+    body: Buffer | Readable,
+    contentType: string,
+  ): Promise<void> {
+    try {
+      await this.client.send(
+        new PutObjectCommand({
+          Bucket: this.bucket,
+          Key: key,
+          Body: body,
+          ContentType: contentType,
+        }),
+      );
+    } catch (err) {
+      throw new InternalServerErrorException(
+        `S3 putObject failed for ${key}: ${(err as Error).message}`,
+      );
+    }
+  }
+
+  /**
+   * Fetch an S3 object as a Node.js Readable. Used by the media
+   * processing worker to stream originals into ffmpeg/sharp without
+   * buffering the full object in memory.
+   */
+  async getObjectStream(key: string): Promise<Readable> {
+    try {
+      const response = await this.client.send(
+        new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+      );
+      if (!response.Body) {
+        throw new Error('S3 response missing Body');
+      }
+      return response.Body as Readable;
+    } catch (err) {
+      throw new InternalServerErrorException(
+        `S3 getObject failed for ${key}: ${(err as Error).message}`,
+      );
     }
   }
 

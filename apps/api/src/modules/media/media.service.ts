@@ -1,11 +1,17 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { randomUUID } from 'crypto';
 import { Media } from './entities/media.entity';
 import { S3Provider } from './providers/s3.provider';
 import { PresignedUrlRequestDto, PresignedUrlResponseDto } from './dto/presigned-url.dto';
 import { User } from '../users/entities/user.entity';
 import { MediaType, MediaStatus } from '../../common/enums';
+import {
+  MEDIA_PROCESSING_QUEUE,
+  MediaProcessJob,
+} from './workers/media-processing.queue';
 
 const SIZE_LIMITS: Record<MediaType, number> = {
   [MediaType.IMAGE]: 10 * 1024 * 1024, // 10MB
@@ -24,6 +30,8 @@ export class MediaService {
   constructor(
     private readonly em: EntityManager,
     private readonly s3: S3Provider,
+    @InjectQueue(MEDIA_PROCESSING_QUEUE)
+    private readonly queue: Queue<MediaProcessJob>,
   ) {}
 
   async generatePresignedUrl(
@@ -74,11 +82,19 @@ export class MediaService {
       throw new BadRequestException('File not uploaded to S3');
     }
 
-    // Set URL and mark as ready (skip BullMQ processing for now — add in future PR)
-    media.url = this.s3.getPublicUrl(media.s3Key);
-    media.status = MediaStatus.READY;
+    // Hand off to the async processing worker. Status stays
+    // PROCESSING until the worker succeeds (→ READY) or exhausts
+    // retries (→ FAILED). The worker also populates thumbnailUrl,
+    // transcodedUrl (video), dimensions, and duration.
+    await this.queue.add(
+      'process',
+      { mediaId: media.id },
+      {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 5000 },
+      },
+    );
 
-    await this.em.flush();
     return media;
   }
 
