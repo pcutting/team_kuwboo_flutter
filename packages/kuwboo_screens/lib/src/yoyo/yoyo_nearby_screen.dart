@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -58,9 +59,14 @@ class _StopButtonThumbShape extends SliderComponentShape {
 /// Opposing diagonal corners share the same radius — tight (33%) on
 /// top-left / bottom-right, loose (50%) on top-right / bottom-left —
 /// producing a distinctive pebble / organic silhouette.
+///
+/// If [imageBytes] is non-null it's used instead of [imageUrl]; this lets
+/// the current user's registration-picked photo render without a network
+/// round-trip (see [_YouAvatar]).
 class _OrganicAvatar extends StatelessWidget {
   final double size;
   final String imageUrl;
+  final Uint8List? imageBytes;
   final Color? borderColor;
   final double borderWidth;
   final List<BoxShadow> boxShadow;
@@ -68,6 +74,7 @@ class _OrganicAvatar extends StatelessWidget {
   const _OrganicAvatar({
     required this.size,
     required this.imageUrl,
+    this.imageBytes,
     this.borderColor,
     this.borderWidth = 0,
     this.boxShadow = const [],
@@ -84,6 +91,9 @@ class _OrganicAvatar extends StatelessWidget {
       bottomLeft: Radius.circular(loose),
       bottomRight: Radius.circular(tight),
     );
+    final ImageProvider image = imageBytes != null
+        ? MemoryImage(imageBytes!)
+        : NetworkImage(imageUrl);
     return Container(
       width: total,
       height: total,
@@ -98,14 +108,44 @@ class _OrganicAvatar extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: radius,
-            image: DecorationImage(
-              image: NetworkImage(imageUrl),
-              fit: BoxFit.cover,
-            ),
+            image: DecorationImage(image: image, fit: BoxFit.cover),
           ),
           clipBehavior: Clip.antiAlias,
         ),
       ),
+    );
+  }
+}
+
+/// The current-user "You" marker on the radar. Watches
+/// [localAvatarProvider] so a registration-picked (or settings-picked)
+/// photo surfaces here without any backend round-trip. Falls back to the
+/// demo unsplash avatar when no bytes are available — this keeps the
+/// unauthenticated prototype walkthroughs visually populated.
+class _YouAvatar extends ConsumerWidget {
+  const _YouAvatar({
+    required this.size,
+    this.borderColor,
+    this.borderWidth = 0,
+    this.boxShadow = const [],
+  });
+
+  final double size;
+  final Color? borderColor;
+  final double borderWidth;
+  final List<BoxShadow> boxShadow;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bytes = ref.watch(localAvatarProvider);
+    return _OrganicAvatar(
+      size: size,
+      imageBytes: bytes,
+      imageUrl:
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+      borderColor: borderColor,
+      borderWidth: borderWidth,
+      boxShadow: boxShadow,
     );
   }
 }
@@ -1573,9 +1613,8 @@ class _RadarArea extends StatelessWidget {
                       top: cy - 29,
                       child: Column(
                         children: [
-                          _OrganicAvatar(
+                          _YouAvatar(
                             size: 52,
-                            imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
                             borderColor: theme.surface,
                             borderWidth: 3,
                             boxShadow: [
@@ -1766,9 +1805,8 @@ class _HiddenRadarArea extends StatelessWidget {
                             children: [
                               Opacity(
                                 opacity: 0.6,
-                                child: _OrganicAvatar(
+                                child: _YouAvatar(
                                   size: 52,
-                                  imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
                                   borderColor: theme.surface,
                                   borderWidth: 3,
                                   boxShadow: [
@@ -2792,9 +2830,8 @@ class _LegacyRadarArea extends StatelessWidget {
                             children: [
                               Opacity(
                                 opacity: state.isYoyoHidden ? 0.6 : 1.0,
-                                child: _OrganicAvatar(
+                                child: _YouAvatar(
                                   size: 52,
-                                  imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
                                   borderColor: theme.surface,
                                   borderWidth: 3,
                                   boxShadow: [
