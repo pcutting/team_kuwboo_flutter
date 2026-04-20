@@ -461,8 +461,10 @@ class _ConsentCheckbox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       identifier: identifier,
+      // `checked` models this as a checkbox to accessibility tooling.
+      // Flutter asserts that a semantics node cannot be both `checked`
+      // and `toggled` at the same time — only one is allowed per node.
       checked: value,
-      toggled: value,
       button: true,
       container: true,
       child: InkWell(
