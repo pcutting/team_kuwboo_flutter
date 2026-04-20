@@ -26,6 +26,7 @@ import {
   OnboardingProgress,
   TrustSignalType,
 } from '../../common/enums';
+import { FRESH_TOKEN_MAX_AGE_SECONDS } from '../../common/guards/fresh-token.guard';
 
 const PASSWORD_BCRYPT_ROUNDS = 10;
 
@@ -61,6 +62,22 @@ export interface EmailOwnedChallenge {
   status: 'email_owned';
   challengeId: string;
   email: string;
+}
+
+export interface ElevatedTokenResponse {
+  /**
+   * Short-lived JWT (same signing key + shape as a normal access token)
+   * whose `iat` claim is wall-clock now, so it satisfies
+   * `FreshTokenGuard` for the ~15 minutes following issuance.
+   */
+  elevatedToken: string;
+  /**
+   * ISO 8601 wall-clock timestamp at which `elevatedToken` ceases to be
+   * considered "fresh" by `FreshTokenGuard`. The raw JWT `exp` claim
+   * matches this value; exposing it as a formatted string means the
+   * client doesn't have to decode the token to know when to re-prompt.
+   */
+  expiresAt: string;
 }
 
 @Injectable()
@@ -668,6 +685,81 @@ export class AuthService {
     // Persist the email-verified flag on the user row.
     await this.usersService.flushUser(user.id);
     return { emailVerified: true };
+  }
+
+  /**
+   * Re-prove ownership of an SSO-only account via an email OTP. Issues
+   * an elevated access token (same signing key + shape as a normal
+   * access token, wall-clock `iat`) that `FreshTokenGuard` will accept
+   * for the next 15 minutes — the mobile client then substitutes it
+   * into the `Authorization` header when calling a privileged endpoint
+   * such as `DELETE /users/me`.
+   *
+   * The flow for a Google/Apple user who hit a `stale_token` 401:
+   *   1. `POST /auth/email/send-otp` with their account email
+   *   2. `POST /auth/confirm-identity` with `{ email, otpCode }`
+   *   3. Retry the privileged request using the returned `elevatedToken`
+   *
+   * Anti-enumeration: unknown email, missing OTP row, expired row,
+   * wrong code — all surface as the same 401 `invalid_otp` shape.
+   * Leaking which branch failed would give callers an email-existence
+   * oracle (mirrors the pattern in `emailLogin`, `emailForgotPassword`,
+   * `emailResetPassword`).
+   */
+  async confirmIdentity(
+    rawEmail: string,
+    otpCode: string,
+  ): Promise<ElevatedTokenResponse> {
+    const email = this.normaliseEmail(rawEmail);
+
+    const invalid = () =>
+      new UnauthorizedException({
+        code: 'invalid_otp',
+        message: 'Invalid or expired code.',
+      });
+
+    // Locate the user by their EMAIL credential. Using the credential
+    // table (not users.email) means we resolve the same row an SSO
+    // flow attached — matches how `googleLogin` / `appleLogin` decide
+    // whether an email is already owned.
+    const emailCred = await this.credentialsService.findByIdentity(
+      CredentialType.EMAIL,
+      email,
+    );
+    if (!emailCred) {
+      throw invalid();
+    }
+
+    try {
+      await this.verificationService.verifyEmailOtp(email, otpCode);
+    } catch {
+      // verifyEmailOtp differentiates "no pending row" (400) from
+      // "wrong code / too many attempts" (401); both collapse to the
+      // same 401 shape here.
+      throw invalid();
+    }
+
+    const user = emailCred.user;
+    return this.issueElevatedToken(user);
+  }
+
+  private issueElevatedToken(user: User): ElevatedTokenResponse {
+    const jti = randomUUID();
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const expSeconds = nowSeconds + FRESH_TOKEN_MAX_AGE_SECONDS;
+
+    const elevatedToken = this.jwtService.sign(
+      { sub: user.id, role: user.role, jti },
+      {
+        secret: this.config.get<string>('jwt.accessSecret'),
+        expiresIn: FRESH_TOKEN_MAX_AGE_SECONDS,
+      },
+    );
+
+    return {
+      elevatedToken,
+      expiresAt: new Date(expSeconds * 1000).toISOString(),
+    };
   }
 
   private async ssoConfirm(

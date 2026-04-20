@@ -10,7 +10,13 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiBody,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService, EmailOwnedChallenge } from './auth.service';
@@ -26,6 +32,7 @@ import {
 } from './dto/email-password.dto';
 import { GoogleLoginDto, AppleLoginDto } from './dto/social-login.dto';
 import { GoogleConfirmDto, AppleConfirmDto } from './dto/sso-confirm.dto';
+import { ConfirmIdentityDto } from './dto/confirm-identity.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -184,6 +191,56 @@ export class AuthController {
       dto.challengeId,
       reqMeta(req),
     );
+  }
+
+  /**
+   * Re-prove identity for SSO-only users before a privileged action.
+   *
+   * Companion endpoint to `FreshTokenGuard`: when a Google/Apple user
+   * hits `DELETE /users/me` (or any other guarded endpoint) with a JWT
+   * older than 15 minutes they get a 401 `stale_token`. Because they
+   * have no password hash, email+password re-auth is unavailable —
+   * this endpoint is their way back to a fresh token. They call
+   * `/auth/email/send-otp` first, then submit the code here.
+   *
+   * The returned `elevatedToken` is a normal-shape access token signed
+   * with the access-token secret; the client substitutes it into the
+   * `Authorization` header on the retry.
+   */
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 15 * 60 * 1000 } })
+  @Post('confirm-identity')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Re-prove identity for a privileged action',
+    description:
+      'Verifies an email OTP and returns a short-lived elevated JWT that ' +
+      'satisfies FreshTokenGuard for the next ~15 minutes. Designed for ' +
+      'SSO-only users (no password hash) who need to confirm account ' +
+      'deletion or similar privileged actions after their access token ' +
+      'has aged past the 15-minute freshness window.',
+  })
+  @ApiBody({ type: ConfirmIdentityDto })
+  @ApiResponse({
+    status: 200,
+    description: 'OTP accepted; elevated token returned.',
+    schema: {
+      type: 'object',
+      properties: {
+        elevatedToken: { type: 'string' },
+        expiresAt: { type: 'string', format: 'date-time' },
+      },
+      required: ['elevatedToken', 'expiresAt'],
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description:
+      'Invalid, expired, mismatched, or missing OTP (or unknown email). ' +
+      'Response shape does not distinguish the underlying cause.',
+  })
+  async confirmIdentity(@Body() dto: ConfirmIdentityDto) {
+    return this.authService.confirmIdentity(dto.email, dto.otpCode);
   }
 
   /**
