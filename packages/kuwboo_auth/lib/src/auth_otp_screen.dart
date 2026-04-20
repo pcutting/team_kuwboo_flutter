@@ -272,21 +272,27 @@ class _AuthOtpScreenState extends State<AuthOtpScreen> {
                       ),
                       const SizedBox(height: 40),
 
-                      // Six OTP digit boxes
+                      // Six OTP digit boxes — Expanded so they share the
+                      // available row width instead of using a fixed 48px
+                      // that overflows inside the 390-px PhoneFrame.
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(_otpLength, (i) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 5),
-                            child: _OtpBox(
-                              identifier: AuthIds.otpDigit(i),
-                              index: i,
-                              value: _controllers[i].text,
-                              controller: _controllers[i],
-                              focusNode: _focusNodes[i],
-                              onChanged: (v) => _onChanged(i, v),
-                              onKey: (event) => _onKey(i, event),
-                              theme: theme,
+                          return Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              child: _OtpBox(
+                                identifier: AuthIds.otpDigit(i),
+                                index: i,
+                                value: _controllers[i].text,
+                                controller: _controllers[i],
+                                focusNode: _focusNodes[i],
+                                onChanged: (v) => _onChanged(i, v),
+                                onKey: (event) => _onKey(i, event),
+                                theme: theme,
+                              ),
                             ),
                           );
                         }),
@@ -357,8 +363,9 @@ class _OtpBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final filled = controller.text.isNotEmpty;
     final active = focusNode.hasFocus;
+    // Width is driven by the parent Expanded; height stays fixed so the
+    // boxes feel rectangular rather than collapsing to a square.
     return SizedBox(
-      width: 48,
       height: 64,
       child: Semantics(
         identifier: identifier,
@@ -431,7 +438,7 @@ class _TestBuildBanner extends StatelessWidget {
             child: RichText(
               text: TextSpan(
                 style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
