@@ -24,7 +24,7 @@ Map<String, dynamic> _$FeedCreatorToJson(_FeedCreator instance) =>
 _Content _$ContentFromJson(Map<String, dynamic> json) => _Content(
   id: json['id'] as String?,
   type: $enumDecode(_$ContentTypeEnumMap, json['type']),
-  creatorId: json['creatorId'] as String?,
+  creatorId: _readCreatorId(json, 'creatorId') as String?,
   creator: json['creator'] == null
       ? null
       : FeedCreator.fromJson(json['creator'] as Map<String, dynamic>),
@@ -124,7 +124,7 @@ _Video _$VideoFromJson(Map<String, dynamic> json) => _Video(
   type:
       $enumDecodeNullable(_$ContentTypeEnumMap, json['type']) ??
       ContentType.video,
-  creatorId: json['creatorId'] as String,
+  creatorId: _readCreatorId(json, 'creatorId') as String,
   visibility:
       $enumDecodeNullable(_$VisibilityEnumMap, json['visibility']) ??
       Visibility.public_,
@@ -170,7 +170,7 @@ _Post _$PostFromJson(Map<String, dynamic> json) => _Post(
   type:
       $enumDecodeNullable(_$ContentTypeEnumMap, json['type']) ??
       ContentType.post,
-  creatorId: json['creatorId'] as String,
+  creatorId: _readCreatorId(json, 'creatorId') as String,
   visibility:
       $enumDecodeNullable(_$VisibilityEnumMap, json['visibility']) ??
       Visibility.public_,
