@@ -2,15 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'mock/package_overrides.dart';
 import 'prototype/app.dart';
+import 'providers/auth_provider.dart';
 import 'widgets/phone_frame.dart';
 
-void main() {
-  // Web prototype has no backend. We override every shared-package
-  // `apiClientProvider` with a mocked KuwbooApiClient so screens that
-  // would otherwise throw `UnimplementedError` render canned demo data.
+Future<void> main() async {
+  // Must initialize before any plugin call (flutter_secure_storage, etc.)
+  // and before spinning up the ProviderContainer that reads from them.
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Build the container up-front so we can await AuthNotifier hydration
+  // (localStorage read + /users/me) BEFORE the router evaluates its first
+  // redirect. Without this, GoRouter sees `isLoading: true`, paints the
+  // welcome screen for a frame, then refreshListenable flips to
+  // authenticated — producing a visible flash AND a race where an early
+  // tap during the flash discards the valid session.
+  final container = ProviderContainer(
+    overrides: buildWebPackageOverrides(),
+  );
+  try {
+    await container.read(authProvider.notifier).ready;
+  } catch (_) {/* non-fatal — boot with whatever state we have */}
+
   runApp(
-    ProviderScope(
-      overrides: buildWebPackageOverrides(),
+    UncontrolledProviderScope(
+      container: container,
       child: const KuwbooPrototypeWeb(),
     ),
   );
