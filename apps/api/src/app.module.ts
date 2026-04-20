@@ -26,6 +26,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 
 import { HealthModule } from './modules/health/health.module';
 import { UsersModule } from './modules/users/users.module';
+import { AccountModule } from './modules/users/account.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DevicesModule } from './modules/devices/devices.module';
 import { MediaModule } from './modules/media/media.module';
@@ -148,6 +149,7 @@ import { EmailModule } from './modules/email/email.module';
 
     HealthModule,
     UsersModule,
+    AccountModule,
     AuthModule,
     DevicesModule,
     MediaModule,

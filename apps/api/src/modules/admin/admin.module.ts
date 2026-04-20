@@ -18,5 +18,6 @@ import { ContentModule } from '../content/content.module';
   ],
   controllers: [AdminController],
   providers: [AdminService, AdminAuditService, AdminAnalyticsService],
+  exports: [AdminAuditService],
 })
 export class AdminModule {}

@@ -58,7 +58,7 @@ export class CommentsService {
   async softDelete(commentId: string, userId: string, isAdmin = false): Promise<void> {
     const comment = await this.em.findOne(Comment, { id: commentId }, { populate: ['author'] });
     if (!comment) throw new NotFoundException('Comment not found');
-    if (!isAdmin && comment.author.id !== userId) throw new ForbiddenException('Not the comment author');
+    if (!isAdmin && comment.author?.id !== userId) throw new ForbiddenException('Not the comment author');
     comment.deletedAt = new Date();
     await this.em.flush();
   }

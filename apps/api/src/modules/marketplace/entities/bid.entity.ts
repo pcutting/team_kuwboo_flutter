@@ -16,8 +16,14 @@ export class Bid {
   @ManyToOne(() => Auction)
   auction!: Auction;
 
-  @ManyToOne(() => User)
-  bidder!: User;
+  /**
+   * Nullable so auction history survives a hard-purge of the bidder
+   * (Migration20260420_account_deletion_financial_fk_nullability widens
+   * the FK to ON DELETE SET NULL). In practice every new bid is written
+   * with a live bidder.
+   */
+  @ManyToOne(() => User, { nullable: true })
+  bidder?: User;
 
   @Property({ type: 'int' })
   amountCents!: number;

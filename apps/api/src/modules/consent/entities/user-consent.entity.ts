@@ -11,8 +11,15 @@ export class UserConsent {
   @PrimaryKey({ type: 'uuid' })
   id: string = randomUUID();
 
-  @ManyToOne(() => User)
-  user!: User;
+  /**
+   * Nullable so the GDPR consent audit trail survives a hard-purge of
+   * the grantor's user row (Migration20260420_account_deletion_fk_nullability
+   * widens the FK to ON DELETE SET NULL). Still non-optional in
+   * practice — every new consent row is written with a live user — but
+   * the type must reflect the DB shape.
+   */
+  @ManyToOne(() => User, { nullable: true })
+  user?: User;
 
   @Enum({ items: () => ConsentType })
   consentType!: ConsentType;

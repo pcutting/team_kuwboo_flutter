@@ -27,9 +27,16 @@ const MIGRATION_ORDER = [
   'Migration20260414_interests',
   'Migration20260414_seed_interests',
   'Migration20260414_profile_completeness_nudge',
-  'Migration20260414_content_interest_tags',
+  // Renamed from Migration20260414_content_interest_tags in PR #165
+  // so FK deps sort after interests — the old name stayed in this
+  // list and only tripped the first time a new e2e spec ran against
+  // a fresh container.
+  'Migration20260415_content_interest_tags',
   'Migration20260417_auth_and_credibility',
+  'Migration20260419_event_content_columns',
   'Migration20260419_user_consent_user_agent',
+  'Migration20260420_account_deletion_fk_nullability',
+  'Migration20260420_account_deletion_financial_fk_nullability',
 ];
 
 async function runMigrationsIfNeeded(orm: MikroORM): Promise<void> {
