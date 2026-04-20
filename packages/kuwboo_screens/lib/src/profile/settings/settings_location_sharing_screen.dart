@@ -18,13 +18,22 @@ class _SettingsLocationSharingScreenState
   bool _social = false;
   bool _yoyo = true;
 
+  void _save() {
+    // TODO(api): PATCH /users/me/preferences with
+    // { locationSharing: { master, yoyo, dating, social } } once the
+    // backend UserPreferences entity gains a location-sharing map.
+    saveAndPop(context, 'Saved on this device');
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = ProtoTheme.of(context);
     final enabled = _master;
     return SettingsPage(
       title: 'Location Sharing',
+      footer: SettingsPrimaryButton(label: 'Save', onTap: _save),
       children: [
+        const SettingsPendingBackendNotice(),
         SettingsCard(
           children: [
             SettingsToggleRow(

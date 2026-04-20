@@ -42,6 +42,11 @@ class _SettingsPasswordScreenState extends State<SettingsPasswordScreen> {
       title: 'Password',
       footer: SettingsPrimaryButton(label: 'Update password', onTap: _submit),
       children: [
+        const SettingsPendingBackendNotice(
+          message:
+              'Password change is coming with the next auth release. '
+              'Use "Forgot password" on sign-in to reset in the meantime.',
+        ),
         SettingsTextField(
           label: 'Current password',
           controller: _current,

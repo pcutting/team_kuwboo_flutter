@@ -20,12 +20,20 @@ class _SettingsPushNotificationsScreenState
   bool _follows = false;
   bool _system = true;
 
+  void _save() {
+    // TODO(api): PATCH /users/me/preferences once the UserPreferences
+    // notifications schema gains the per-category fields this screen uses.
+    saveAndPop(context, 'Saved on this device');
+  }
+
   @override
   Widget build(BuildContext context) {
     final enabled = _master;
     return SettingsPage(
       title: 'Push Notifications',
+      footer: SettingsPrimaryButton(label: 'Save', onTap: _save),
       children: [
+        const SettingsPendingBackendNotice(),
         SettingsCard(
           children: [
             SettingsToggleRow(
