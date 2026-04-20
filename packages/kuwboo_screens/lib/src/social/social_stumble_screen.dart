@@ -59,17 +59,49 @@ class SocialStumbleScreen extends ConsumerWidget {
   }
 }
 
-class _StumbleCard extends StatelessWidget {
+class _StumbleCard extends ConsumerWidget {
   const _StumbleCard({required this.content, required this.theme});
 
   final Content content;
   final ProtoTheme theme;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final creatorName = content.creator?.name ?? 'Someone';
     final avatarUrl = content.creator?.avatarUrl;
+    final creatorId = content.creator?.id;
     final bodyText = content.text ?? content.caption ?? content.title ?? '';
+    final isFollowing =
+        creatorId != null && ref.watch(followedCreatorsProvider).contains(creatorId);
+
+    Future<void> onFollow() async {
+      if (creatorId == null) return;
+      // Optimistic flip so the button feels instant; revert on failure.
+      ref.read(followedCreatorsProvider.notifier).update((s) => {...s, creatorId});
+      try {
+        await ref
+            .read(connectionsApiProvider)
+            .follow(FollowDto(userId: creatorId));
+        if (context.mounted) {
+          ProtoToast.show(
+            context,
+            theme.icons.personAdd,
+            'Following $creatorName',
+          );
+        }
+      } catch (e) {
+        ref
+            .read(followedCreatorsProvider.notifier)
+            .update((s) => s.where((id) => id != creatorId).toSet());
+        if (context.mounted) {
+          ProtoToast.show(
+            context,
+            Icons.error_outline,
+            'Couldn\'t follow — try again',
+          );
+        }
+      }
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -85,15 +117,24 @@ class _StumbleCard extends StatelessWidget {
               Expanded(
                 child: Text(creatorName, style: theme.title.copyWith(fontSize: 14)),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: theme.primary,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  'Follow',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
+              ProtoPressButton(
+                onTap: isFollowing || creatorId == null ? null : onFollow,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isFollowing
+                        ? theme.text.withValues(alpha: 0.08)
+                        : theme.primary,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    isFollowing ? 'Following' : 'Follow',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isFollowing ? theme.textSecondary : Colors.white,
+                    ),
+                  ),
                 ),
               ),
             ],

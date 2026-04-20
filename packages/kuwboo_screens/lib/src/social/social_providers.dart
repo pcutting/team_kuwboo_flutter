@@ -38,6 +38,15 @@ final connectionsApiProvider = Provider<ConnectionsApi>(
   (ref) => ConnectionsApi(ref.watch(kuwbooApiClientProvider)),
 );
 
+/// In-session set of creator user ids the signed-in user has tapped "Follow"
+/// for. Used by the Stumble cards to switch their button from "Follow" →
+/// "Following" without waiting for a re-fetch of the discovery feed. Cleared
+/// on sign-out (provider is refreshed with the rest of the auth scope).
+///
+/// This is a UI optimism layer, not a source of truth — the real membership
+/// lives in the `connections` table server-side.
+final followedCreatorsProvider = StateProvider<Set<String>>((_) => <String>{});
+
 // ─── Social feed ────────────────────────────────────────────────────────
 
 /// The main social tab feed — hits `/feed?tab=social`.
