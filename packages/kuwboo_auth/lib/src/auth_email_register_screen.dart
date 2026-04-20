@@ -113,190 +113,210 @@ class _AuthEmailRegisterScreenState extends State<AuthEmailRegisterScreen> {
                   child: Form(
                     key: _formKey,
                     child: AutofillGroup(
-                      child: ListView(
-                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-                        children: [
-                          Text(
-                            'Create your account',
-                            style: theme.headline.copyWith(fontSize: 22),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Use your email and password. We\'ll ask you to '
-                            'verify your email on the next step.',
-                            style:
-                                theme.body.copyWith(color: theme.textSecondary),
-                          ),
-                          const SizedBox(height: 20),
-                          _FieldLabel(text: 'Email', theme: theme),
-                          Semantics(
-                            identifier: AuthIds.registerEmailField,
-                            textField: true,
-                            child: TextFormField(
-                              controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              autocorrect: false,
-                              enableSuggestions: false,
-                              textCapitalization: TextCapitalization.none,
-                              autofillHints: const [AutofillHints.email],
-                              style: theme.body,
-                              onChanged: (_) => setState(() {}),
-                              validator: _validateEmail,
-                              decoration: _decoration(
-                                theme,
-                                hint: 'you@example.com',
-                                prefix: Icons.email_outlined,
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Create your account',
+                                style: theme.headline.copyWith(fontSize: 22),
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          _FieldLabel(text: 'Password', theme: theme),
-                          Semantics(
-                            identifier: AuthIds.registerPasswordField,
-                            textField: true,
-                            child: TextFormField(
-                              controller: _passwordController,
-                              obscureText: _obscurePassword,
-                              autofillHints: const [AutofillHints.newPassword],
-                              style: theme.body,
-                              onChanged: (_) => setState(() {}),
-                              validator: _validatePassword,
-                              decoration: _decoration(
-                                theme,
-                                hint: 'At least 8 characters',
-                                prefix: Icons.lock_outline,
-                                suffix: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
-                                    size: 20,
-                                    color: theme.textTertiary,
-                                  ),
-                                  onPressed: () => setState(
-                                    () => _obscurePassword = !_obscurePassword,
+                              const SizedBox(height: 6),
+                              Text(
+                                'Use your email and password. We\'ll ask you to '
+                                'verify your email on the next step.',
+                                style: theme.body.copyWith(
+                                  color: theme.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              _FieldLabel(text: 'Email', theme: theme),
+                              Semantics(
+                                identifier: AuthIds.registerEmailField,
+                                textField: true,
+                                child: TextFormField(
+                                  controller: _emailController,
+                                  keyboardType: TextInputType.emailAddress,
+                                  autocorrect: false,
+                                  enableSuggestions: false,
+                                  textCapitalization: TextCapitalization.none,
+                                  autofillHints: const [AutofillHints.email],
+                                  style: theme.body,
+                                  onChanged: (_) => setState(() {}),
+                                  validator: _validateEmail,
+                                  decoration: _decoration(
+                                    theme,
+                                    hint: 'you@example.com',
+                                    prefix: Icons.email_outlined,
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          _FieldLabel(text: 'Confirm password', theme: theme),
-                          Semantics(
-                            identifier: AuthIds.registerConfirmPasswordField,
-                            textField: true,
-                            child: TextFormField(
-                              controller: _confirmPasswordController,
-                              obscureText: _obscureConfirm,
-                              autofillHints: const [AutofillHints.newPassword],
-                              style: theme.body,
-                              onChanged: (_) => setState(() {}),
-                              validator: _validateConfirmPassword,
-                              decoration: _decoration(
-                                theme,
-                                hint: 'Re-enter your password',
-                                prefix: Icons.lock_outline,
-                                suffix: IconButton(
-                                  icon: Icon(
-                                    _obscureConfirm
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
-                                    size: 20,
-                                    color: theme.textTertiary,
-                                  ),
-                                  onPressed: () => setState(
-                                    () => _obscureConfirm = !_obscureConfirm,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          _FieldLabel(
-                            text: 'Name (optional)',
-                            theme: theme,
-                          ),
-                          Semantics(
-                            identifier: AuthIds.registerNameField,
-                            textField: true,
-                            child: TextFormField(
-                              controller: _nameController,
-                              keyboardType: TextInputType.name,
-                              textCapitalization: TextCapitalization.words,
-                              autofillHints: const [AutofillHints.name],
-                              style: theme.body,
-                              decoration: _decoration(
-                                theme,
-                                hint: 'What should we call you?',
-                                prefix: Icons.person_outline,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          _ConsentCheckbox(
-                            identifier: AuthIds.registerAgeConfirm,
-                            value: _ageConfirmed,
-                            onChanged: (v) =>
-                                setState(() => _ageConfirmed = v ?? false),
-                            label: Text(
-                              'I am 18 or older',
-                              style: theme.body,
-                            ),
-                            theme: theme,
-                          ),
-                          const SizedBox(height: 8),
-                          _ConsentCheckbox(
-                            identifier: AuthIds.registerLegalAccept,
-                            value: _legalAccepted,
-                            onChanged: (v) =>
-                                setState(() => _legalAccepted = v ?? false),
-                            label: _legalLabel(theme),
-                            theme: theme,
-                          ),
-                          const SizedBox(height: 24),
-                          _SubmitButton(
-                            identifier: AuthIds.registerSubmit,
-                            label: _submitting ? 'Creating…' : 'Create Account',
-                            enabled: _canSubmit,
-                            busy: _submitting,
-                            onTap: () => _submit(context),
-                            theme: theme,
-                          ),
-                          const SizedBox(height: 16),
-                          Center(
-                            child: Semantics(
-                              identifier: AuthIds.registerLoginLink,
-                              button: true,
-                              label: 'Log in',
-                              child: GestureDetector(
-                                onTap: () {
-                                  FocusManager.instance.primaryFocus?.unfocus();
-                                  context.go(ProtoRoutes.authEmailLogin);
-                                },
-                                child: Text.rich(
-                                  TextSpan(
-                                    text: 'Already have an account? ',
-                                    children: [
-                                      TextSpan(
-                                        text: 'Log in',
-                                        style: TextStyle(
-                                          color: theme.primary,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                              const SizedBox(height: 14),
+                              _FieldLabel(text: 'Password', theme: theme),
+                              Semantics(
+                                identifier: AuthIds.registerPasswordField,
+                                textField: true,
+                                child: TextFormField(
+                                  controller: _passwordController,
+                                  obscureText: _obscurePassword,
+                                  autofillHints: const [
+                                    AutofillHints.newPassword,
+                                  ],
+                                  style: theme.body,
+                                  onChanged: (_) => setState(() {}),
+                                  validator: _validatePassword,
+                                  decoration: _decoration(
+                                    theme,
+                                    hint: 'At least 8 characters',
+                                    prefix: Icons.lock_outline,
+                                    suffix: IconButton(
+                                      icon: Icon(
+                                        _obscurePassword
+                                            ? Icons.visibility_outlined
+                                            : Icons.visibility_off_outlined,
+                                        size: 20,
+                                        color: theme.textTertiary,
                                       ),
-                                    ],
+                                      onPressed: () => setState(
+                                        () => _obscurePassword =
+                                            !_obscurePassword,
+                                      ),
+                                    ),
                                   ),
-                                  style: theme.body
-                                      .copyWith(color: theme.textSecondary),
                                 ),
                               ),
-                            ),
+                              const SizedBox(height: 14),
+                              _FieldLabel(
+                                text: 'Confirm password',
+                                theme: theme,
+                              ),
+                              Semantics(
+                                identifier:
+                                    AuthIds.registerConfirmPasswordField,
+                                textField: true,
+                                child: TextFormField(
+                                  controller: _confirmPasswordController,
+                                  obscureText: _obscureConfirm,
+                                  autofillHints: const [
+                                    AutofillHints.newPassword,
+                                  ],
+                                  style: theme.body,
+                                  onChanged: (_) => setState(() {}),
+                                  validator: _validateConfirmPassword,
+                                  decoration: _decoration(
+                                    theme,
+                                    hint: 'Re-enter your password',
+                                    prefix: Icons.lock_outline,
+                                    suffix: IconButton(
+                                      icon: Icon(
+                                        _obscureConfirm
+                                            ? Icons.visibility_outlined
+                                            : Icons.visibility_off_outlined,
+                                        size: 20,
+                                        color: theme.textTertiary,
+                                      ),
+                                      onPressed: () => setState(
+                                        () =>
+                                            _obscureConfirm = !_obscureConfirm,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              _FieldLabel(
+                                text: 'Name (optional)',
+                                theme: theme,
+                              ),
+                              Semantics(
+                                identifier: AuthIds.registerNameField,
+                                textField: true,
+                                child: TextFormField(
+                                  controller: _nameController,
+                                  keyboardType: TextInputType.name,
+                                  textCapitalization: TextCapitalization.words,
+                                  autofillHints: const [AutofillHints.name],
+                                  style: theme.body,
+                                  decoration: _decoration(
+                                    theme,
+                                    hint: 'What should we call you?',
+                                    prefix: Icons.person_outline,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              _ConsentCheckbox(
+                                identifier: AuthIds.registerAgeConfirm,
+                                value: _ageConfirmed,
+                                onChanged: (v) =>
+                                    setState(() => _ageConfirmed = v ?? false),
+                                label: Text(
+                                  'I am 18 or older',
+                                  style: theme.body,
+                                ),
+                                theme: theme,
+                              ),
+                              const SizedBox(height: 8),
+                              _ConsentCheckbox(
+                                identifier: AuthIds.registerLegalAccept,
+                                value: _legalAccepted,
+                                onChanged: (v) =>
+                                    setState(() => _legalAccepted = v ?? false),
+                                label: _legalLabel(theme),
+                                theme: theme,
+                              ),
+                              const SizedBox(height: 24),
+                              _SubmitButton(
+                                identifier: AuthIds.registerSubmit,
+                                label: _submitting
+                                    ? 'Creating…'
+                                    : 'Create Account',
+                                enabled: _canSubmit,
+                                busy: _submitting,
+                                onTap: () => _submit(context),
+                                theme: theme,
+                              ),
+                              const SizedBox(height: 16),
+                              Center(
+                                child: Semantics(
+                                  identifier: AuthIds.registerLoginLink,
+                                  button: true,
+                                  label: 'Log in',
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      FocusManager.instance.primaryFocus
+                                          ?.unfocus();
+                                      context.go(ProtoRoutes.authEmailLogin);
+                                    },
+                                    child: Text.rich(
+                                      TextSpan(
+                                        text: 'Already have an account? ',
+                                        children: [
+                                          TextSpan(
+                                            text: 'Log in',
+                                            style: TextStyle(
+                                              color: theme.primary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      style: theme.body.copyWith(
+                                        color: theme.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              // Leave space for the software keyboard on mobile.
+                              SizedBox(
+                                height: MediaQuery.viewInsetsOf(context).bottom,
+                              ),
+                            ],
                           ),
-                          // Leave space for the software keyboard on mobile.
-                          SizedBox(
-                            height: MediaQuery.viewInsetsOf(context).bottom,
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -336,8 +356,10 @@ class _AuthEmailRegisterScreenState extends State<AuthEmailRegisterScreen> {
               link: true,
               child: InkWell(
                 onTap: () => context.push(ProtoRoutes.legalPrivacy),
-                child:
-                    Text('Privacy Policy', style: theme.body.merge(linkStyle)),
+                child: Text(
+                  'Privacy Policy',
+                  style: theme.body.merge(linkStyle),
+                ),
               ),
             ),
           ),
@@ -550,8 +572,7 @@ class _SubmitButton extends StatelessWidget {
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.4,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
                   : Text(label, style: theme.button.copyWith(fontSize: 16)),
