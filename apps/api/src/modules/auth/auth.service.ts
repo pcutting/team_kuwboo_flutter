@@ -552,16 +552,17 @@ export class AuthService {
    * user enumeration.
    *
    * Brute-force defence (issue #174):
-   *   1. Pre-check the per-(email, ip) throttle counter; if already
-   *      over the ceiling (10+ recent failures) short-circuit to 429
-   *      without doing a bcrypt compare. THROTTLED audit row.
+   *   1. Pre-check the per-(email, ip) throttle counter AND the
+   *      account-level soft-lock flag; either being set short-circuits
+   *      to a generic 429 before bcrypt runs.
    *   2. Run the normal credential check. On failure, call
    *      `LoginThrottleService.registerFailure()` which applies the
    *      exponential backoff and, when the per-email distinct-IP set
-   *      crosses the threshold, tells us to trip the account soft lock.
+   *      crosses the cross-IP threshold, tells us to trip the account
+   *      soft lock via `user.authLockedAt`.
    *   3. On success, reset the per-(email, ip) counter. The account
-   *      soft-lock (phase 2) is intentionally NOT cleared here —
-   *      unlock is gated by a password reset.
+   *      soft-lock is intentionally NOT cleared here — unlock is
+   *      gated by a password reset.
    */
   async emailLogin(
     rawEmail: string,
@@ -584,6 +585,20 @@ export class AuthService {
     }
 
     const user = await this.usersService.findByEmail(email);
+
+    // Account-level soft-lock gate. Runs BEFORE the
+    // unknown-email branch so a locked account can't be distinguished
+    // from an unknown email in the response (both paths collapse to
+    // the same generic 429).
+    if (user?.authLockedAt) {
+      await this.loginAttemptLogger.log({
+        email,
+        ipAddress,
+        userAgent,
+        outcome: LoginAttemptOutcome.LOCKED_OUT,
+      });
+      throw this.tooManyAttempts();
+    }
 
     if (!user || !user.passwordHash) {
       await this.registerFailureAndMaybeLock({
@@ -635,6 +650,11 @@ export class AuthService {
    * counter tipped into the hard-throttle band — promotes the outcome
    * from WRONG_PASSWORD / UNKNOWN_EMAIL to THROTTLED so the audit row
    * reflects what the client actually saw.
+   *
+   * When the cross-IP detector flagged an account lock on this
+   * failure AND we have a real user row, persist `authLockedAt` so
+   * every subsequent attempt collapses to the generic 429 path.
+   * We never lock on UNKNOWN_EMAIL because there is nothing to lock.
    */
   private async registerFailureAndMaybeLock(args: {
     email: string;
@@ -648,9 +668,25 @@ export class AuthService {
       args.ipAddress,
     );
 
+    // Trip the account-level soft lock when the cross-IP detector
+    // said so. Only meaningful when we actually have a user row —
+    // UNKNOWN_EMAIL branches can't be locked.
+    let lockJustTripped = false;
+    if (
+      decision.accountLockTriggered &&
+      args.user &&
+      !args.user.authLockedAt
+    ) {
+      args.user.authLockedAt = new Date();
+      await this.usersService.flushUser(args.user.id);
+      lockJustTripped = true;
+    }
+
     let finalOutcome = args.outcome;
-    if (decision.shouldThrottle) {
-      finalOutcome = LoginAttemptOutcome.THROTTLED;
+    if (lockJustTripped || decision.shouldThrottle) {
+      finalOutcome = lockJustTripped
+        ? LoginAttemptOutcome.LOCKED_OUT
+        : LoginAttemptOutcome.THROTTLED;
     }
 
     await this.loginAttemptLogger.log({
@@ -660,7 +696,7 @@ export class AuthService {
       outcome: finalOutcome,
     });
 
-    if (decision.shouldThrottle) {
+    if (decision.shouldThrottle || lockJustTripped) {
       throw this.tooManyAttempts();
     }
   }
@@ -722,6 +758,14 @@ export class AuthService {
 
     user.passwordHash = await bcrypt.hash(newPassword, PASSWORD_BCRYPT_ROUNDS);
     user.lastLoginAt = new Date();
+    // A completed password reset is the recovery path for the
+    // cross-IP soft-lock set by the login-throttle subsystem. Clear
+    // the flag + reset the Redis counters so the user can log in
+    // again on the next request (issue #174 phase 2).
+    if (user.authLockedAt) {
+      user.authLockedAt = undefined;
+    }
+    await this.loginThrottle.registerSuccess(email, meta?.ipAddress);
 
     await this.sessionsService.revokeAllForUser(user.id);
     const tokens = await this.issueTokens(user, meta);

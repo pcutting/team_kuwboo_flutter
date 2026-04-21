@@ -146,6 +146,24 @@ export class User {
   @Property({ type: 'timestamptz', nullable: true })
   lastLoginAt?: Date;
 
+  /**
+   * Account-level soft-lock timestamp. Set when the cross-IP
+   * credential-stuffing detector in the login-throttle subsystem
+   * observes failed attempts against this email from three or more
+   * distinct IPs inside a 30-minute window (issue #174).
+   *
+   * Recovery path is deliberately a password reset — credential-
+   * stuffing is a strong enough signal that auto-unlock on timer
+   * would just hand the attacker another window. Cleared when
+   * `emailResetPassword` completes successfully.
+   *
+   * When populated, `emailLogin` returns the same generic 429 used
+   * for the per-(email, ip) throttle, without distinguishing
+   * unknown-email from locked-account in the response body.
+   */
+  @Property({ type: 'timestamptz', nullable: true })
+  authLockedAt?: Date;
+
   @Enum({
     items: () => AgeVerificationStatus,
     default: AgeVerificationStatus.SELF_DECLARED,
