@@ -16,10 +16,30 @@ import { CURRENT_CONSENT_VERSIONS } from '../src/modules/consent/consent-version
  * wiring errors (module imports, cyclic deps) alongside the business
  * logic.
  */
+// Deterministic emails registered with the KuwbooThrottlerGuard's
+// reserved-emails list so the seven successful-or-attempted register
+// calls in this file don't exhaust the /auth/email/register throttle
+// (5 req / 15 min / IP). Production throttle behaviour is unchanged —
+// see `kuwboo-throttler.guard.ts`.
+const TEST_EMAIL_DOMAIN = 'email-register-consent-e2e.example';
+const TEST_EMAILS = [
+  `case1@${TEST_EMAIL_DOMAIN}`,
+  `case2@${TEST_EMAIL_DOMAIN}`,
+  `case3@${TEST_EMAIL_DOMAIN}`,
+  `case4@${TEST_EMAIL_DOMAIN}`,
+  `case5@${TEST_EMAIL_DOMAIN}`,
+  `case6@${TEST_EMAIL_DOMAIN}`,
+  `case7@${TEST_EMAIL_DOMAIN}`,
+];
+
 describe('POST /auth/email/register — consent capture (e2e)', () => {
   let ctx: TestAppContext;
+  let emailCursor = 0;
 
   beforeAll(async () => {
+    process.env.RESERVED_TEST_EMAILS =
+      (process.env.RESERVED_TEST_EMAILS ?? '') + ',' + TEST_EMAILS.join(',');
+
     ctx = await bootstrapTestApp();
   });
 
@@ -28,7 +48,9 @@ describe('POST /auth/email/register — consent capture (e2e)', () => {
   });
 
   function freshEmail(): string {
-    return `consent+${Date.now()}.${Math.floor(Math.random() * 1e6)}@example.com`;
+    const email = TEST_EMAILS[emailCursor];
+    emailCursor += 1;
+    return email;
   }
 
   it('rejects with 400 when legalAccepted is missing', async () => {
