@@ -5,14 +5,33 @@ import { Verification } from '../src/modules/verification/entities/verification.
 import { VerificationType, DobChoice } from '../src/common/enums';
 
 /**
- * Email / password auth happy-path coverage. Each test uses a fresh
- * random email so the whole file can run in parallel with other e2e
- * specs sharing the same Postgres container.
+ * Email / password auth happy-path coverage. Each test uses a
+ * deterministic email registered with the global KuwbooThrottlerGuard's
+ * reserved-emails list so the six registrations in this file don't
+ * exhaust the /auth/email/register throttle (5 req / 15 min / IP).
+ * Production throttle behaviour is unchanged — see
+ * `kuwboo-throttler.guard.ts` for the bypass mechanism.
  */
+const TEST_EMAIL_DOMAIN = 'email-password-e2e.example';
+const TEST_EMAILS = [
+  `case1@${TEST_EMAIL_DOMAIN}`,
+  `case2@${TEST_EMAIL_DOMAIN}`,
+  `case3@${TEST_EMAIL_DOMAIN}`,
+  `case4@${TEST_EMAIL_DOMAIN}`,
+  `case5@${TEST_EMAIL_DOMAIN}`,
+  `case6@${TEST_EMAIL_DOMAIN}`,
+];
+
 describe('Auth (email + password) e2e', () => {
   let ctx: TestAppContext;
+  let emailCursor = 0;
 
   beforeAll(async () => {
+    // Whitelist every email used by this spec so the ThrottlerGuard
+    // skips /auth/email/register rate limiting for them.
+    process.env.RESERVED_TEST_EMAILS =
+      (process.env.RESERVED_TEST_EMAILS ?? '') + ',' + TEST_EMAILS.join(',');
+
     ctx = await bootstrapTestApp();
   });
 
@@ -21,7 +40,9 @@ describe('Auth (email + password) e2e', () => {
   });
 
   function freshEmail(): string {
-    return `test+${Date.now()}.${Math.floor(Math.random() * 1e6)}@example.com`;
+    const email = TEST_EMAILS[emailCursor];
+    emailCursor += 1;
+    return email;
   }
 
   it('registers a new user, returns tokens, and authenticates /users/me', async () => {
