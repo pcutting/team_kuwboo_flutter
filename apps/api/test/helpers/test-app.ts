@@ -37,6 +37,8 @@ const MIGRATION_ORDER = [
   'Migration20260419_user_consent_user_agent',
   'Migration20260420_account_deletion_fk_nullability',
   'Migration20260420_account_deletion_financial_fk_nullability',
+  'Migration20260420_media_transcoded_url',
+  'Migration20260421_auth_login_attempts',
 ];
 
 async function runMigrationsIfNeeded(orm: MikroORM): Promise<void> {
