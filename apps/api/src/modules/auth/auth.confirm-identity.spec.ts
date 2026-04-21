@@ -47,6 +47,8 @@ describe('AuthService.confirmIdentity', () => {
       {} as any,
       {} as any,
       {} as any,
+      {} as any,
+      {} as any,
     );
   }
 

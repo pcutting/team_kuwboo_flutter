@@ -12,11 +12,14 @@ import { VerificationModule } from '../verification/verification.module';
 import { CredentialsModule } from '../credentials/credentials.module';
 import { TrustModule } from '../trust/trust.module';
 import { ConsentModule } from '../consent/consent.module';
+import { EmailModule } from '../email/email.module';
 import { LoginAttempt } from './login-throttle/login-attempt.entity';
 import { LoginAttemptLogger } from './login-throttle/login-attempt-logger.service';
 import { LoginThrottleService } from './login-throttle/login-throttle.service';
 import { DelayProvider, RealDelayProvider } from './login-throttle/delay.provider';
 import { loginThrottleRedisProvider } from './login-throttle/redis.provider';
+import { LoginMetricsService } from './login-throttle/login-metrics.service';
+import { LoginNotifierService } from './login-throttle/login-notifier.service';
 
 @Module({
   imports: [
@@ -30,6 +33,7 @@ import { loginThrottleRedisProvider } from './login-throttle/redis.provider';
     CredentialsModule,
     TrustModule,
     ConsentModule,
+    EmailModule,
   ],
   controllers: [AuthController],
   providers: [
@@ -37,9 +41,11 @@ import { loginThrottleRedisProvider } from './login-throttle/redis.provider';
     JwtStrategy,
     LoginAttemptLogger,
     LoginThrottleService,
+    LoginMetricsService,
+    LoginNotifierService,
     { provide: DelayProvider, useClass: RealDelayProvider },
     loginThrottleRedisProvider,
   ],
-  exports: [AuthService],
+  exports: [AuthService, LoginMetricsService],
 })
 export class AuthModule {}

@@ -23,6 +23,8 @@ import { ConsentService } from '../consent/consent.service';
 import { LoginAttemptLogger } from './login-throttle/login-attempt-logger.service';
 import { LoginThrottleService } from './login-throttle/login-throttle.service';
 import { LoginAttemptOutcome } from './login-throttle/login-attempt.entity';
+import { LoginMetricsService } from './login-throttle/login-metrics.service';
+import { LoginNotifierService } from './login-throttle/login-notifier.service';
 import { User } from '../users/entities/user.entity';
 import {
   AgeVerificationStatus,
@@ -119,6 +121,8 @@ export class AuthService {
     private readonly consentService: ConsentService,
     private readonly loginAttemptLogger: LoginAttemptLogger,
     private readonly loginThrottle: LoginThrottleService,
+    private readonly loginMetrics: LoginMetricsService,
+    private readonly loginNotifier: LoginNotifierService,
   ) {
     this.googleClient = new OAuth2Client();
   }
@@ -575,6 +579,7 @@ export class AuthService {
 
     // Pre-check: already-throttled callers never touch bcrypt.
     if (await this.loginThrottle.shouldBlockBeforeCheck(email, ipAddress)) {
+      this.loginMetrics.incrementThrottled();
       await this.loginAttemptLogger.log({
         email,
         ipAddress,
@@ -591,6 +596,7 @@ export class AuthService {
     // from an unknown email in the response (both paths collapse to
     // the same generic 429).
     if (user?.authLockedAt) {
+      this.loginMetrics.incrementThrottled();
       await this.loginAttemptLogger.log({
         email,
         ipAddress,
@@ -680,6 +686,7 @@ export class AuthService {
       args.user.authLockedAt = new Date();
       await this.usersService.flushUser(args.user.id);
       lockJustTripped = true;
+      this.loginMetrics.incrementSoftLock();
     }
 
     let finalOutcome = args.outcome;
@@ -687,6 +694,9 @@ export class AuthService {
       finalOutcome = lockJustTripped
         ? LoginAttemptOutcome.LOCKED_OUT
         : LoginAttemptOutcome.THROTTLED;
+      this.loginMetrics.incrementThrottled();
+    } else {
+      this.loginMetrics.incrementFailure();
     }
 
     await this.loginAttemptLogger.log({
@@ -695,6 +705,19 @@ export class AuthService {
       userAgent: args.userAgent,
       outcome: finalOutcome,
     });
+
+    // Kick off user + admin notifications on a fresh lock. The
+    // notifier is responsible for its own 24h dedupe + error
+    // swallowing — we don't await its result in the hot path so
+    // a slow SES call can't lengthen the 429 response.
+    if (lockJustTripped) {
+      void this.loginNotifier.notifyAccountLocked({
+        email: args.email,
+        ipAddress: args.ipAddress,
+        userAgent: args.userAgent,
+        attemptsLast24h: decision.distinctIpCount * 3,
+      });
+    }
 
     if (decision.shouldThrottle || lockJustTripped) {
       throw this.tooManyAttempts();
