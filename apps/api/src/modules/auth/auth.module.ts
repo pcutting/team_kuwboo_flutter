@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -11,11 +12,20 @@ import { VerificationModule } from '../verification/verification.module';
 import { CredentialsModule } from '../credentials/credentials.module';
 import { TrustModule } from '../trust/trust.module';
 import { ConsentModule } from '../consent/consent.module';
+import { EmailModule } from '../email/email.module';
+import { LoginAttempt } from './login-throttle/login-attempt.entity';
+import { LoginAttemptLogger } from './login-throttle/login-attempt-logger.service';
+import { LoginThrottleService } from './login-throttle/login-throttle.service';
+import { DelayProvider, RealDelayProvider } from './login-throttle/delay.provider';
+import { loginThrottleRedisProvider } from './login-throttle/redis.provider';
+import { LoginMetricsService } from './login-throttle/login-metrics.service';
+import { LoginNotifierService } from './login-throttle/login-notifier.service';
 
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({}),
+    MikroOrmModule.forFeature([LoginAttempt]),
     AppleAuthModule,
     UsersModule,
     SessionsModule,
@@ -23,9 +33,19 @@ import { ConsentModule } from '../consent/consent.module';
     CredentialsModule,
     TrustModule,
     ConsentModule,
+    EmailModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [AuthService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    LoginAttemptLogger,
+    LoginThrottleService,
+    LoginMetricsService,
+    LoginNotifierService,
+    { provide: DelayProvider, useClass: RealDelayProvider },
+    loginThrottleRedisProvider,
+  ],
+  exports: [AuthService, LoginMetricsService],
 })
 export class AuthModule {}
