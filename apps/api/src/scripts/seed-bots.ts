@@ -18,6 +18,7 @@
  * Auto-run from seed:demo (default).
  */
 import { NestFactory } from '@nestjs/core';
+import { RequestContext } from '@mikro-orm/core';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { AppModule } from '../app.module';
 import { BotsService } from '../modules/bots/bots.service';
@@ -62,43 +63,49 @@ export async function seedBots(
   botsService: BotsService,
   options: { force?: boolean } = {},
 ): Promise<SeedBotsResult> {
-  const seedNames = SEED_BOTS.map((b) => b.name);
+  // BotsService.createBot uses its injected (global) EM via this.em.create(),
+  // which throws cannotUseGlobalContext outside a request scope. Wrap the
+  // whole body so every service call resolves to the forked EM via
+  // AsyncLocalStorage — same pattern as BotActionProcessor (PR #202).
+  return RequestContext.create(em, async () => {
+    const seedNames = SEED_BOTS.map((b) => b.name);
 
-  if (options.force) {
-    // Soft-delete the User rows we previously seeded; cascading rules
-    // remove their BotProfile and content. Direct nativeDelete cascades
-    // through onDelete: cascade FKs declared on BotProfile.user.
-    const deleted = await em.nativeDelete(User, { name: { $in: seedNames } });
-    console.log(`[seed-bots] --force: deleted ${deleted} previously-seeded bots (cascades to BotProfile + content).`);
-  } else {
-    const existing = await em.count(BotProfile, {
-      user: { name: { $in: seedNames } },
-    });
-    if (existing > 0) {
-      console.log(`[seed-bots] Skipping — ${existing} seed bots already exist. Re-run with force=true to regenerate.`);
-      return { created: 0, skipped: true };
+    if (options.force) {
+      // Soft-delete the User rows we previously seeded; cascading rules
+      // remove their BotProfile and content. Direct nativeDelete cascades
+      // through onDelete: cascade FKs declared on BotProfile.user.
+      const deleted = await em.nativeDelete(User, { name: { $in: seedNames } });
+      console.log(`[seed-bots] --force: deleted ${deleted} previously-seeded bots (cascades to BotProfile + content).`);
+    } else {
+      const existing = await em.count(BotProfile, {
+        user: { name: { $in: seedNames } },
+      });
+      if (existing > 0) {
+        console.log(`[seed-bots] Skipping — ${existing} seed bots already exist. Re-run with force=true to regenerate.`);
+        return { created: 0, skipped: true };
+      }
     }
-  }
 
-  let created = 0;
-  for (const def of SEED_BOTS) {
-    if (!PERSONA_NAMES.includes(def.persona)) {
-      console.warn(`[seed-bots] Skipping ${def.name} — unknown persona ${def.persona}`);
-      continue;
+    let created = 0;
+    for (const def of SEED_BOTS) {
+      if (!PERSONA_NAMES.includes(def.persona)) {
+        console.warn(`[seed-bots] Skipping ${def.name} — unknown persona ${def.persona}`);
+        continue;
+      }
+      await botsService.createBot({
+        name: def.name,
+        displayPersona: def.persona,
+        backstory: def.backstory,
+        homeLatitude: def.lat,
+        homeLongitude: def.lng,
+        roamRadiusKm: 5,
+      });
+      created++;
     }
-    await botsService.createBot({
-      name: def.name,
-      displayPersona: def.persona,
-      backstory: def.backstory,
-      homeLatitude: def.lat,
-      homeLongitude: def.lng,
-      roamRadiusKm: 5,
-    });
-    created++;
-  }
 
-  console.log(`[seed-bots] Created ${created} bots across ${PERSONA_NAMES.length} personas.`);
-  return { created, skipped: false };
+    console.log(`[seed-bots] Created ${created} bots across ${PERSONA_NAMES.length} personas.`);
+    return { created, skipped: false };
+  });
 }
 
 // Standalone bootstrap when invoked via `npm run seed:bots`.
