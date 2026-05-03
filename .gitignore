@@ -44,6 +44,10 @@ apps/api/dist/
 # Playwright MCP session artefacts
 .playwright-mcp/
 
+# Local verification screenshots (not source — kept out of the bundle so
+# they don't bloat Vercel deploys or PR diffs).
+apps/web/screenshots/
+
 # Apple signing keys — NEVER COMMIT
 *.p8
 AuthKey_*.p8
