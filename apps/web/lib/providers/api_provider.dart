@@ -53,3 +53,15 @@ final commentsApiProvider = Provider<CommentsApi>(
 final interactionsApiProvider = Provider<InteractionsApi>(
   (ref) => InteractionsApi(ref.watch(realApiClientProvider)),
 );
+
+// ─── Messaging vertical ──────────────────────────────────────────────────
+//
+// The shared `kuwboo_chat` package consumes its own `apiClientProvider`
+// (see `package_overrides.dart`) which is now pointed at
+// `realApiClientProvider`. This top-level provider keeps the surface
+// symmetrical with feed/auth/users for any direct consumer in the web
+// layer.
+
+final messagingApiProvider = Provider<MessagingApi>(
+  (ref) => MessagingApi(ref.watch(realApiClientProvider)),
+);

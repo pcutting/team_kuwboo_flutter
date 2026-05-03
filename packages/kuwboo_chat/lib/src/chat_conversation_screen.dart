@@ -312,7 +312,13 @@ class _ChatConversationScreenState
       _inputController.clear();
       ref.invalidate(messagesProvider(threadId));
     } catch (_) {
-      // Surface a toast in Phase 8 error-handling pass.
+      if (mounted) {
+        ProtoToast.show(
+          context,
+          Icons.error_outline,
+          'Could not send message',
+        );
+      }
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -372,18 +378,29 @@ class _LiveMessageList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(messagesProvider(threadId));
     return async.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text('Could not load messages: $e',
-              style: TextStyle(color: theme.textSecondary)),
-        ),
+      loading: () => const ProtoLoadingState(itemCount: 4),
+      error: (e, _) => ProtoErrorState(
+        message: 'Could not load messages',
+        onRetry: () => ref.invalidate(messagesProvider(threadId)),
       ),
       data: (page) {
         final items = page.items;
         if (items.isEmpty) {
-          return const Center(child: Text('No messages yet.'));
+          return RefreshIndicator(
+            onRefresh: () async =>
+                ref.invalidate(messagesProvider(threadId)),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [
+                SizedBox(height: 80),
+                ProtoEmptyState(
+                  icon: Icons.waving_hand_outlined,
+                  title: 'No messages yet',
+                  subtitle: 'Say hello to get the conversation started',
+                ),
+              ],
+            ),
+          );
         }
         return RefreshIndicator(
           onRefresh: () async =>

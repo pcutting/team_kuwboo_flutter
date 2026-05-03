@@ -62,20 +62,36 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     return '${diff.inDays}d';
   }
 
-  List<DemoConversation> _applyFilter(List<DemoConversation> all) {
-    if (widget.moduleKey == null) return all;
-    return all.where((c) => c.moduleContext == widget.moduleKey).toList();
-  }
-
-  /// Apply [_applyFilter] over `(thread, demo)` pairs so the live thread id
-  /// stays attached to the rendered conversation card. Without this the
-  /// conversation screen only knows the display data and falls back to the
-  /// canned transactional prototype (no live input bar).
+  /// Filter `(thread, demo)` pairs by [widget.moduleKey] so the live
+  /// thread id stays attached to the rendered conversation card. Without
+  /// this the conversation screen only knows the display data.
+  ///
+  /// The widget receives display-cased filter values like `'YoYo'`,
+  /// `'Dating'`, `'Shop'`. The backend persists the canonical enum
+  /// (`'YOYO'`, `'DATING'`, `'BUY_SELL'`, `'SOCIAL_STUMBLE'`,
+  /// `'VIDEO_MAKING'`). Compare case-insensitively, ignoring underscores
+  /// and the optional shared prefixes (`SOCIAL_`, `BUY_`), so both
+  /// shapes match without forcing a backend-wide rename.
   List<(api.Thread, DemoConversation)> _applyFilterPairs(
     List<(api.Thread, DemoConversation)> all,
   ) {
-    if (widget.moduleKey == null) return all;
-    return all.where((p) => p.$2.moduleContext == widget.moduleKey).toList();
+    final filter = widget.moduleKey;
+    if (filter == null) return all;
+    final norm = _normaliseModuleKey(filter);
+    return all
+        .where((p) => _normaliseModuleKey(p.$2.moduleContext) == norm)
+        .toList();
+  }
+
+  /// Lowercase, strip underscores, and drop common prefixes so display
+  /// names ('YoYo') match enum values ('YOYO') and the marketplace alias
+  /// ('Shop' ↔ 'BUY_SELL') resolves the same way as before.
+  static String _normaliseModuleKey(String value) {
+    final lower = value.toLowerCase().replaceAll('_', '');
+    if (lower == 'buysell') return 'shop';
+    if (lower == 'socialstumble') return 'social';
+    if (lower == 'videomaking') return 'video';
+    return lower;
   }
 
   // ── Build ──────────────────────────────────────────────────────────────
@@ -86,29 +102,6 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     final theme = ProtoTheme.of(context);
     final threadsAsync = ref.watch(threadsProvider);
     final showModuleBadge = widget.moduleKey == null;
-
-    // Map live threads → DemoConversation view-models (paired with their
-    // source `api.Thread` so we can pass the live id when navigating into
-    // a conversation), then client-side filter by moduleKey. Fall back to
-    // static demo data with `null` thread id when the backend is unreachable.
-    final convoPairs = threadsAsync.when(
-      data: (threads) => _applyFilterPairs(
-        threads.items.map((t) => (t, _threadToDemo(t))).toList(),
-      ),
-      loading: () => const <(api.Thread, DemoConversation)>[],
-      error: (_, __) => <(api.Thread, DemoConversation)>[],
-    );
-    // Offline / static fallback — DemoConversations without a backend id.
-    final fallbackConvos = threadsAsync.when(
-      data: (_) => const <DemoConversation>[],
-      loading: () => const <DemoConversation>[],
-      error: (_, __) => _applyFilter(ProtoDemoData.conversations),
-    );
-    final convos = [
-      ...convoPairs.map((p) => p.$2),
-      ...fallbackConvos,
-    ];
-    final isLoading = threadsAsync.isLoading;
 
     return Container(
       color: theme.background,
@@ -181,29 +174,48 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
             ),
 
           Expanded(
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : convos.isEmpty
-                ? const ProtoEmptyState(
-                    icon: Icons.chat_bubble_outline_rounded,
-                    title: 'No conversations yet',
-                    subtitle: 'Start a chat to connect with others',
-                    actionLabel: 'New Message',
-                  )
-                : RefreshIndicator(
+            child: threadsAsync.when(
+              loading: () => const ProtoLoadingState(itemCount: 6),
+              error: (err, _) => ProtoErrorState(
+                message: 'Could not load conversations',
+                onRetry: () => ref.invalidate(threadsProvider),
+              ),
+              data: (response) {
+                final pairs = _applyFilterPairs(
+                  response.items
+                      .map((t) => (t, _threadToDemo(t)))
+                      .toList(),
+                );
+                if (pairs.isEmpty) {
+                  return RefreshIndicator(
                     onRefresh: () async =>
                         ref.invalidate(threadsProvider),
-                    child: ListView.builder(
+                    child: ListView(
+                      // ListView so RefreshIndicator has a scrollable;
+                      // single child is the empty state.
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [
+                        SizedBox(height: 80),
+                        ProtoEmptyState(
+                          icon: Icons.chat_bubble_outline_rounded,
+                          title: 'No conversations yet',
+                          subtitle:
+                              'Start a chat to connect with others',
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                return RefreshIndicator(
+                  onRefresh: () async =>
+                      ref.invalidate(threadsProvider),
+                  child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: convos.length,
+                    itemCount: pairs.length,
                     itemBuilder: (context, i) {
-                      final conv = convos[i];
-                      // Cards backed by a live thread carry the id forward
-                      // so the conversation screen renders the live input
-                      // bar (real TextField + functional Send). Fallback
-                      // demo cards still navigate to the canned prototype.
-                      final liveThreadId =
-                          i < convoPairs.length ? convoPairs[i].$1.id : null;
+                      final pair = pairs[i];
+                      final conv = pair.$2;
+                      final liveThreadId = pair.$1.id;
                       return _buildDismissible(
                         context,
                         theme,
@@ -213,17 +225,17 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
                           index: i,
                           ornaments: widget.ornaments,
                           showModuleBadge: showModuleBadge,
-                          onTap: () => liveThreadId == null
-                              ? state.push(ProtoRoutes.chatConversation)
-                              : state.pushWithArgs(
-                                  ProtoRoutes.chatConversation,
-                                  {'threadId': liveThreadId},
-                                ),
+                          onTap: () => state.pushWithArgs(
+                            ProtoRoutes.chatConversation,
+                            {'threadId': liveThreadId},
+                          ),
                         ),
                       );
                     },
                   ),
-                  ),
+                );
+              },
+            ),
           ),
 
           Padding(

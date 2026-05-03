@@ -45,8 +45,25 @@ abstract class Thread with _$Thread {
     required DateTime createdAt,
   }) = _Thread;
 
+  /// Normalises the backend response shape (nested `lastMessage: { text,
+  /// sender, createdAt }`) into the flat fields this model exposes. Falls
+  /// through cleanly when the JSON is already flat (older stubs, fixtures).
   factory Thread.fromJson(Map<String, dynamic> json) =>
-      _$ThreadFromJson(json);
+      _$ThreadFromJson(_normaliseThreadJson(json));
+}
+
+Map<String, dynamic> _normaliseThreadJson(Map<String, dynamic> json) {
+  final lastMessage = json['lastMessage'];
+  if (lastMessage is! Map) return json;
+  final lm = Map<String, dynamic>.from(lastMessage);
+  return {
+    ...json,
+    'lastMessageText': json['lastMessageText'] ?? lm['text'],
+    'lastMessageAt': json['lastMessageAt'] ?? lm['createdAt'],
+    'lastMessageSenderId': json['lastMessageSenderId'] ??
+        _extractId(lm['sender']) ??
+        lm['senderId'],
+  };
 }
 
 @freezed
@@ -60,8 +77,29 @@ abstract class Message with _$Message {
     required DateTime createdAt,
   }) = _Message;
 
+  /// Normalises the backend response shape (`thread` + `sender` as either
+  /// nested objects or relation-id strings) into the flat `threadId` /
+  /// `senderId` strings this model exposes.
   factory Message.fromJson(Map<String, dynamic> json) =>
-      _$MessageFromJson(json);
+      _$MessageFromJson(_normaliseMessageJson(json));
+}
+
+Map<String, dynamic> _normaliseMessageJson(Map<String, dynamic> json) {
+  return {
+    ...json,
+    'threadId': json['threadId'] ?? _extractId(json['thread']),
+    'senderId': json['senderId'] ?? _extractId(json['sender']),
+  };
+}
+
+/// Pulls an id out of a value that may be a `{id: ...}` map, a raw id
+/// string, or null. Mirrors how MikroORM serializes relations: with
+/// `populate` it's a nested object; without it's a UUID string.
+String? _extractId(Object? rel) {
+  if (rel == null) return null;
+  if (rel is String) return rel;
+  if (rel is Map && rel['id'] is String) return rel['id'] as String;
+  return null;
 }
 
 // ---------------------------------------------------------------------------

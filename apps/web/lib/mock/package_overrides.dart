@@ -114,8 +114,11 @@ List<Override> buildWebPackageOverrides() {
     ),
 
     // ── kuwboo_chat ──
+    // Messaging vertical (inbox + conversation + send + mark-as-read) is
+    // de-mocked. Routes hit the live backend through the real
+    // KuwbooApiClient so the auth interceptor and token refresh apply.
     chat.apiClientProvider.overrideWith(
-      (ref) => ref.watch(mockApiClientProvider),
+      (ref) => ref.watch(realApiClientProvider),
     ),
 
     // ── kuwboo_screens: profile ──
