@@ -69,6 +69,47 @@ Gate is `email = 'cuttingphilip+test@gmail.com'`. If the user exists, the script
 - `seed-demo-data.ts` is the **content-creator seed** — it gives the database a population of users + content for unauthenticated browsing and rendering.
 - `seed-test-user.ts` is the **subject seed** — it gives one logged-in user a populated graph (followers, threads, likes) so signed-in screens have something to render. Splitting keeps each script's idempotency gate single-purpose and lets the test user be re-seeded independently of the content seed.
 
+## Bot population (`seed-bots.ts`)
+
+Seeds 12 `BotProfile` rows + their backing `User` records spread across the 5
+preset personas (`social_butterfly`, `content_creator`, `lurker`, `explorer`,
+`shopper`). Wired into `seed-demo-data.ts` as the tail step so the scheduler
+has both a graph of users to follow and a corpus of content to interact with
+on the very first tick once started.
+
+```bash
+# Standalone (after seed:demo has populated base content)
+cd apps/api
+npm run build
+npm run seed:bots
+npm run seed:bots:force      # wipe + re-insert
+
+# Auto-run as the tail of seed:demo (default)
+npm run seed:demo
+npm run seed:demo -- --no-bots   # skip the bot tail
+```
+
+| Domain | What it adds |
+|---|---|
+| Users (bots) | 12, all `isBot=true`, with `lastLocation` scattered across central London |
+| BotProfiles | 12, one per bot user, persona round-robin |
+| YoyoSettings | 12 (created by `BotsService.createBot`) |
+
+### Idempotency
+
+Gate is `User.name LIKE 'Kuwboo Bot ___'`. If any rows match, the function
+logs and returns. To re-run from scratch, pass `force=true` (or
+`seed:bots:force`) — the script deletes the matching `User` rows and the
+`BotProfile` cascades follow.
+
+### Operating the seeded bots
+
+`seed-bots.ts` only **creates** bots in `IDLE` state — it does not start the
+simulation. Either set `BOT_SIMULATION_ENABLED=1` on the API process to
+auto-start them on boot, or call `POST /admin/bots/start-all` against the
+running API. See `apps/api/docs/BOT_OPS.md` for the full runbook (env flags,
+demo cadence, troubleshooting).
+
 ## Admin users (`seed-admin.ts`)
 
 Creates (or upserts) two `SUPER_ADMIN` users with email + bcrypt password credentials so the admin dashboard at `admin.kuwboo.com` can be reached via email+password login. Passwords are never hard-coded — they are read from env vars at seed time.
