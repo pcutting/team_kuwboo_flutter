@@ -105,10 +105,12 @@ final mockApiClientProvider = Provider<KuwbooApiClient>((ref) {
 /// has a counterpart here.
 List<Override> buildWebPackageOverrides() {
   return [
-    // Shared social provider takes a base URL + builds its own client; we
-    // bypass that by overriding the constructed client directly.
+    // ── kuwboo_screens: social ──
+    // Social feed + Stumble are de-mocked. Both hit the live backend
+    // through the same KuwbooApiClient so the auth interceptor and
+    // token refresh logic apply.
     social.kuwbooApiClientProvider.overrideWith(
-      (ref) => ref.watch(mockApiClientProvider),
+      (ref) => ref.watch(realApiClientProvider),
     ),
 
     // ── kuwboo_chat ──
@@ -125,8 +127,9 @@ List<Override> buildWebPackageOverrides() {
     ),
 
     // ── kuwboo_screens: video ──
+    // Video feed + comments + interactions are de-mocked.
     video.apiClientProvider.overrideWith(
-      (ref) => ref.watch(mockApiClientProvider),
+      (ref) => ref.watch(realApiClientProvider),
     ),
 
     // ── kuwboo_screens: shop ──

@@ -214,25 +214,28 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
     return feedAsync.when(
       loading: () =>
           const Center(child: CircularProgressIndicator(color: Colors.white)),
-      error: (err, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            'Couldn\'t load videos.\n$err',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white70),
-          ),
-        ),
+      error: (err, _) => _VideoFeedErrorState(
+        onRetry: () => ref.invalidate(videoFeedProvider(kind)),
       ),
       data: (feed) {
         _contents = feed.items;
         _videos = feed.items.map(_contentToDemoVideo).toList();
         if (widget.isFollowingFeed && _videos.isEmpty) {
-          return const ProtoEmptyState(
+          return const _VideoFeedEmptyState(
             icon: Icons.people_outline_rounded,
             title: 'No followed creators yet',
             subtitle: 'Follow creators to see their videos here',
-            actionLabel: 'Discover Creators',
+          );
+        }
+        if (_videos.isEmpty) {
+          // For You feed with nothing to show. Bots will populate the
+          // live DB asynchronously — until then, surface a friendly
+          // empty state instead of a blank PageView. Copy avoids
+          // blaming the user (it's not their fault the feed is sparse).
+          return const _VideoFeedEmptyState(
+            icon: Icons.video_library_outlined,
+            title: 'No videos yet',
+            subtitle: 'Be the first to post — or check back soon.',
           );
         }
         return Stack(
@@ -1129,5 +1132,114 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
   String _formatCount(int count) {
     if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
     return count.toString();
+  }
+}
+
+// ─── Dark-themed empty / error states ───────────────────────────────────
+//
+// The video module renders against a black scaffold (the shell sets
+// `backgroundColor: Colors.black` when the overlay top bar is in use),
+// so the standard ProtoEmptyState — which paints theme.text on a light
+// surface — disappears. These local variants force light foreground
+// colours so the message stays legible.
+
+class _VideoFeedEmptyState extends StatelessWidget {
+  const _VideoFeedEmptyState({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.black,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 56, color: Colors.white54),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _VideoFeedErrorState extends StatelessWidget {
+  const _VideoFeedErrorState({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.black,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 56,
+                color: Colors.white54,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Could not load videos',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(
+                  Icons.refresh_rounded,
+                  size: 18,
+                  color: Colors.white,
+                ),
+                label: const Text(
+                  'Try again',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

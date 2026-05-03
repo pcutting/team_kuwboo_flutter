@@ -48,31 +48,9 @@ class MockApiInterceptor extends Interceptor {
     // Strip query string. We key only on method+path; parameters do not
     // change the canned response.
     if (method == 'GET') {
-      // Feed (video / social / shop / home).
-      if (path == '/feed' || path == '/feed/following') {
-        final tab = options.queryParameters['tab']?.toString() ?? 'home';
-        return _envelope(_feedResponse(tab));
-      }
-      if (path == '/feed/trending' || path == '/feed/discover') {
-        final tab = options.queryParameters['tab']?.toString() ?? 'home';
-        return _envelope(_feedResponse(tab)['items']);
-      }
-
-      // Comments.
-      if (RegExp(r'^/content/[^/]+/comments$').hasMatch(path)) {
-        return _envelope(_commentsList());
-      }
-      if (RegExp(r'^/content/[^/]+/interactions$').hasMatch(path)) {
-        return _envelope(<String, dynamic>{
-          'liked': false,
-          'saved': false,
-          'likeCount': 142,
-          'saveCount': 18,
-          'viewCount': 2310,
-          'shareCount': 24,
-          'commentCount': _commentsList().length,
-        });
-      }
+      // Feed vertical (video / social / Stumble / comments / interactions)
+      // is de-mocked — it hits the live backend through the real
+      // KuwbooApiClient. See apps/web/lib/mock/package_overrides.dart.
 
       // Users.
       if (path == '/users/me') return _envelope(_meUser());
@@ -182,42 +160,9 @@ class MockApiInterceptor extends Interceptor {
     }
 
     if (method == 'POST') {
-      if (RegExp(r'^/content/[^/]+/like$').hasMatch(path)) {
-        return _envelope(<String, dynamic>{'liked': true, 'likeCount': 143});
-      }
-      if (RegExp(r'^/content/[^/]+/save$').hasMatch(path)) {
-        return _envelope(<String, dynamic>{'saved': true, 'saveCount': 19});
-      }
-      if (RegExp(r'^/content/[^/]+/(view|share)$').hasMatch(path)) {
-        return _envelope(<String, dynamic>{'ok': true});
-      }
-      if (RegExp(r'^/content/[^/]+/comments$').hasMatch(path)) {
-        // Echo the submitted text back so the caller sees the comment it
-        // just posted appear in the list, rather than a canned reply.
-        final contentId =
-            RegExp(r'^/content/([^/]+)/comments$').firstMatch(path)?.group(1) ??
-            'demo-content-1';
-        final raw = options.data;
-        String text = '';
-        String? parentCommentId;
-        if (raw is Map) {
-          text = (raw['text'] as String?)?.trim() ?? '';
-          parentCommentId = raw['parentCommentId'] as String?;
-        }
-        return _envelope(<String, dynamic>{
-          'id': 'demo-comment-${DateTime.now().microsecondsSinceEpoch}',
-          'contentId': contentId,
-          'authorId': 'demo-user-me',
-          'text': text,
-          'likeCount': 0,
-          'replyCount': 0,
-          if (parentCommentId != null) 'parentCommentId': parentCommentId,
-          'createdAt': DateTime.now().toIso8601String(),
-        });
-      }
-      if (RegExp(r'^/comments/[^/]+/like$').hasMatch(path)) {
-        return _envelope(<String, dynamic>{'liked': true});
-      }
+      // Feed-vertical writes (content/comments interactions) are
+      // de-mocked — they hit the live backend through the real
+      // KuwbooApiClient. See apps/web/lib/mock/package_overrides.dart.
       if (path == '/threads') {
         return _envelope(_threads().first);
       }
@@ -363,81 +308,6 @@ class MockApiInterceptor extends Interceptor {
         .subtract(const Duration(days: 30))
         .toIso8601String(),
   };
-
-  Map<String, dynamic> _feedResponse(String tab) {
-    final type = switch (tab) {
-      'shop' => 'PRODUCT',
-      'social' => 'POST',
-      _ => 'VIDEO',
-    };
-    // Every piece of canned content resolves its comment list to the same
-    // fixed-length demo list (see `_commentsList()`), so seed the feed-
-    // level `commentCount` with the same value rather than a formula that
-    // drifts out of sync with the sheet (the "4 vs 5" off-by-one).
-    final commentCount = _commentsList().length;
-    final items = List<Map<String, dynamic>>.generate(8, (i) {
-      final isPost = type == 'POST';
-      final isProduct = type == 'PRODUCT';
-      return <String, dynamic>{
-        'id': 'demo-${tab}-$i',
-        'type': type,
-        'creator': <String, dynamic>{
-          'id': 'demo-user-$i',
-          'name': _names[i % _names.length],
-          'avatarUrl': _avatars[i % _avatars.length],
-        },
-        'visibility': 'PUBLIC',
-        'tier': 'FREE',
-        'status': 'ACTIVE',
-        'likeCount': 50 + i * 17,
-        'commentCount': commentCount,
-        'viewCount': 1200 + i * 87,
-        'shareCount': 6 + i,
-        'saveCount': 12 + i,
-        'createdAt': DateTime.now()
-            .subtract(Duration(hours: i + 1))
-            .toIso8601String(),
-        if (isPost) 'text': _captions[i % _captions.length],
-        if (isPost) 'subType': 'STANDARD',
-        if (!isPost) 'caption': _captions[i % _captions.length],
-        if (!isPost) 'videoUrl': 'https://example.com/video-$i.mp4',
-        if (!isPost) 'thumbnailUrl': _avatars[i % _avatars.length],
-        if (!isPost) 'durationSeconds': 30 + i * 5,
-        if (isProduct) 'title': 'Vintage find #${i + 1}',
-        if (isProduct) 'priceCents': (1500 + i * 750),
-        if (isProduct) 'currency': 'GBP',
-        if (isProduct) 'condition': 'GOOD',
-      };
-    });
-    return <String, dynamic>{
-      'items': items,
-      'nextCursor': null,
-      'hasMore': false,
-    };
-  }
-
-  List<Map<String, dynamic>> _commentsList() {
-    return List<Map<String, dynamic>>.generate(5, (i) {
-      const lines = <String>[
-        'This is incredible!',
-        'Love the vibe.',
-        'Where is this? Need to visit.',
-        'Following for more!',
-        'The lighting is perfect.',
-      ];
-      return <String, dynamic>{
-        'id': 'demo-comment-$i',
-        'contentId': 'demo-content-1',
-        'authorId': 'demo-user-$i',
-        'text': lines[i],
-        'likeCount': 5 + i * 7,
-        'replyCount': i,
-        'createdAt': DateTime.now()
-            .subtract(Duration(minutes: 5 + i * 5))
-            .toIso8601String(),
-      };
-    });
-  }
 
   List<Map<String, dynamic>> _userInterests() {
     const slugs = <String>['music', 'travel', 'photography', 'cooking', 'art'];
