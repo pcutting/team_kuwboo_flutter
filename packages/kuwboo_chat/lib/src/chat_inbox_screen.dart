@@ -65,11 +65,33 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
   /// Filter `(thread, demo)` pairs by [widget.moduleKey] so the live
   /// thread id stays attached to the rendered conversation card. Without
   /// this the conversation screen only knows the display data.
+  ///
+  /// The widget receives display-cased filter values like `'YoYo'`,
+  /// `'Dating'`, `'Shop'`. The backend persists the canonical enum
+  /// (`'YOYO'`, `'DATING'`, `'BUY_SELL'`, `'SOCIAL_STUMBLE'`,
+  /// `'VIDEO_MAKING'`). Compare case-insensitively, ignoring underscores
+  /// and the optional shared prefixes (`SOCIAL_`, `BUY_`), so both
+  /// shapes match without forcing a backend-wide rename.
   List<(api.Thread, DemoConversation)> _applyFilterPairs(
     List<(api.Thread, DemoConversation)> all,
   ) {
-    if (widget.moduleKey == null) return all;
-    return all.where((p) => p.$2.moduleContext == widget.moduleKey).toList();
+    final filter = widget.moduleKey;
+    if (filter == null) return all;
+    final norm = _normaliseModuleKey(filter);
+    return all
+        .where((p) => _normaliseModuleKey(p.$2.moduleContext) == norm)
+        .toList();
+  }
+
+  /// Lowercase, strip underscores, and drop common prefixes so display
+  /// names ('YoYo') match enum values ('YOYO') and the marketplace alias
+  /// ('Shop' ↔ 'BUY_SELL') resolves the same way as before.
+  static String _normaliseModuleKey(String value) {
+    final lower = value.toLowerCase().replaceAll('_', '');
+    if (lower == 'buysell') return 'shop';
+    if (lower == 'socialstumble') return 'social';
+    if (lower == 'videomaking') return 'video';
+    return lower;
   }
 
   // ── Build ──────────────────────────────────────────────────────────────
