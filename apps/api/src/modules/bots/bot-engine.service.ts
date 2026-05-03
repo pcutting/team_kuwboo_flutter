@@ -54,6 +54,9 @@ export class BotEngineService {
         case 'createPost':
           result = await this.doCreatePost(profile);
           break;
+        case 'createVideo':
+          result = await this.doCreateVideo(profile);
+          break;
         case 'likeContent':
           result = await this.doLikeContent(profile);
           break;
@@ -135,6 +138,36 @@ export class BotEngineService {
       targetId: post.id,
       success: true,
       metadata: { text: text.slice(0, 100) },
+    };
+  }
+
+  private async doCreateVideo(profile: BotProfile): Promise<BotActionResult> {
+    const config = profile.behaviorConfig;
+    const templates = config.videoTemplates;
+    if (!templates || !templates.length) {
+      return { actionType: 'createVideo', success: false, errorMessage: 'No video templates' };
+    }
+
+    const template = templates[Math.floor(Math.random() * templates.length)];
+    const location = profile.user.lastLocation;
+
+    const video = await this.contentService.createVideo(profile.user, {
+      videoUrl: template.videoUrl,
+      thumbnailUrl: template.thumbnailUrl,
+      durationSeconds: template.durationSeconds,
+      caption: template.caption,
+      latitude: location?.latitude,
+      longitude: location?.longitude,
+    } as any);
+
+    return {
+      actionType: 'createVideo',
+      targetId: video.id,
+      success: true,
+      metadata: {
+        videoUrl: template.videoUrl,
+        caption: template.caption?.slice(0, 100),
+      },
     };
   }
 

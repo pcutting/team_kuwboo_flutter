@@ -12,9 +12,17 @@ import { User } from '../../users/entities/user.entity';
 import { PointType, Point } from '../../../database/types/point.type';
 import { BotSimulationStatus } from '../../../common/enums';
 
+export interface BotVideoTemplate {
+  videoUrl: string;
+  thumbnailUrl: string;
+  durationSeconds: number;
+  caption?: string;
+}
+
 export interface BotBehaviorConfig {
   actionWeights: {
     createPost: number;
+    createVideo: number;
     likeContent: number;
     commentOnContent: number;
     viewContent: number;
@@ -29,6 +37,7 @@ export interface BotBehaviorConfig {
   activeHoursStart: number;
   activeHoursEnd: number;
   postTemplates: string[];
+  videoTemplates: BotVideoTemplate[];
   commentTemplates: string[];
   waveMessages: string[];
   movementStyle: 'random_walk' | 'commute' | 'wander' | 'stationary';

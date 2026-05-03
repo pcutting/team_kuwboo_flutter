@@ -1,13 +1,82 @@
-import { BotBehaviorConfig } from '../entities/bot-profile.entity';
+import { BotBehaviorConfig, BotVideoTemplate } from '../entities/bot-profile.entity';
+
+/**
+ * Shared pool of royalty-free sample clips (Google CDN) + Pexels stills used
+ * as bot-generated video content. Same source as `seed-demo-data.ts`'s
+ * `SAMPLE_VIDEOS` list — bots draw from it when picking a clip to "post".
+ */
+export const BOT_VIDEO_LIBRARY: BotVideoTemplate[] = [
+  {
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    thumbnailUrl: 'https://images.pexels.com/photos/3389528/pexels-photo-3389528.jpeg',
+    durationSeconds: 60,
+    caption: 'Quick clip from the weekend — what do you think?',
+  },
+  {
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    thumbnailUrl: 'https://images.pexels.com/photos/355288/pexels-photo-355288.jpeg',
+    durationSeconds: 15,
+    caption: 'Caught this on my walk this morning ✨',
+  },
+  {
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+    thumbnailUrl: 'https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg',
+    durationSeconds: 15,
+    caption: 'Behind the scenes 📸',
+  },
+  {
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    thumbnailUrl: 'https://images.pexels.com/photos/1170412/pexels-photo-1170412.jpeg',
+    durationSeconds: 60,
+    caption: 'Just for fun.',
+  },
+  {
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+    thumbnailUrl: 'https://images.pexels.com/photos/3422964/pexels-photo-3422964.jpeg',
+    durationSeconds: 15,
+    caption: 'Joyride mode 🚗',
+  },
+  {
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+    thumbnailUrl: 'https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg',
+    durationSeconds: 15,
+    caption: 'Mood today.',
+  },
+  {
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
+    thumbnailUrl: 'https://images.pexels.com/photos/1592384/pexels-photo-1592384.jpeg',
+    durationSeconds: 60,
+    caption: 'Test drive day.',
+  },
+  {
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4',
+    thumbnailUrl: 'https://images.pexels.com/photos/1149831/pexels-photo-1149831.jpeg',
+    durationSeconds: 60,
+    caption: 'Review incoming. Drop questions.',
+  },
+  {
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4',
+    thumbnailUrl: 'https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg',
+    durationSeconds: 47,
+    caption: 'Adventure starts now.',
+  },
+  {
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4',
+    thumbnailUrl: 'https://images.pexels.com/photos/3729464/pexels-photo-3729464.jpeg',
+    durationSeconds: 25,
+    caption: 'Bargain hunting today.',
+  },
+];
 
 export const PERSONA_PRESETS: Record<string, BotBehaviorConfig> = {
   social_butterfly: {
     actionWeights: {
-      createPost: 0.15,
+      createPost: 0.10,
+      createVideo: 0.05,
       likeContent: 0.25,
-      commentOnContent: 0.2,
-      viewContent: 0.1,
-      followUser: 0.1,
+      commentOnContent: 0.20,
+      viewContent: 0.10,
+      followUser: 0.10,
       sendWave: 0.08,
       respondToWave: 0.05,
       moveLocation: 0.05,
@@ -27,6 +96,7 @@ export const PERSONA_PRESETS: Record<string, BotBehaviorConfig> = {
       'Grateful for all the connections I have made here 💛',
       'Tag someone who needs to see this view!',
     ],
+    videoTemplates: BOT_VIDEO_LIBRARY,
     commentTemplates: [
       'Love this! 🔥',
       'So cool, thanks for sharing!',
@@ -48,10 +118,11 @@ export const PERSONA_PRESETS: Record<string, BotBehaviorConfig> = {
 
   content_creator: {
     actionWeights: {
-      createPost: 0.35,
-      likeContent: 0.1,
-      commentOnContent: 0.1,
-      viewContent: 0.15,
+      createPost: 0.15,
+      createVideo: 0.25,
+      likeContent: 0.10,
+      commentOnContent: 0.10,
+      viewContent: 0.10,
       followUser: 0.05,
       sendWave: 0.03,
       respondToWave: 0.05,
@@ -72,6 +143,7 @@ export const PERSONA_PRESETS: Record<string, BotBehaviorConfig> = {
       'Process over perfection. Here is the raw, unfiltered version.',
       'Quick tip: the best content comes from authentic moments.',
     ],
+    videoTemplates: BOT_VIDEO_LIBRARY,
     commentTemplates: [
       'The composition on this is fire 🔥',
       'Great work! What setup did you use?',
@@ -89,14 +161,15 @@ export const PERSONA_PRESETS: Record<string, BotBehaviorConfig> = {
 
   lurker: {
     actionWeights: {
-      createPost: 0.02,
+      createPost: 0.01,
+      createVideo: 0.01,
       likeContent: 0.15,
       commentOnContent: 0.03,
       viewContent: 0.55,
       followUser: 0.08,
       sendWave: 0.01,
       respondToWave: 0.05,
-      moveLocation: 0.1,
+      moveLocation: 0.10,
       sendMessage: 0.01,
     },
     minActionIntervalMs: 120_000,
@@ -108,6 +181,7 @@ export const PERSONA_PRESETS: Record<string, BotBehaviorConfig> = {
       '...',
       'Checking in.',
     ],
+    videoTemplates: BOT_VIDEO_LIBRARY,
     commentTemplates: [
       '👍',
       'Nice.',
@@ -124,14 +198,15 @@ export const PERSONA_PRESETS: Record<string, BotBehaviorConfig> = {
 
   explorer: {
     actionWeights: {
-      createPost: 0.1,
-      likeContent: 0.1,
+      createPost: 0.08,
+      createVideo: 0.07,
+      likeContent: 0.10,
       commentOnContent: 0.05,
-      viewContent: 0.1,
+      viewContent: 0.10,
       followUser: 0.05,
       sendWave: 0.15,
-      respondToWave: 0.1,
-      moveLocation: 0.3,
+      respondToWave: 0.10,
+      moveLocation: 0.25,
       sendMessage: 0.05,
     },
     minActionIntervalMs: 20_000,
@@ -146,6 +221,7 @@ export const PERSONA_PRESETS: Record<string, BotBehaviorConfig> = {
       'Every corner has a story. Today I found a great one.',
       'Out exploring again. Drop suggestions for must-see spots!',
     ],
+    videoTemplates: BOT_VIDEO_LIBRARY,
     commentTemplates: [
       'Where is this? I need to visit!',
       'Adding this to my list!',
@@ -164,15 +240,16 @@ export const PERSONA_PRESETS: Record<string, BotBehaviorConfig> = {
 
   shopper: {
     actionWeights: {
-      createPost: 0.08,
+      createPost: 0.06,
+      createVideo: 0.05,
       likeContent: 0.15,
       commentOnContent: 0.12,
-      viewContent: 0.25,
+      viewContent: 0.20,
       followUser: 0.05,
       sendWave: 0.03,
       respondToWave: 0.05,
       moveLocation: 0.12,
-      sendMessage: 0.15,
+      sendMessage: 0.17,
     },
     minActionIntervalMs: 45_000,
     maxActionIntervalMs: 240_000,
@@ -186,6 +263,7 @@ export const PERSONA_PRESETS: Record<string, BotBehaviorConfig> = {
       'New listing up! Check my profile for details.',
       'Deal of the day. You do not want to miss this one.',
     ],
+    videoTemplates: BOT_VIDEO_LIBRARY,
     commentTemplates: [
       'Is this still available?',
       'Great price!',

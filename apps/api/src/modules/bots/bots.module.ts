@@ -8,6 +8,7 @@ import { BotEngineService } from './bot-engine.service';
 import { BotMovementService } from './bot-movement.service';
 import { BotSchedulerService } from './bot-scheduler.service';
 import { BotActionProcessor } from './bot-action.processor';
+import { BotSimulationBootstrap } from './bot-simulation-bootstrap.service';
 import { BotAdminController } from './bot-admin.controller';
 import { ContentModule } from '../content/content.module';
 import { InteractionsModule } from '../interactions/interactions.module';
@@ -34,6 +35,7 @@ import { MessagingModule } from '../messaging/messaging.module';
     BotMovementService,
     BotSchedulerService,
     BotActionProcessor,
+    BotSimulationBootstrap,
   ],
   exports: [BotsService],
 })
