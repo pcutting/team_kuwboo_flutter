@@ -26,7 +26,9 @@ import { Video } from '../modules/content/entities/video.entity';
 import { Post } from '../modules/content/entities/post.entity';
 import { Product } from '../modules/content/entities/product.entity';
 import { Wave } from '../modules/yoyo/entities/wave.entity';
+import { BotsService } from '../modules/bots/bots.service';
 import { seedTestUser } from './seed-test-user';
+import { seedBots } from './seed-bots';
 import {
   Role,
   UserStatus,
@@ -246,6 +248,17 @@ async function bootstrap() {
       await seedTestUser(em);
     } catch (err) {
       console.error('[seed] test-user seed failed (continuing):', err);
+    }
+  }
+
+  // Seed the bot population. Idempotent: skips if any previously-seeded
+  // bots exist. Disable with `--no-bots` if working on a no-bot baseline.
+  if (!process.argv.includes('--no-bots')) {
+    try {
+      const botsService = app.get(BotsService);
+      await seedBots(em, botsService, { force });
+    } catch (err) {
+      console.error('[seed] bot seed failed (continuing):', err);
     }
   }
 
