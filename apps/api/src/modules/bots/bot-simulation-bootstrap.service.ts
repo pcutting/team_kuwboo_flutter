@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { RequestContext } from '@mikro-orm/core';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { BotSchedulerService } from './bot-scheduler.service';
 import { BotProfile } from './entities/bot-profile.entity';
@@ -41,34 +42,39 @@ export class BotSimulationBootstrap implements OnModuleInit {
     const maxBotsRaw = this.config.get<string>('BOT_SIMULATION_MAX_BOTS');
     const maxBots = maxBotsRaw ? parseInt(maxBotsRaw, 10) : undefined;
 
-    // Use a forked EM since OnModuleInit runs outside the request scope
-    // and the global EM has no active context yet.
+    // Fork an EM and bind it to AsyncLocalStorage via RequestContext.
+    // The find query alone could run on the fork, but scheduler.startBot
+    // and downstream BotsService methods read from this.em (the global)
+    // and would throw cannotUseGlobalContext without a bound context.
+    // Same pattern as BotActionProcessor (PR #202).
     const em = this.em.fork();
 
-    const candidates = await em.find(
-      BotProfile,
-      { simulationStatus: { $in: [BotSimulationStatus.IDLE, BotSimulationStatus.PAUSED] } },
-      { limit: maxBots, orderBy: { createdAt: 'ASC' } },
-    );
+    await RequestContext.create(em, async () => {
+      const candidates = await em.find(
+        BotProfile,
+        { simulationStatus: { $in: [BotSimulationStatus.IDLE, BotSimulationStatus.PAUSED] } },
+        { limit: maxBots, orderBy: { createdAt: 'ASC' } },
+      );
 
-    if (candidates.length === 0) {
-      this.logger.log('Bot simulation enabled but no bots in IDLE/PAUSED — nothing to start.');
-      return;
-    }
-
-    let started = 0;
-    for (const bot of candidates) {
-      try {
-        await this.scheduler.startBot(bot.id);
-        started++;
-      } catch (err: any) {
-        this.logger.warn(`Failed to auto-start bot ${bot.id}: ${err.message}`);
+      if (candidates.length === 0) {
+        this.logger.log('Bot simulation enabled but no bots in IDLE/PAUSED — nothing to start.');
+        return;
       }
-    }
 
-    this.logger.log(
-      `Bot simulation auto-start: ${started}/${candidates.length} bots started ` +
-        `(BOT_DEMO_MODE=${this.config.get<string>('BOT_DEMO_MODE') ?? 'unset'}).`,
-    );
+      let started = 0;
+      for (const bot of candidates) {
+        try {
+          await this.scheduler.startBot(bot.id);
+          started++;
+        } catch (err: any) {
+          this.logger.warn(`Failed to auto-start bot ${bot.id}: ${err.message}`);
+        }
+      }
+
+      this.logger.log(
+        `Bot simulation auto-start: ${started}/${candidates.length} bots started ` +
+          `(BOT_DEMO_MODE=${this.config.get<string>('BOT_DEMO_MODE') ?? 'unset'}).`,
+      );
+    });
   }
 }
