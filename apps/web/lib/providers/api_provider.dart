@@ -28,3 +28,28 @@ final realUsersApiProvider = Provider<UsersApi>(
 final interestsApiProvider = Provider<InterestsApi>(
   (ref) => InterestsApi(ref.watch(realApiClientProvider)),
 );
+
+// ─── Feed vertical ───────────────────────────────────────────────────────
+//
+// These providers exist for any direct consumer in the web layer. The
+// shared `kuwboo_screens` package consumes its own per-module
+// `apiClientProvider` (see `package_overrides.dart`) which is now also
+// pointed at `realApiClientProvider` for the feed-vertical modules
+// (video + social). Adding these here keeps the surface symmetrical with
+// the rest of the de-mocked verticals (auth, users, interests, profile).
+
+final feedApiProvider = Provider<FeedApi>(
+  (ref) => FeedApi(ref.watch(realApiClientProvider)),
+);
+
+final contentApiProvider = Provider<ContentApi>(
+  (ref) => ContentApi(ref.watch(realApiClientProvider)),
+);
+
+final commentsApiProvider = Provider<CommentsApi>(
+  (ref) => CommentsApi(ref.watch(realApiClientProvider)),
+);
+
+final interactionsApiProvider = Provider<InteractionsApi>(
+  (ref) => InteractionsApi(ref.watch(realApiClientProvider)),
+);
