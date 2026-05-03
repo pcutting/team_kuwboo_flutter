@@ -118,19 +118,10 @@ class MockApiInterceptor extends Interceptor {
         return _envelope(<String, dynamic>{'likes': <dynamic>[]});
       }
 
-      // Threads / messaging.
-      if (path == '/threads') {
-        return _envelope(<String, dynamic>{
-          'items': _threads(),
-          'nextCursor': null,
-        });
-      }
-      if (RegExp(r'^/threads/[^/]+/messages$').hasMatch(path)) {
-        return _envelope(<String, dynamic>{
-          'items': _messages(),
-          'nextCursor': null,
-        });
-      }
+      // Threads / messaging vertical is de-mocked — see
+      // apps/web/lib/mock/package_overrides.dart and
+      // apps/web/lib/providers/api_provider.dart. The shared kuwboo_chat
+      // package now consumes the real KuwbooApiClient.
 
       // Connections (offset paginated, returned as bare list).
       if (path == '/connections/followers' ||
@@ -160,15 +151,10 @@ class MockApiInterceptor extends Interceptor {
     }
 
     if (method == 'POST') {
-      // Feed-vertical writes (content/comments interactions) are
-      // de-mocked — they hit the live backend through the real
-      // KuwbooApiClient. See apps/web/lib/mock/package_overrides.dart.
-      if (path == '/threads') {
-        return _envelope(_threads().first);
-      }
-      if (RegExp(r'^/threads/[^/]+/messages$').hasMatch(path)) {
-        return _envelope(_messages().first);
-      }
+      // Feed-vertical writes (content/comments interactions) and the
+      // messaging vertical (thread create + send-message) are de-mocked —
+      // they hit the live backend through the real KuwbooApiClient. See
+      // apps/web/lib/mock/package_overrides.dart.
       if (path == '/yoyo/location' || path == '/yoyo/wave') {
         return _envelope(<String, dynamic>{'message': 'ok'});
       }
@@ -235,9 +221,6 @@ class MockApiInterceptor extends Interceptor {
           'ageMax': null,
           'genderFilter': null,
         });
-      }
-      if (RegExp(r'^/threads/[^/]+/read$').hasMatch(path)) {
-        return _envelope(<String, dynamic>{'message': 'ok'});
       }
       if (path == '/notifications/read-all' ||
           RegExp(r'^/notifications/[^/]+/read$').hasMatch(path)) {
@@ -410,52 +393,6 @@ class MockApiInterceptor extends Interceptor {
         'subType': 'STANDARD',
       };
     });
-  }
-
-  List<Map<String, dynamic>> _threads() {
-    return List<Map<String, dynamic>>.generate(5, (i) {
-      const modules = <String>['YoYo', 'Dating', 'Market', 'Social', 'Video'];
-      return <String, dynamic>{
-        'id': 'demo-thread-${i + 100000}',
-        'moduleKey': modules[i % modules.length],
-        'lastMessageText': const [
-          'See you there!',
-          'Is the camera still available?',
-          'Great recipe, thanks!',
-          'Friday works for me',
-          'Cool shot!',
-        ][i],
-        'lastMessageAt': DateTime.now()
-            .subtract(Duration(minutes: 5 + i * 35))
-            .toIso8601String(),
-        'createdAt': DateTime.now()
-            .subtract(Duration(days: 1 + i))
-            .toIso8601String(),
-      };
-    });
-  }
-
-  List<Map<String, dynamic>> _messages() {
-    const lines = <String>[
-      'Hey! Loved your latest video',
-      'Thanks! Took ages to edit',
-      'The transition at 0:15 was so smooth',
-      'I used a new plugin for that!',
-      'What plugin? I need it',
-      'See you there!',
-    ];
-    return [
-      for (var i = 0; i < lines.length; i++)
-        <String, dynamic>{
-          'id': 'demo-msg-$i',
-          'threadId': 'demo-thread-100000',
-          'senderId': i.isEven ? 'demo-user-other' : 'demo-user-me',
-          'text': lines[i],
-          'createdAt': DateTime.now()
-              .subtract(Duration(minutes: 30 - i * 5))
-              .toIso8601String(),
-        },
-    ];
   }
 
   List<Map<String, dynamic>> _nearbyUsers() {

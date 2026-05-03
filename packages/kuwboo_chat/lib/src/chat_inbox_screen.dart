@@ -62,15 +62,9 @@ class _ChatInboxScreenState extends ConsumerState<ChatInboxScreen> {
     return '${diff.inDays}d';
   }
 
-  List<DemoConversation> _applyFilter(List<DemoConversation> all) {
-    if (widget.moduleKey == null) return all;
-    return all.where((c) => c.moduleContext == widget.moduleKey).toList();
-  }
-
-  /// Apply [_applyFilter] over `(thread, demo)` pairs so the live thread id
-  /// stays attached to the rendered conversation card. Without this the
-  /// conversation screen only knows the display data and falls back to the
-  /// canned transactional prototype (no live input bar).
+  /// Filter `(thread, demo)` pairs by [widget.moduleKey] so the live
+  /// thread id stays attached to the rendered conversation card. Without
+  /// this the conversation screen only knows the display data.
   List<(api.Thread, DemoConversation)> _applyFilterPairs(
     List<(api.Thread, DemoConversation)> all,
   ) {
